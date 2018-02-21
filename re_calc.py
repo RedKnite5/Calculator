@@ -4,7 +4,6 @@
 #   Calculator\re_calc.py
 #   current
 
-
 import math
 import statistics as stats
 import sys
@@ -63,7 +62,8 @@ except ModuleNotFoundError:
 30) two expressions adjacent means multiplication
 32) 3d graphs
 34) make icon of tkinter window when run on Fedora
-35) 
+35) make compatible with other operating systems
+36) 
 '''
 
 
@@ -80,9 +80,8 @@ graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
 
 # variables used in multiple functions
-x_min_str, x_max_str, y_min_str, y_max_str = (None for i in range(4))
-x_min_entry, x_max_entry, y_min_entry, y_max_entry = (
-	None for i in range(4))
+x_min_str, x_max_str, y_min_str, y_max_str = (None, None, None, None)
+x_min_entry, x_max_entry, y_min_entry, y_max_entry = (None, None, None, None)
 input_widget = None
 equals_button = None
 back_button = None
@@ -1230,7 +1229,7 @@ def abs_value(input):
 	parts = input.split("|")
 
 	for i in range(len(parts)):
-		if parts[i].startswith(("+", "*", "^", "/", "-")) or\
+		if parts[i].startswith(("+", "*", "^", "/")) or\
 		parts[i].endswith(("+", "*", "^", "/", "-")) or not parts[i]:
 			pass
 
