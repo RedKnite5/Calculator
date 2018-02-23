@@ -617,34 +617,6 @@ class graph(object):
 			except:
 				pass
 
-	'''def ydraw(self, func): # not yet in use
-
-		# does the same thing as xdraw but, sideways
-
-		density = 1000
-		y = self.ymin
-		xrang = self.xmax - self.xmin
-		yrang = self.ymax - self.ymin
-
-		while y < self.ymax:
-			y += yrang / density
-			try:
-				x = float(simplify("eval " + func + " at " + str(y)))
-				slope = float(simplify(
-				"derivative of " + func + " at " + str(y)))
-				density = int((400 * math.fabs(slope)) + 500)
-
-				if x > self.xmax or x < self.xmin:
-					denstiy = 2000
-
-				a = (x - self.xmin) * self.wide / xrang
-				b = self.high - ((y - self.ymin) * self.high / yrang)
-
-				self.screen.create_line(a, b, a + 1, b)
-			except: pass
-		self.root.update()
-	'''
-
 
 class polar_graph(object):
 	"""Polar graphing window class."""
