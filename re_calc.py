@@ -1111,7 +1111,7 @@ def single_argument(m):
 	# e for the constant e
 	try:
 		result = "{:.16f}".format(float(result))
-	except:
+	except ValueError:
 		pass
 
 	# add back anything that was cut off when finding the
@@ -1271,7 +1271,7 @@ def simplify(s):
 		if i == const_comp:
 			try:
 				s = "{:.16f}".format(float(s))
-			except:
+			except ValueError:
 				pass
 
 		# checks for the operation
