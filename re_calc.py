@@ -550,7 +550,6 @@ class graph(object):
 	def axes(self):
 		"""Draw the axis on a Cartesian graph."""
 
-		density = 500
 		xrang = self.xmax - self.xmin
 		yrang = self.ymax - self.ymin
 
@@ -1256,7 +1255,6 @@ def abs_value(input):
 			return(result)
 
 
-
 # main func
 def simplify(s):
 	"""Simplify an expression."""
@@ -1437,7 +1435,7 @@ def simplify(s):
 
 				try:
 					result = "{:.16f}".format(result)
-				except:
+				except ValueError:
 					pass
 
 			# replace the text matched by i: the regular expression
@@ -1446,7 +1444,7 @@ def simplify(s):
 			m = i.search(s)
 	try:
 		s = "{:.16f}".format(s)
-	except:
+	except ValueError:
 		pass
 	return(s)
 
@@ -1491,12 +1489,12 @@ def key_pressed(event):
 
 	try:
 		code = event.keycode
-	except:
+	except AttributeError:
 		code = event
 
 	key_binds = {"nt":(13, 38, 40), "posix":(104, 111, 116)}
 
-#	print(code)
+	# print(code)
 
 	# get the user input when enter is pressed
 	if code == key_binds[os.name][0]:  # enter
@@ -1544,6 +1542,13 @@ def get_input():
 
 	# save history to file
 	save_info()
+	
+	if s == "":
+		if os.name == "posix":
+			print("exit")
+			exit()
+		elif os.name == "nt":
+			sys.exit()
 
 	out = simplify(s)
 
@@ -1570,11 +1575,11 @@ def switch_trig():
 		hyperbolic_func_buttons[i].grid_forget()
 		try:
 			misc_func_buttons[i].grid_forget()
-		except:
+		except IndexError:
 			pass
 		try:
 			stats_func_buttons[i].grid_forget()
-		except:
+		except IndexError:
 			pass
 
 	# sin cos tan
@@ -1607,11 +1612,11 @@ def switch_hyperbolic():
 		trig_func_buttons[i].grid_forget()
 		try:
 			misc_func_buttons[i].grid_forget()
-		except:
+		except IndexError:
 			pass
 		try:
 			stats_func_buttons[i].grid_forget()
-		except:
+		except IndexError:
 			pass
 
 	# sinh cosh tanh
@@ -1645,7 +1650,7 @@ def switch_misc():
 		hyperbolic_func_buttons[i].grid_forget()
 		try:
 			stats_func_buttons[i].grid_forget()
-		except:
+		except IndexError:
 			pass
 
 	# log ln gamma
@@ -1680,7 +1685,7 @@ def switch_stats():
 		hyperbolic_func_buttons[i].grid_forget()
 		try:
 			misc_func_buttons[i].grid_forget()
-		except:
+		except IndexError:
 			pass
 
 	# mean median mode
@@ -1841,7 +1846,7 @@ def tkask(s = None):
 
 	# equals button
 	equals_button = tk.Button(root, text = "=",
-	command = get_input, width = 5, bg = "blue")
+	command = get_input, width = 5, bg = "light blue")
 
 	# backspace button
 	back_button = tk.Button(root, text = "delete",
