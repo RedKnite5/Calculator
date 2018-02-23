@@ -63,7 +63,9 @@ except ModuleNotFoundError:
 32) 3d graphs
 34) make icon of tkinter window when run on Fedora
 35) make compatible with other operating systems
-36) 
+36) fix polar graphing of cardioid
+37) fix 2-2*sin(6)
+38) 
 '''
 
 
@@ -73,6 +75,11 @@ graph x/2 -1 from -10 to 2
 solve(2*r+4=r) for r  = -4
 '''
 
+if os.name == "nt":
+    user_path = environ["USERPROFILE"]
+elif os.name == "posix":
+    user_path = environ["HOME"]
+
 # changeable variables
 use_gui = True
 graph_w = 400
@@ -81,7 +88,10 @@ graph_colors = ("black", "red", "blue", "green", "orange", "purple")
 
 # variables used in multiple functions
 x_min_str, x_max_str, y_min_str, y_max_str = (None, None, None, None)
-x_min_entry, x_max_entry, y_min_entry, y_max_entry = (None, None, None, None)
+x_min_entry, x_max_entry, y_min_entry, y_max_entry = (None,
+	None, None, None)
+theta_min_str, theta_max_str = (None, None)
+theta_min_entry, theta_max_entry = (None, None)
 input_widget = None
 equals_button = None
 back_button = None
@@ -94,15 +104,9 @@ misc_func_buttons = []
 stats_func_buttons = []
 
 # multi session variables
-if os.name == "nt":
-    user_path = environ["USERPROFILE"]
-if os.name == "posix":
-    user_path = environ["HOME"]
-
+calc_path = os.path.dirname(os.path.realpath(__file__))
 calc_info = load(open(
-	join(user_path,
-	"Dropbox", "Python", "Calculator",
-	"re_calc_info.txt"), "rb"))
+	join(calc_path, "re_calc_info.txt"), "rb"))
 history = calc_info[0]
 ans = calc_info[1]
 options = calc_info[2]
@@ -276,8 +280,7 @@ def save_info():
 
 	calc_info = [history, ans, options, win_bound]
 
-	dump(calc_info, open(join(user_path,
-	"Dropbox", "Python", "Calculator",
+	dump(calc_info, open(join(calc_path,
 	"re_calc_info.txt"), "wb"))
 
 
@@ -404,11 +407,15 @@ def change_graph_win_set():
 	global win_bound
 	global x_min_str, x_max_str, y_min_str, y_max_str
 	global x_min_entry, x_max_entry, y_min_entry, y_max_entry
+	global theta_min_str, theta_max_str
+	global theta_min_entry, theta_max_entry
 
 	xmin_in = x_min_entry.get()
 	xmax_in = x_max_entry.get()
 	ymin_in = y_min_entry.get()
 	ymax_in = y_max_entry.get()
+	theta_min_in = theta_min_entry.get()
+	theta_max_in = theta_max_entry.get()
 
 	if check_if_float(xmin_in):
 		win_bound["xmin"] = float(xmin_in)
@@ -418,6 +425,10 @@ def change_graph_win_set():
 		win_bound["ymin"] = float(ymin_in)
 	if check_if_float(ymax_in):
 		win_bound["ymax"] = float(ymax_in)
+	if check_if_float(theta_min_in):
+		win_bound["theta_max"] = float(theta_max_in)
+	if check_if_float(theta_max_in):
+		win_bound["theta_max"] = float(theta_max_in)
 
 	save_info()
 
@@ -425,6 +436,9 @@ def change_graph_win_set():
 	x_max_str.set("x max = " + str(win_bound["xmax"]))
 	y_min_str.set("y min = " + str(win_bound["ymin"]))
 	y_max_str.set("y max = " + str(win_bound["ymax"]))
+	theta_min_str.set("theta min = " + str(win_bound["theta_min"]))
+	theta_max_str.set("theta max = " + str(win_bound["theta_max"]))
+	
 
 
 def find_match(s):
@@ -618,7 +632,7 @@ class graph(object):
 				pass
 
 
-class polar_graph(object):
+class polar_graph(graph):
 	"""Polar graphing window class."""
 
 	def __init__(self,
@@ -652,6 +666,9 @@ class polar_graph(object):
 		self.close = tk.Button(self.root, text = "Close",
 		command = self.root.destroy)
 		self.close.pack()
+
+		# draw axes
+		self.axes()
 
 	def draw(self, func, color = "black"):
 		"""Draw a polar function."""
@@ -1734,6 +1751,8 @@ def edit_graph_window():
 
 	global x_min_str, x_max_str, y_min_str, y_max_str
 	global x_min_entry, x_max_entry, y_min_entry, y_max_entry
+	global theta_min_str, theta_max_str
+	global theta_min_entry, theta_max_entry
 
 	root = tk.Toplevel()
 
@@ -1741,6 +1760,8 @@ def edit_graph_window():
 	x_max_entry = tk.Entry(root)
 	y_min_entry = tk.Entry(root)
 	y_max_entry = tk.Entry(root)
+	theta_min_entry = tk.Entry(root)
+	theta_max_entry = tk.Entry(root)
 
 	x_min_str = tk.StringVar()
 	x_min_str.set("x min = " + str(win_bound["xmin"]))
@@ -1753,6 +1774,12 @@ def edit_graph_window():
 
 	y_max_str = tk.StringVar()
 	y_max_str.set("y max = " + str(win_bound["ymax"]))
+	
+	theta_min_str = tk.StringVar()
+	theta_min_str.set("theta min = " + str(win_bound["theta_min"]))
+	
+	theta_max_str = tk.StringVar()
+	theta_max_str.set("theta max = " + str(win_bound["theta_max"]))
 
 	x_min_disp = tk.Message(root, textvariable = x_min_str,
 	width = 100)
@@ -1762,16 +1789,24 @@ def edit_graph_window():
 	width = 100)
 	y_max_disp = tk.Message(root, textvariable = y_max_str,
 	width = 100)
+	theta_min_disp = tk.Message(root, textvariable = theta_min_str,
+	width = 100)
+	theta_max_disp = tk.Message(root, textvariable = theta_max_str,
+	width = 100)
 
 	x_min_disp.grid(row = 0, column = 0)
 	x_max_disp.grid(row = 1, column = 0)
 	y_min_disp.grid(row = 2, column = 0)
 	y_max_disp.grid(row = 3, column = 0)
+	theta_min_disp.grid(row = 4, column = 0)
+	theta_max_disp.grid(row = 5, column = 0)
 
 	x_min_entry.grid(row = 0, column = 1)
 	x_max_entry.grid(row = 1, column = 1)
 	y_min_entry.grid(row = 2, column = 1)
 	y_max_entry.grid(row = 3, column = 1)
+	theta_min_entry.grid(row = 4, column = 1)
+	theta_max_entry.grid(row = 5, column = 1)
 
 	root.bind("<Return>", lambda a: change_graph_win_set())
 
@@ -1792,8 +1827,7 @@ def tkask(s = None):
 	root.title("Calculator")
 
 	if os.name == "nt":
-		root.iconbitmap(default = join(user_path,
-		"Dropbox", "Python", "Calculator", "calc_pic.ico"))
+		root.iconbitmap(default = join(calc_path, "calc_pic.ico"))
 
 	mess = tk.StringVar()
 	mess.set("Input an expression")
