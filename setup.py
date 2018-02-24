@@ -1,6 +1,7 @@
 #   setup.py
 
 from setuptools import setup, find_packages
+
 setup(
     name = "Calculator",
     version = "0.1",
@@ -23,6 +24,7 @@ setup(
 	package_data = {
 	"": ["*.ico", "*.txt", "*.py"]
 	},
+	zip_safe = False,
 	
 	url = "https://github.com/RedKnite5/Calculator.git"
 	

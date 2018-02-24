@@ -75,6 +75,7 @@ graph x/2 -1 from -10 to 2
 solve(2*r+4=r) for r  = -4
 '''
 
+# os handling
 if os.name == "nt":
     user_path = environ["USERPROFILE"]
 elif os.name == "posix":
@@ -104,7 +105,7 @@ misc_func_buttons = []
 stats_func_buttons = []
 
 # multi session variables
-calc_path = os.path.dirname(os.path.realpath(__file__))
+calc_path = os.path.abspath(os.path.dirname(__file__))
 calc_info = load(open(
 	join(calc_path, "re_calc_info.txt"), "rb"))
 history = calc_info[0]

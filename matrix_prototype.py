@@ -1,7 +1,8 @@
 #   matrix_prototype.py
 import tkinter as tk
-import os
+import curses
 
+'''
 def matrix():
 	"""Create a matrix window."""
 	
@@ -24,27 +25,18 @@ def matrix():
 	
 	
 	
-	
-	
-	
 	root.mainloop()
-	
 
-	
-	
-	
-#x = matrix()
+x = matrix()
+'''
 
-print("line")
-print(os.path.realpath(__file__))
+
+
+scr = curses.initscr()
 
 
 
 
 
-
-
-
-
-
-
+# C:\Users\Max\Documents\Python\Calculator
+# C:\Users\Max\Dropbox\Python
