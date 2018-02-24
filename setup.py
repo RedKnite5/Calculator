@@ -32,7 +32,7 @@ setup(
 	author_email = "mr.awesome10000@gmail.com",
 	desciption = "This is a basic graphing calculator.",
 	licencse = "GNU"
-	
+	keywords = ["Calculator"]
 )
 
 
