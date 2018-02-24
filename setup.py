@@ -14,10 +14,10 @@ setup(
 	"License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 	"Natural Language :: English",
 	"Operating System :: Microsoft :: Windows :: Windows 10",
-	"Operating System :: POSIX :: Linux".
+	"Operating System :: POSIX :: Linux",
 	"Programming Language :: Python :: 3 :: Only",
 	"Programming Language :: Python :: Implementation :: CPython",
-	"Topic :: Scientific/Engineering :: Mathematics",
+	"Topic :: Scientific/Engineering :: Mathematics"
 	]
 	install_requires = ["sympy>=1.1.1", "tkinter>=8.6"]
 	
