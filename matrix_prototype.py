@@ -1,6 +1,5 @@
 #   matrix_prototype.py
 import tkinter as tk
-import curses
 
 '''
 def matrix():
@@ -30,13 +29,11 @@ def matrix():
 x = matrix()
 '''
 
-
-
-scr = curses.initscr()
-
+print(g)
 
 
 
 
-# C:\Users\Max\Documents\Python\Calculator
-# C:\Users\Max\Dropbox\Python
+
+
+

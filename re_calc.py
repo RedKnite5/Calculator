@@ -13,8 +13,6 @@ from pickle import load, dump
 from re import compile, sub
 from sympy import symbols, integrate, sympify
 from sympy.solvers import solve
-from os import environ
-from os.path import join
 
 
 try:
@@ -77,9 +75,9 @@ solve(2*r+4=r) for r  = -4
 
 # os handling
 if os.name == "nt":
-    user_path = environ["USERPROFILE"]
+    user_path = os.environ["USERPROFILE"]
 elif os.name == "posix":
-    user_path = environ["HOME"]
+    user_path = os.environ["HOME"]
 
 # changeable variables
 use_gui = True
@@ -107,7 +105,7 @@ stats_func_buttons = []
 # multi session variables
 calc_path = os.path.abspath(os.path.dirname(__file__))
 calc_info = load(open(
-	join(calc_path, "re_calc_info.txt"), "rb"))
+	os.path.join(calc_path, "re_calc_info.txt"), "rb"))
 history = calc_info[0]
 ans = calc_info[1]
 options = calc_info[2]
@@ -281,7 +279,7 @@ def save_info():
 
 	calc_info = [history, ans, options, win_bound]
 
-	dump(calc_info, open(join(calc_path,
+	dump(calc_info, open(os.path.join(calc_path,
 	"re_calc_info.txt"), "wb"))
 
 
@@ -1101,7 +1099,7 @@ def single_argument(m):
 	# e for the constant e
 	try:
 		result = "{:.16f}".format(float(result))
-	except ValueError:
+	except (ValueError, TypeError):
 		pass
 
 	# add back anything that was cut off when finding the
@@ -1261,7 +1259,7 @@ def simplify(s):
 		if i == const_comp:
 			try:
 				s = "{:.16f}".format(float(s))
-			except ValueError:
+			except (ValueError, TypeError):
 				pass
 
 		# checks for the operation
@@ -1425,7 +1423,7 @@ def simplify(s):
 
 				try:
 					result = "{:.16f}".format(result)
-				except ValueError:
+				except (ValueError, TypeError):
 					pass
 
 			# replace the text matched by i: the regular expression
@@ -1434,7 +1432,7 @@ def simplify(s):
 			m = i.search(s)
 	try:
 		s = "{:.16f}".format(s)
-	except ValueError:
+	except (ValueError, TypeError):
 		pass
 	return(s)
 
@@ -1828,7 +1826,8 @@ def tkask(s = None):
 	root.title("Calculator")
 
 	if os.name == "nt":
-		root.iconbitmap(default = join(calc_path, "calc_pic.ico"))
+		root.iconbitmap(default = os.path.join(calc_path,
+		"calc_pic.ico"))
 
 	mess = tk.StringVar()
 	mess.set("Input an expression")
