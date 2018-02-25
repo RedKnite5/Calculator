@@ -18,20 +18,20 @@ setup(
 	"Programming Language :: Python :: 3 :: Only",
 	"Programming Language :: Python :: Implementation :: CPython",
 	"Topic :: Scientific/Engineering :: Mathematics"
-	]
-	install_requires = ["sympy>=1.1.1", "tkinter>=8.6"]
+	],
+	install_requires = ["sympy>=1.1.1", "tkinter>=8.6"],
 	
 	package_data = {
 	"": ["*.ico", "*.txt", "*.py"]
 	},
 	zip_safe = False,
 	
-	url = "https://github.com/RedKnite5/Calculator.git"
+	url = "https://github.com/RedKnite5/Calculator.git",
 	
 	author = "Max Friedman",
 	author_email = "mr.awesome10000@gmail.com",
 	desciption = "This is a basic graphing calculator.",
-	licencse = "GNU"
+	licencse = "GPLv3",
 	keywords = ["Calculator"]
 )
 
