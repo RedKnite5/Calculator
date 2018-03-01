@@ -118,7 +118,7 @@ win_bound = calc_info[3]
 # regular expressions
 if True:
 	# regex for a number
-	reg_num = "(-?[0-9]+\.?[0-9]*j?|-?[0-9]*\.?[0-9]+j?)"
+	reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
 
 	# regex for commands
 	# ^$ is for an empty string
@@ -129,7 +129,7 @@ if True:
 	# regex for constants
 	
 	const_reg = ("(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
-	"(?<!a-z)i(?![a-z])|ans(?:wer)?|tau|τ)")
+	"ans(?:wer)?|tau|τ)")
 	const_comp = compile(const_reg)
 
 	# regex for graphing
@@ -227,7 +227,7 @@ if True:
 	per_comp = compile(per_reg)
 
 	# regex for multiplication (not recursive)
-	mult_reg = reg_num+" ?([*/÷]) ?"+reg_num
+	mult_reg = reg_num + " ?([*/÷]) ?" + reg_num
 	mult_comp = compile(mult_reg)
 
 	# regex for addition (not recursive)
@@ -628,7 +628,7 @@ class graph(object):
 			try:
 				self.root.update()
 			except:
-				pass
+				x = self.xmax + 1
 
 
 class polar_graph(graph):
@@ -719,7 +719,7 @@ class polar_graph(graph):
 			try:
 				self.root.update()
 			except:
-				pass
+				theta = self.theta_max + 1
 
 
 #####################
@@ -737,10 +737,6 @@ def constant_function(m):
 	elif m.group(1) == "e":
 		return(math.e)
 
-	# i (this doesn't really work yet)
-	elif m.group(1) == "i":
-		return(1j)
-
 	# the output of the previous query
 	elif m.group(1) in ("ans", "answer"):
 		return(ans)
@@ -751,7 +747,8 @@ def constant_function(m):
 
 	# should never happen debugging use only
 	else:
-		print(m.group(0))
+		print("Unknown constant: ", m.group(0))
+		raise ValueError
 
 
 def graph_function(m):
@@ -1429,6 +1426,10 @@ def simplify(s):
 			# replace the text matched by i: the regular expression
 			# with the result of the mathematical expression
 			s = sub(i, str(result), s, count = 1)
+			
+			# print("result", "".join(m.groups()), " = ", result)
+			# print("sub",s)
+			
 			m = i.search(s)
 	try:
 		s = "{:.16f}".format(s)
