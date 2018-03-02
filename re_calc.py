@@ -2,7 +2,6 @@
 
 
 #   Calculator\re_calc.py
-#   current
 
 import math
 import statistics as stats
@@ -597,22 +596,22 @@ class graph(object):
 				y = float(evaluate_function(
 					eval_comp.search("eval " + func + " at " + str(x))))
 
-				# find the slope at the point using the derivative
-				# function of simplify
-				try:
-					slope = float(find_derivative(
-						der_comp.search("derivative of "
-						+ func + " at " + str(x))))
-				except:
-					slope = 10
-
-				# calculate how dense the points need to be
-				# this function is somewhat arbitrary
-				density = int((3000 * math.fabs(slope)) / yrang + 500)
-
 				# check if the graph goes off the screen
 				if y > self.ymax or y < self.ymin and density > 2000:
 					denstiy = 2000
+				else:
+					# find the slope at the point using the derivative
+					# function of simplify
+					try:
+						slope = float(find_derivative(
+							der_comp.search("derivative of "
+							+ func + " at " + str(x))))
+					except:
+						slope = 10
+
+					# calculate how dense the points need to be
+					# this function is somewhat arbitrary
+					density = int((3000 * math.fabs(slope)) / yrang + 500)
 
 				# adjust coordinate for the screen (this is the
 				# hard part)
@@ -1572,24 +1571,24 @@ def switch_trig():
 			pass
 
 	# sin cos tan
-	trig_func_buttons[0].grid(row = 3, column = 7)
-	trig_func_buttons[1].grid(row = 3, column = 8)
-	trig_func_buttons[2].grid(row = 3, column = 9)
+	trig_func_buttons[0].grid(row = 3, column = 8)
+	trig_func_buttons[1].grid(row = 3, column = 9)
+	trig_func_buttons[2].grid(row = 3, column = 10)
 
 	# sec csc cot
-	trig_func_buttons[3].grid(row = 4, column = 7)
-	trig_func_buttons[4].grid(row = 4, column = 8)
-	trig_func_buttons[5].grid(row = 4, column = 9)
+	trig_func_buttons[3].grid(row = 4, column = 8)
+	trig_func_buttons[4].grid(row = 4, column = 9)
+	trig_func_buttons[5].grid(row = 4, column = 10)
 
 	# arcsin arccos arctan
-	trig_func_buttons[6].grid(row = 5, column = 7)
-	trig_func_buttons[7].grid(row = 5, column = 8)
-	trig_func_buttons[8].grid(row = 5, column = 9)
+	trig_func_buttons[6].grid(row = 5, column = 8)
+	trig_func_buttons[7].grid(row = 5, column = 9)
+	trig_func_buttons[8].grid(row = 5, column = 10)
 
 	# arcsec arccsc arccot
-	trig_func_buttons[9].grid(row = 6, column = 7)
-	trig_func_buttons[10].grid(row = 6, column = 8)
-	trig_func_buttons[11].grid(row = 6, column = 9)
+	trig_func_buttons[9].grid(row = 6, column = 8)
+	trig_func_buttons[10].grid(row = 6, column = 9)
+	trig_func_buttons[11].grid(row = 6, column = 10)
 
 
 def switch_hyperbolic():
@@ -1609,24 +1608,24 @@ def switch_hyperbolic():
 			pass
 
 	# sinh cosh tanh
-	hyperbolic_func_buttons[0].grid(row = 3, column = 7)
-	hyperbolic_func_buttons[1].grid(row = 3, column = 8)
-	hyperbolic_func_buttons[2].grid(row = 3, column = 9)
+	hyperbolic_func_buttons[0].grid(row = 3, column = 8)
+	hyperbolic_func_buttons[1].grid(row = 3, column = 9)
+	hyperbolic_func_buttons[2].grid(row = 3, column = 10)
 
 	# sech csch coth
-	hyperbolic_func_buttons[3].grid(row = 4, column = 7)
-	hyperbolic_func_buttons[4].grid(row = 4, column = 8)
-	hyperbolic_func_buttons[5].grid(row = 4, column = 9)
+	hyperbolic_func_buttons[3].grid(row = 4, column = 8)
+	hyperbolic_func_buttons[4].grid(row = 4, column = 9)
+	hyperbolic_func_buttons[5].grid(row = 4, column = 10)
 
 	# arcsinh arccosh arctanh
-	hyperbolic_func_buttons[6].grid(row = 5, column = 7)
-	hyperbolic_func_buttons[7].grid(row = 5, column = 8)
-	hyperbolic_func_buttons[8].grid(row = 5, column = 9)
+	hyperbolic_func_buttons[6].grid(row = 5, column = 8)
+	hyperbolic_func_buttons[7].grid(row = 5, column = 9)
+	hyperbolic_func_buttons[8].grid(row = 5, column = 10)
 
 	# arcsech arccsch arccoth
-	hyperbolic_func_buttons[9].grid(row = 6, column = 7)
-	hyperbolic_func_buttons[10].grid(row = 6, column = 8)
-	hyperbolic_func_buttons[11].grid(row = 6, column = 9)
+	hyperbolic_func_buttons[9].grid(row = 6, column = 8)
+	hyperbolic_func_buttons[10].grid(row = 6, column = 9)
+	hyperbolic_func_buttons[11].grid(row = 6, column = 10)
 
 
 def switch_misc():
@@ -1643,24 +1642,24 @@ def switch_misc():
 			pass
 
 	# log ln gamma
-	misc_func_buttons[0].grid(row = 3, column = 7)
-	misc_func_buttons[1].grid(row = 3, column = 8)
-	misc_func_buttons[2].grid(row = 3, column = 9)
+	misc_func_buttons[0].grid(row = 3, column = 8)
+	misc_func_buttons[1].grid(row = 3, column = 9)
+	misc_func_buttons[2].grid(row = 3, column = 10)
 
 	# abs ceil floor
-	misc_func_buttons[3].grid(row = 4, column = 7)
-	misc_func_buttons[4].grid(row = 4, column = 8)
-	misc_func_buttons[5].grid(row = 4, column = 9)
+	misc_func_buttons[3].grid(row = 4, column = 8)
+	misc_func_buttons[4].grid(row = 4, column = 9)
+	misc_func_buttons[5].grid(row = 4, column = 10)
 
 	# erf mod C
-	misc_func_buttons[6].grid(row = 5, column = 7)
-	misc_func_buttons[7].grid(row = 5, column = 8)
-	misc_func_buttons[8].grid(row = 5, column = 9)
+	misc_func_buttons[6].grid(row = 5, column = 8)
+	misc_func_buttons[7].grid(row = 5, column = 9)
+	misc_func_buttons[8].grid(row = 5, column = 10)
 
 	# P
-	misc_func_buttons[9].grid(row = 6, column = 7)
-	# misc_func_buttons[10].grid(row = 3, column = 8)
-	# misc_func_buttons[11].grid(row = 3, column = 9)
+	misc_func_buttons[9].grid(row = 6, column = 8)
+	# misc_func_buttons[10].grid(row = 3, column = 9)
+	# misc_func_buttons[11].grid(row = 3, column = 10)
 	pass
 
 
@@ -1678,22 +1677,22 @@ def switch_stats():
 			pass
 
 	# mean median mode
-	stats_func_buttons[0].grid(row = 3, column = 7)
-	stats_func_buttons[1].grid(row = 3, column = 8)
-	stats_func_buttons[2].grid(row = 3, column = 9)
+	stats_func_buttons[0].grid(row = 3, column = 8)
+	stats_func_buttons[1].grid(row = 3, column = 9)
+	stats_func_buttons[2].grid(row = 3, column = 10)
 
 	# stdev max min
-	stats_func_buttons[3].grid(row = 4, column = 7)
-	stats_func_buttons[4].grid(row = 4, column = 8)
-	stats_func_buttons[5].grid(row = 4, column = 9)
+	stats_func_buttons[3].grid(row = 4, column = 8)
+	stats_func_buttons[4].grid(row = 4, column = 9)
+	stats_func_buttons[5].grid(row = 4, column = 10)
 
-	# stats_func_buttons[6].grid(row = 5, column=7)
-	# stats_func_buttons[7].grid(row = 5, column=8)
-	# stats_func_buttons[8].grid(row = 5, column=9)
+	# stats_func_buttons[6].grid(row = 5, column=8)
+	# stats_func_buttons[7].grid(row = 5, column=9)
+	# stats_func_buttons[8].grid(row = 5, column=10)
 
-	# stats_func_buttons[9].grid(row = 6, column = 7)
-	# misc_func_buttons[10].grid(row = 6, column = 8)
-	# misc_func_buttons[11].grid(row = 6, column = 9)
+	# stats_func_buttons[9].grid(row = 6, column = 8)
+	# misc_func_buttons[10].grid(row = 6, column = 9)
+	# misc_func_buttons[11].grid(row = 6, column = 10)
 	pass
 
 
@@ -1728,14 +1727,18 @@ def format_default_screen():
 	digit_button[17].grid(row = 6, column = 4)  # π
 	digit_button[18].grid(row = 6, column = 5)  # e
 	digit_button[19].grid(row = 3, column = 6)  # (
-	digit_button[20].grid(row = 4, column = 6)  # )
-	digit_button[21].grid(row = 5, column = 6)  # ,
+	digit_button[20].grid(row = 3, column = 7)  # )
+	digit_button[21].grid(row = 4, column = 6)  # |
+	digit_button[22].grid(row = 4, column = 7)  # ,
+	digit_button[23].grid(row = 5, column = 6)  # ∫
+	digit_button[24].grid(row = 5, column = 7)  # x
+	
 
 	equals_button.grid(row = 6, column = 2)  # =
-	back_button.grid(row = 3, column = 11)  # backspace
+	back_button.grid(row = 3, column = 12)  # backspace
 
 	# the functions menubutton
-	menubar.grid(row = 3, column = 10)
+	menubar.grid(row = 3, column = 11)
 
 	switch_trig()
 
@@ -1840,11 +1843,12 @@ def tkask(s = None):
 
 	# input text widget
 	input_widget = tk.Entry(root, width = 90)
-	input_widget.grid(row = 1, column = 0, columnspan = 11)
+	input_widget.grid(row = 1, column = 0, columnspan = 12)
 
 	# list of basic buttons
 	button_keys = list(range(10)) + [
-		".", "+", "-", "*", "÷", "^", "!", "π", "e", "(", ")", ","]
+		".", "+", "-", "*", "÷", "^", "!", "π", "e", "(", ")", "|",
+		",", "∫", "x"]
 
 	# creating of the basic buttons
 	digit_button = list(tk.Button(root, text = str(i),
