@@ -60,9 +60,8 @@ except ModuleNotFoundError:
 32) 3d graphs
 34) make icon of tkinter window when run on Fedora
 35) make compatible with other operating systems
-36) fix polar graphing of cardioid
-37) fix 2-2*sin(6)
-38) 
+36) fix subtraction problem
+37) 
 '''
 
 
