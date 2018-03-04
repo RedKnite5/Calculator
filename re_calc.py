@@ -64,7 +64,6 @@ except ModuleNotFoundError:
 37) 
 '''
 
-
 '''  Test inputs
 log(mean(ln(e^2),ln(e**2),mode(4),4*sin(arccos(-1)/2))+C(5C1,1),2!) = 3
 graph x/2 -1 from -10 to 2
@@ -83,22 +82,7 @@ graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
 
-# variables used in multiple functions
-x_min_str, x_max_str, y_min_str, y_max_str = (None, None, None, None)
-x_min_entry, x_max_entry, y_min_entry, y_max_entry = (None,
-	None, None, None)
-theta_min_str, theta_max_str = (None, None)
-theta_min_entry, theta_max_entry = (None, None)
-input_widget = None
-equals_button = None
-back_button = None
-menubar = None
 up_hist = 0
-digit_button = []
-trig_func_buttons = []
-hyperbolic_func_buttons = []
-misc_func_buttons = []
-stats_func_buttons = []
 
 # multi session variables
 calc_path = os.path.abspath(os.path.dirname(__file__))
