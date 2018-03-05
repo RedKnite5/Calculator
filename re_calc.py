@@ -97,6 +97,7 @@ der_approx = options[2]  # default = .0001
 hist_len = options[3]
 win_bound = calc_info[3]
 
+
 # regular expressions
 if True:
 	# regex for a number
@@ -385,42 +386,21 @@ def change_der_approx_win():
 def change_graph_win_set():
 	"""Change the graphing window bounds."""
 
-	global win_bound
-	global x_min_str, x_max_str, y_min_str, y_max_str
-	global x_min_entry, x_max_entry, y_min_entry, y_max_entry
-	global theta_min_str, theta_max_str
-	global theta_min_entry, theta_max_entry
+	global win_bound, g_bound_entry, g_bound_string 
 
-	xmin_in = x_min_entry.get()
-	xmax_in = x_max_entry.get()
-	ymin_in = y_min_entry.get()
-	ymax_in = y_max_entry.get()
-	theta_min_in = theta_min_entry.get()
-	theta_max_in = theta_max_entry.get()
+	g_bound_input = {}
+	for i in g_bound_names:
+		g_bound_input[i] = g_bound_entry[i].get()
 
-	if check_if_float(xmin_in):
-		win_bound["xmin"] = float(xmin_in)
-	if check_if_float(xmax_in):
-		win_bound["xmax"] = float(xmax_in)
-	if check_if_float(ymin_in):
-		win_bound["ymin"] = float(ymin_in)
-	if check_if_float(ymax_in):
-		win_bound["ymax"] = float(ymax_in)
-	if check_if_float(theta_min_in):
-		win_bound["theta_max"] = float(theta_max_in)
-	if check_if_float(theta_max_in):
-		win_bound["theta_max"] = float(theta_max_in)
+	for i in g_bound_names:
+		if check_if_float(g_bound_input[i]):
+			win_bound[i] = float(g_bound_input[i])
 
 	save_info()
 
-	x_min_str.set("x min = " + str(win_bound["xmin"]))
-	x_max_str.set("x max = " + str(win_bound["xmax"]))
-	y_min_str.set("y min = " + str(win_bound["ymin"]))
-	y_max_str.set("y max = " + str(win_bound["ymax"]))
-	theta_min_str.set("theta min = " + str(win_bound["theta_min"]))
-	theta_max_str.set("theta max = " + str(win_bound["theta_max"]))
+	for i in g_bound_names:
+		g_bound_string[i].set(i + " = " + str(win_bound[i]))
 	
-
 
 def find_match(s):
 	"""Find matching parentheses."""
@@ -752,8 +732,8 @@ def graph_function(m):
 
 		# sets bounds to bounds given
 		if range_m is None:
-			temp_graph_xmin = win_bound["xmin"]
-			temp_graph_xmax = win_bound["xmax"]
+			temp_graph_xmin = win_bound["x min"]
+			temp_graph_xmax = win_bound["x max"]
 		else:
 			temp_graph_xmin = float(m.group(3))
 			temp_graph_xmax = float(m.group(4))
@@ -762,14 +742,14 @@ def graph_function(m):
 		if polar_mode is False:
 			made_graph = graph(
 				xmin = temp_graph_xmin, xmax = temp_graph_xmax,
-				ymin = win_bound["ymin"], ymax = win_bound["ymax"],
+				ymin = win_bound["y min"], ymax = win_bound["y max"],
 				wide = graph_w, high = graph_h)
 		else:
 			made_graph = polar_graph(
 				xmin = temp_graph_xmin, xmax = temp_graph_xmax,
-				ymin = win_bound["ymin"], ymax = win_bound["ymax"],
-				theta_min = win_bound["theta_min"],
-				theta_max = win_bound["theta_max"],
+				ymin = win_bound["y min"], ymax = win_bound["y max"],
+				theta_min = win_bound["theta min"],
+				theta_max = win_bound["theta max"],
 				wide = graph_w, high = graph_h)
 
 		# works out how many times it needs to
@@ -1738,64 +1718,33 @@ def switch_matrices():
 def edit_graph_window():
 	"""Change the graph window options."""
 
-	global x_min_str, x_max_str, y_min_str, y_max_str
-	global x_min_entry, x_max_entry, y_min_entry, y_max_entry
-	global theta_min_str, theta_max_str
-	global theta_min_entry, theta_max_entry
+	global g_bound_names, g_bound_entry, g_bound_string
+	
+	g_bound_names = ("x min", "x max", "y min", "y max", "theta min",
+	"theta max")
 
 	root = tk.Toplevel()
-
-	x_min_entry = tk.Entry(root)
-	x_max_entry = tk.Entry(root)
-	y_min_entry = tk.Entry(root)
-	y_max_entry = tk.Entry(root)
-	theta_min_entry = tk.Entry(root)
-	theta_max_entry = tk.Entry(root)
-
-	x_min_str = tk.StringVar()
-	x_min_str.set("x min = " + str(win_bound["xmin"]))
-
-	x_max_str = tk.StringVar()
-	x_max_str.set("x max = " + str(win_bound["xmax"]))
-
-	y_min_str = tk.StringVar()
-	y_min_str.set("y min = " + str(win_bound["ymin"]))
-
-	y_max_str = tk.StringVar()
-	y_max_str.set("y max = " + str(win_bound["ymax"]))
 	
-	theta_min_str = tk.StringVar()
-	theta_min_str.set("theta min = " + str(win_bound["theta_min"]))
-	
-	theta_max_str = tk.StringVar()
-	theta_max_str.set("theta max = " + str(win_bound["theta_max"]))
+	g_bound_entry = {}
+	for i in g_bound_names:
+		g_bound_entry[i] = tk.Entry(root)
 
-	x_min_disp = tk.Message(root, textvariable = x_min_str,
-	width = 100)
-	x_max_disp = tk.Message(root, textvariable = x_max_str,
-	width = 100)
-	y_min_disp = tk.Message(root, textvariable = y_min_str,
-	width = 100)
-	y_max_disp = tk.Message(root, textvariable = y_max_str,
-	width = 100)
-	theta_min_disp = tk.Message(root, textvariable = theta_min_str,
-	width = 100)
-	theta_max_disp = tk.Message(root, textvariable = theta_max_str,
-	width = 100)
+	g_bound_string = {}
+	for i in g_bound_names:
+		g_bound_string[i] = tk.StringVar()
+		g_bound_string[i].set(i + " = " + str(win_bound[i]))
 
-	x_min_disp.grid(row = 0, column = 0)
-	x_max_disp.grid(row = 1, column = 0)
-	y_min_disp.grid(row = 2, column = 0)
-	y_max_disp.grid(row = 3, column = 0)
-	theta_min_disp.grid(row = 4, column = 0)
-	theta_max_disp.grid(row = 5, column = 0)
+	g_bound_disp = {}
+	for i in g_bound_names:
+		g_bound_disp[i] = tk.Message(root,
+		textvariable = g_bound_string[i],
+		width = 100)
 
-	x_min_entry.grid(row = 0, column = 1)
-	x_max_entry.grid(row = 1, column = 1)
-	y_min_entry.grid(row = 2, column = 1)
-	y_max_entry.grid(row = 3, column = 1)
-	theta_min_entry.grid(row = 4, column = 1)
-	theta_max_entry.grid(row = 5, column = 1)
+	for counter, key in enumerate(g_bound_disp):
+		g_bound_disp[key].grid(row = counter, column = 0)
+
+	for counter, key in enumerate(g_bound_entry):
+		g_bound_entry[key].grid(row = counter, column = 1)
 
 	root.bind("<Return>", lambda a: change_graph_win_set())
 
