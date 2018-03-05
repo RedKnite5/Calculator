@@ -111,7 +111,7 @@ if True:
 	# regex for constants
 	
 	const_reg = ("(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
-	"ans(?:wer)?|tau|τ)")
+	"ans(?:wer)?|tau|τ|phi|φ)")
 	const_comp = compile(const_reg)
 
 	# regex for graphing
@@ -726,6 +726,9 @@ def constant_function(m):
 	# tau (equivalent to 2*pi)
 	elif m.group(1) in ("tau", "τ"):
 		return(math.tau)
+		
+	elif m.group(1) in ("phi", "φ"):
+		return((1 + 5 ** 0.5) / 2)
 
 	# should never happen debugging use only
 	else:
