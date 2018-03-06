@@ -97,6 +97,9 @@ der_approx = options[2]  # default = .0001
 hist_len = options[3]
 win_bound = calc_info[3]
 
+key_binds = {"nt": (13, 38, 40), "posix": (104, 111, 116)}
+g_bound_names = ("x min", "x max", "y min", "y max", "theta min",
+	"theta max")
 
 # regular expressions
 if True:
@@ -124,11 +127,12 @@ if True:
 	alg_comp = compile(alg_reg)
 
 	# regex for evaluating functions
-	eval_reg = "[Ee]val(?:uate)? (.+?) (?:for|at) (.+)"
+	eval_reg = ("[Ee]val(?:uate)? (.+) (?:for|at) (.+)")
 	eval_comp = compile(eval_reg)
 
 	# regex for derivatives (must be at a number)
-	der_reg = "[Dd]erivative of (.+) at "+reg_num
+	der_reg = ("[Dd]erivative of (.+) at (.+?)"
+	"( with respect to [a-z])?")
 	der_comp = compile(der_reg)
 
 	# regex for integrals (bounds must be numbers)
@@ -147,7 +151,7 @@ if True:
 	ave_comp = compile(ave_reg)
 
 	# regex for one argument functions
-	# the order does matter because of trig functions come
+	# the order does matter because if trig functions come
 	# before hyperbolic functions the "h" is interpreted as
 	# part of the argument for the function
 	trig_reg = ("("
@@ -503,6 +507,9 @@ class graph(object):
 		self.xmax = xmax
 		self.ymin = ymin
 		self.ymax = ymax
+		
+		self.xrang = self.xmax - self.xmin
+		self.yrang = self.ymax - self.ymin
 
 		# dimensions of the window
 		self.wide = wide
@@ -547,17 +554,14 @@ class graph(object):
 
 		density = 1000
 		x = self.xmin
-		xrang = self.xmax - self.xmin
-		yrang = self.ymax - self.ymin
 
 		while x < self.xmax:
 
 			# move the x coordinate a little
-			x += xrang / density
+			x += self.xrang / density
 			try:
 				# eval the function at x and set that to y
-				y = float(evaluate_function(
-					eval_comp.search("eval " + func + " at " + str(x))))
+				y = float(evaluate_function(func, str(x)))
 
 				# check if the graph goes off the screen
 				if y > self.ymax or y < self.ymin and density > 2000:
@@ -566,20 +570,20 @@ class graph(object):
 					# find the slope at the point using the derivative
 					# function of simplify
 					try:
-						slope = float(find_derivative(
-							der_comp.search("derivative of "
-							+ func + " at " + str(x))))
+						slope = float(find_derivative(func, str(x)))
 					except:
 						slope = 10
 
 					# calculate how dense the points need to be
 					# this function is somewhat arbitrary
-					density = int((3000 * math.fabs(slope)) / yrang + 500)
+					density = int((3000 * math.fabs(slope))
+					/ self.yrang + 500)
 
 				# adjust coordinate for the screen (this is the
 				# hard part)
-				a = (x-self.xmin) * self.wide / xrang
-				b = self.high - ((y - self.ymin) * self.high / yrang)
+				a = (x-self.xmin) * self.wide / self.xrang
+				b = self.high - ((y - self.ymin) * self.high
+				/ self.yrang)
 
 				# draw the point
 				self.screen.create_line(a, b, a + 1, b, fill = color)
@@ -602,58 +606,31 @@ class polar_graph(graph):
 	wide = 400, high = 400):  # all the arguments you pass the object
 		"""Initialize polar graphing window."""
 
-		self.root = tk.Toplevel()
-
-		self.root.title("Calculator")
-
-		# sets bounds
-		self.xmin = xmin
-		self.xmax = xmax
-		self.ymin = ymin
-		self.ymax = ymax
+		super(polar_graph, self).__init__(
+		xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+		wide = wide, high = high)
+		
 		self.theta_min = theta_min
 		self.theta_max = theta_max
 
-		# dimensions of the window
-		self.wide = wide
-		self.high = high
-
-		# create the canvas
-		self.screen = tk.Canvas(self.root,
-		width = wide, height = high)
-		self.screen.pack()
-
-		# button that close the window and program immediately
-		self.close = tk.Button(self.root, text = "Close",
-		command = self.root.destroy)
-		self.close.pack()
-
-		# draw axes
-		self.axes()
+		self.theta_rang = self.theta_max - self.theta_min
 
 	def draw(self, func, color = "black"):
 		"""Draw a polar function."""
 
 		density = 1000
 		theta = self.theta_min
-		theta_rang = self.theta_max - self.theta_min
-		xrang = self.xmax - self.xmin
-		yrang = self.ymax - self.ymin
 
 		while theta < self.theta_max:
 
 			# move theta a little
-			theta += theta_rang / density
+			theta += self.theta_rang / density
 			try:
 				# eval the function at theta and set that to r
-				r = float(evaluate_function(
-					eval_comp.search("eval "
-					+ func + " at " + str(theta))))
+				r = float(evaluate_function(func, str(theta)))
 
 				# find the slope at the point using find_derivative
-				slope = float(find_derivative(
-					der_comp.search("derivative of " + func + " at "
-					+ str(theta))))
+				slope = float(find_derivative(func, str(theta)))
 
 				x = r * math.cos(theta)
 				y = r * math.sin(theta)
@@ -669,8 +646,9 @@ class polar_graph(graph):
 
 				# adjust coordinate for the
 				# screen (this is the hard part)
-				a = (x - self.xmin) * self.wide / xrang
-				b = self.high - ((y - self.ymin) * self.high / yrang)
+				a = (x - self.xmin) * self.wide / self.xrang
+				b = self.high - ((y - self.ymin) * self.high
+				/self.yrang)
 
 				# draw the point
 				self.screen.create_line(a, b, a + 1, b, fill = color)
@@ -691,29 +669,11 @@ class polar_graph(graph):
 def constant_function(m):
 	"""Evaluate mathematical constants."""
 
-	# pi
-	if m.group(1) in ("pi", "π"):
-		return(math.pi)
-
-	# e
-	elif m.group(1) == "e":
-		return(math.e)
-
-	# the output of the previous query
-	elif m.group(1) in ("ans", "answer"):
-		return(ans)
-
-	# tau (equivalent to 2*pi)
-	elif m.group(1) in ("tau", "τ"):
-		return(math.tau)
-		
-	elif m.group(1) in ("phi", "φ"):
-		return((1 + 5 ** 0.5) / 2)
-
-	# should never happen debugging use only
-	else:
-		print("Unknown constant: ", m.group(0))
-		raise ValueError
+	constant_dict = {"pi": math.pi, "π": math.pi, "e": math.e,
+	"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
+	"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2}
+	
+	return(constant_dict[m.group(1)])
 
 
 def graph_function(m):
@@ -810,31 +770,31 @@ def solve_equations(m):
 			return(temp_result)
 
 
-def evaluate_function(m):
+def evaluate_function(expression, point, var = "x"):
 	"""Evaluate the function by substituting x for the number you
 	want to evaluate at.
 	"""
 
 	# substituting the point for x in the function and evaluating
 	# that recursively
-	return(simplify(sub("(?<![a-z])x",
-	m.group(2), m.group(1))))
+	return(simplify(sub("(?<![a-z])" + var + "(?![a-z])",
+	point, expression)))
 
 
-def find_derivative(m):
+def find_derivative(expression, point, var = "x"):
 	"""Calculate the derivative by evaluating the slope
 	between two points on either side of the point you are
 	finding the derivative of.
 	"""
 
 	# find the point on either side of the desired point
-	x_one = float(m.group(2)) + der_approx
-	x_two = float(m.group(2)) - der_approx
+	p = float(simplify(point))
+	x_one = p + der_approx
+	x_two = p - der_approx
 
 	# find the change in y value between the two points
-	delta_y = float(simplify("eval " + m.group(1) + " for "
-	+ str(x_one))) - float(simplify("eval " + m.group(1) + " for "
-	+ str(x_two)))
+	delta_y = (float(evaluate_function(expression, str(x_one), var = var))
+	- float(evaluate_function(expression, str(x_two), var = var)))
 
 	# divide by the length of the interval to find the slope
 	return(delta_y / (2 * der_approx))
@@ -1267,11 +1227,15 @@ def simplify(s):
 
 			elif i == eval_comp:
 
-				result = evaluate_function(m)
+				result = evaluate_function(m.group(1), m.group(2))
 
 			elif i == der_comp:
 
-				result = find_derivative(m)
+				if m.group(3) is not None:
+					result = find_derivative(m.group(1), m.group(2),
+					var = m.group(3)[-1])
+				else:
+					result = find_derivative(m.group(1), m.group(2))
 
 			elif i == int_comp:
 
@@ -1328,9 +1292,9 @@ def simplify(s):
 
 			elif i in (mod_comp, mod2_comp):
 
-				# modulus written as both mod(x, y) and x%y
+				# modulus written as both mod(x, y) and x % y
 				# where x is the dividend and y is the divisor
-				# if written as x%y it will only take numbers
+				# if written as x % y it will only take numbers
 				# for arguments. In order of operations modulus comes
 				# after exponents and factorials, but before
 				# multiplication and division
@@ -1445,8 +1409,6 @@ def key_pressed(event):
 		code = event.keycode
 	except AttributeError:
 		code = event
-
-	key_binds = {"nt":(13, 38, 40), "posix":(104, 111, 116)}
 
 	# print(code)
 
@@ -1715,13 +1677,26 @@ def switch_matrices():
 	pass
 
 
+def graph_win_key_press(event, index):
+	'''Deal with keypresses while editing the graph window.'''
+
+	global g_bound_entry
+	
+	try:
+		code = event.keycode
+	except AttributeError:
+		code = event
+
+	if code == key_binds[os.name][1] and index > 0:
+		g_bound_entry[g_bound_names[index - 1]].focus()
+	if code == key_binds[os.name][2] and\
+		index < len(g_bound_names) - 1:
+		g_bound_entry[g_bound_names[index + 1]].focus()
+
 def edit_graph_window():
 	"""Change the graph window options."""
 
-	global g_bound_names, g_bound_entry, g_bound_string
-	
-	g_bound_names = ("x min", "x max", "y min", "y max", "theta min",
-	"theta max")
+	global g_bound_entry, g_bound_string
 
 	root = tk.Toplevel()
 	
@@ -1747,6 +1722,10 @@ def edit_graph_window():
 		g_bound_entry[key].grid(row = counter, column = 1)
 
 	root.bind("<Return>", lambda a: change_graph_win_set())
+	
+	for index, val in enumerate(g_bound_names):
+		g_bound_entry[val].bind("<Key>",
+			lambda event, i = index: graph_win_key_press(event, i))
 
 	root.mainloop()
 

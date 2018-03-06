@@ -5,10 +5,10 @@ import tkinter as tk
 def matrix():
 	"""Create a matrix window."""
 	
-	root = tk.Tk()
+	root = tk.Toplevel()
 	
 	display_text = tk.StringVar()
-	display_text.set("Matrix 1")
+	display_text.set("Matrix A")
 	
 	display = tk.Message(root,textvariable=display_text)
 	display.grid(row=0, column=0)
@@ -28,8 +28,16 @@ def matrix():
 
 x = matrix()
 '''
+root = tk.Tk()
 
-print(g)
+
+def print_key(event):
+	print(event.keycode)
+
+root.bind("<Key>",print_key)
+root.mainloop()
+
+
 
 
 
