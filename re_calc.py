@@ -61,7 +61,7 @@ except ModuleNotFoundError:
 34) make icon of tkinter window when run on Fedora
 35) make compatible with other operating systems
 36) fix subtraction problem
-37) 
+37)
 '''
 
 '''  Test inputs
@@ -72,9 +72,9 @@ solve(2*r+4=r) for r  = -4
 
 # os handling
 if os.name == "nt":
-    user_path = os.environ["USERPROFILE"]
+	user_path = os.environ["USERPROFILE"]
 elif os.name == "posix":
-    user_path = os.environ["HOME"]
+	user_path = os.environ["HOME"]
 
 # changeable variables
 use_gui = True
@@ -113,7 +113,6 @@ if True:
 	command_comp = compile(command_reg)
 
 	# regex for constants
-	
 	const_reg = ("(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
 	"ans(?:wer)?|tau|τ|phi|φ)")
 	const_comp = compile(const_reg)
@@ -177,7 +176,7 @@ if True:
 	# regex for modulus
 	mod2_reg = "[Mm]od(.+)"
 	mod2_comp = compile(mod2_reg)
-	
+
 	# regex for detecting absolute value
 	abs_reg = "(.*\|.*)"
 	abs_comp = compile(abs_reg)
@@ -223,14 +222,14 @@ if True:
 
 # list of compiled regular expressions in order
 operations = [command_comp, const_comp, graph_comp,
- alg_comp, eval_comp, der_comp, int_comp,
- comb_comp, ave_comp, trig_comp, gamma_comp, log_comp, mod2_comp,
- abs_comp, paren_comp,
- # here is where the order of operations starts to matter
- # it goes: choose notation(nCm), exponents, factorial,
- # modulus, multiplication, addition
- comma_comp, choos_comp,
- exp_comp, fact_comp, mod_comp, per_comp, mult_comp, add_comp]
+	alg_comp, eval_comp, der_comp, int_comp,
+	comb_comp, ave_comp, trig_comp, gamma_comp, log_comp, mod2_comp,
+	abs_comp, paren_comp,
+	# here is where the order of operations starts to matter
+	# it goes: choose notation(nCm), exponents, factorial,
+	# modulus, multiplication, addition
+	comma_comp, choos_comp,
+	exp_comp, fact_comp, mod_comp, per_comp, mult_comp, add_comp]
 
 #######################################################
 # regular expressions not used on the immediate input #
@@ -390,7 +389,7 @@ def change_der_approx_win():
 def change_graph_win_set():
 	"""Change the graphing window bounds."""
 
-	global win_bound, g_bound_entry, g_bound_string 
+	global win_bound, g_bound_entry, g_bound_string
 
 	g_bound_input = {}
 	for i in g_bound_names:
@@ -404,7 +403,7 @@ def change_graph_win_set():
 
 	for i in g_bound_names:
 		g_bound_string[i].set(i + " = " + str(win_bound[i]))
-	
+
 
 def find_match(s):
 	"""Find matching parentheses."""
@@ -507,7 +506,7 @@ class graph(object):
 		self.xmax = xmax
 		self.ymin = ymin
 		self.ymax = ymax
-		
+
 		self.xrang = self.xmax - self.xmin
 		self.yrang = self.ymax - self.ymin
 
@@ -571,7 +570,7 @@ class graph(object):
 					# function of simplify
 					try:
 						slope = float(find_derivative(func, str(x)))
-					except:
+					except Exception as e:
 						slope = 10
 
 					# calculate how dense the points need to be
@@ -587,13 +586,13 @@ class graph(object):
 
 				# draw the point
 				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except:
+			except Exception as e:
 				pass
 
 			# update the screen
 			try:
 				self.root.update()
-			except:
+			except Exception as e:
 				x = self.xmax + 1
 
 
@@ -607,9 +606,9 @@ class polar_graph(graph):
 		"""Initialize polar graphing window."""
 
 		super(polar_graph, self).__init__(
-		xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
-		wide = wide, high = high)
-		
+			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+			wide = wide, high = high)
+
 		self.theta_min = theta_min
 		self.theta_max = theta_max
 
@@ -648,17 +647,17 @@ class polar_graph(graph):
 				# screen (this is the hard part)
 				a = (x - self.xmin) * self.wide / self.xrang
 				b = self.high - ((y - self.ymin) * self.high
-				/self.yrang)
+				/ self.yrang)
 
 				# draw the point
 				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except:
+			except Exception as e:
 				pass
 
 			# update the screen
 			try:
 				self.root.update()
-			except:
+			except Exception as e:
 				theta = self.theta_max + 1
 
 
@@ -672,7 +671,7 @@ def constant_function(m):
 	constant_dict = {"pi": math.pi, "π": math.pi, "e": math.e,
 	"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
 	"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2}
-	
+
 	return(constant_dict[m.group(1)])
 
 
@@ -1139,7 +1138,8 @@ def abs_value(input):
 
 	for i in range(len(parts)):
 		if parts[i].startswith(("+", "*", "^", "/")) or\
-		parts[i].endswith(("+", "*", "^", "/", "-")) or not parts[i]:
+			parts[i].endswith(("+", "*", "^", "/", "-")) or\
+			not parts[i]:
 			pass
 
 		else:
@@ -1355,10 +1355,10 @@ def simplify(s):
 			# replace the text matched by i: the regular expression
 			# with the result of the mathematical expression
 			s = sub(i, str(result), s, count = 1)
-			
+
 			# print("result", "".join(m.groups()), " = ", result)
 			# print("sub",s)
-			
+
 			m = i.search(s)
 	try:
 		s = "{:.16f}".format(s)
@@ -1458,7 +1458,7 @@ def get_input():
 
 	# save history to file
 	save_info()
-	
+
 	if s == "":
 		if os.name == "posix":
 			print("exit")
@@ -1660,7 +1660,6 @@ def format_default_screen():
 	digit_button[22].grid(row = 4, column = 7)  # ,
 	digit_button[23].grid(row = 5, column = 6)  # ∫
 	digit_button[24].grid(row = 5, column = 7)  # x
-	
 
 	equals_button.grid(row = 6, column = 2)  # =
 	back_button.grid(row = 3, column = 12)  # backspace
@@ -1678,10 +1677,10 @@ def switch_matrices():
 
 
 def graph_win_key_press(event, index):
-	'''Deal with keypresses while editing the graph window.'''
+	'''Deal with key presses while editing the graph window.'''
 
 	global g_bound_entry
-	
+
 	try:
 		code = event.keycode
 	except AttributeError:
@@ -1693,39 +1692,35 @@ def graph_win_key_press(event, index):
 		index < len(g_bound_names) - 1:
 		g_bound_entry[g_bound_names[index + 1]].focus()
 
+
 def edit_graph_window():
 	"""Change the graph window options."""
 
 	global g_bound_entry, g_bound_string
 
 	root = tk.Toplevel()
-	
+
 	g_bound_entry = {}
-	for i in g_bound_names:
-		g_bound_entry[i] = tk.Entry(root)
-
 	g_bound_string = {}
-	for i in g_bound_names:
-		g_bound_string[i] = tk.StringVar()
-		g_bound_string[i].set(i + " = " + str(win_bound[i]))
-
 	g_bound_disp = {}
-	for i in g_bound_names:
-		g_bound_disp[i] = tk.Message(root,
-		textvariable = g_bound_string[i],
-		width = 100)
-
-	for counter, key in enumerate(g_bound_disp):
-		g_bound_disp[key].grid(row = counter, column = 0)
-
-	for counter, key in enumerate(g_bound_entry):
-		g_bound_entry[key].grid(row = counter, column = 1)
-
-	root.bind("<Return>", lambda a: change_graph_win_set())
-	
 	for index, val in enumerate(g_bound_names):
+		g_bound_entry[val] = tk.Entry(root)
+
+		g_bound_entry[val].grid(row = index, column = 1)
+
+		g_bound_string[val] = tk.StringVar()
+		g_bound_string[val].set(val + " = " + str(win_bound[val]))
+
+		g_bound_disp[val] = tk.Message(root,
+			textvariable = g_bound_string[val],
+			width = 100)
+
+		g_bound_disp[val].grid(row = index, column = 0)
+
 		g_bound_entry[val].bind("<Key>",
 			lambda event, i = index: graph_win_key_press(event, i))
+
+	root.bind("<Return>", lambda a: change_graph_win_set())
 
 	root.mainloop()
 
