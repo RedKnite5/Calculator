@@ -28,14 +28,11 @@ def matrix():
 
 x = matrix()
 '''
-root = tk.Tk()
 
 
-def print_key(event):
-	print(event.keycode)
 
-root.bind("<Key>",print_key)
-root.mainloop()
+
+
 
 
 

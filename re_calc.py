@@ -16,6 +16,7 @@ from sympy.solvers import solve
 
 try:
 	import tkinter as tk
+	from _tkinter import TclError
 except ModuleNotFoundError:
 	pass
 
@@ -135,7 +136,7 @@ if True:
 	der_comp = compile(der_reg)
 
 	# regex for integrals (bounds must be numbers)
-	int_reg = ("(?:[Ii]ntegra(?:te|l)|∫) (.+)d([a-z])"
+	int_reg = ("(?:[Ii]ntegra(?:te ?|l ?)|∫)(.+)d([a-z])"
 	" (?:from )?"+reg_num+" to "+reg_num)
 	int_comp = compile(int_reg)
 
@@ -429,9 +430,8 @@ def find_match(s):
 
 	try:
 		return(an, left)
-	except Exception:
-		print("error ", s, " is an invalid input.")
-		raise ValueError
+	except UnboundLocalError:
+		raise ValueError("error '" + str(s) + "' is an invalid input.")
 
 
 def brackets(s):
@@ -529,7 +529,7 @@ class graph(object):
 
 	# draw the axes
 	def axes(self):
-		"""Draw the axis on a Cartesian graph."""
+		"""Draw the axis."""
 
 		xrang = self.xmax - self.xmin
 		yrang = self.ymax - self.ymin
@@ -537,16 +537,19 @@ class graph(object):
 		# adjusted y coordinate of x-axis
 		b = self.high + (self.ymin * self.high / yrang)
 
-		# draw x-axis
-		self.screen.create_line(0, b, self.wide, b, fill = "gray")
-
 		# adjusted x coordinate of y-axis
 		a = -1 * self.xmin * self.wide / xrang
 
-		# draw y-axis
-		self.screen.create_line(a, self.high, a, 0, fill = "gray")
+		try:
+			# draw x-axis
+			self.screen.create_line(0, b, self.wide, b, fill = "gray")
 
-		self.root.update()
+			# draw y-axis
+			self.screen.create_line(a, self.high, a, 0, fill = "gray")
+
+			self.root.update()
+		except TclError as e:
+			pass
 
 	def draw(self, func, color = "black"):
 		"""Draw a Cartesian function."""
@@ -570,7 +573,8 @@ class graph(object):
 					# function of simplify
 					try:
 						slope = float(find_derivative(func, str(x)))
-					except Exception as e:
+					except (ValueError) as e:
+						print("slope")
 						slope = 10
 
 					# calculate how dense the points need to be
@@ -586,13 +590,14 @@ class graph(object):
 
 				# draw the point
 				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except Exception as e:
+			except (ValueError, TclError) as e:
 				pass
 
 			# update the screen
 			try:
 				self.root.update()
-			except Exception as e:
+			except TclError as e:
+				print(e)
 				x = self.xmax + 1
 
 
@@ -651,13 +656,13 @@ class polar_graph(graph):
 
 				# draw the point
 				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except Exception as e:
+			except (ValueError, TclError) as e:
 				pass
 
 			# update the screen
 			try:
 				self.root.update()
-			except Exception as e:
+			except TclError as e:
 				theta = self.theta_max + 1
 
 
@@ -665,21 +670,21 @@ class polar_graph(graph):
 # List of Functions #
 #####################
 
-def constant_function(m):
+def constant_function(constant):
 	"""Evaluate mathematical constants."""
 
 	constant_dict = {"pi": math.pi, "π": math.pi, "e": math.e,
 	"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
 	"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2}
 
-	return(constant_dict[m.group(1)])
+	return(constant_dict[constant])
 
 
 def graph_function(m):
 	"""Graph the given function."""
 
 	# looks for x bounds on the graph
-	range_m = graph_rang_comp.search(m.group(1))
+	range_m = graph_rang_comp.search(m)
 	if range_m is not None:
 		m = range_m
 
@@ -725,18 +730,18 @@ def graph_function(m):
 		print("Could not graph. Tkinter is not installed")
 
 
-def solve_equations(m):
+def solve_equations(equation):
 	"""Solve equations using sympy. If there is no equals
 	sign it is assumed the expression equals zero.
 	"""
 
 	# find if there is a specified variable
-	varm = alg_var_comp.search(m.group(1))
+	varm = alg_var_comp.search(equation)
 
 	# find the variable its solving for. defaults to "x"
 	if varm is None:
 		x = symbols("x")
-		eq = m.group(1)
+		eq = equation
 	else:
 		# used to be symbols(varm.group(2)[-1]) don't know why
 		# may have been important
@@ -799,7 +804,7 @@ def find_derivative(expression, point, var = "x"):
 	return(delta_y / (2 * der_approx))
 
 
-def integrate_function(m):
+def integrate_function(expression, var, a, b):
 	"""Integrate with sympy."""
 
 	# Integrals must be in a form that sympy can integrate
@@ -807,8 +812,7 @@ def integrate_function(m):
 	# The integral must have a "dx" or whatever variable you are using
 
 	# using sympy to integrate
-	return(integrate(m.group(1),
-	(m.group(2), m.group(3), m.group(4))))
+	return(integrate(expression, (var, a, b)))
 
 
 def combinations_and_permutations(m, i):
@@ -871,7 +875,7 @@ def combinations_and_permutations(m, i):
 		return(str(temp_result) + proto_inner[1])
 
 
-def statistics_functions(m):
+def statistics_functions(function, args):
 	"""Perform general statistics functions."""
 
 	# this may in the future include any function that
@@ -880,7 +884,7 @@ def statistics_functions(m):
 	# find the arguments of the function and cut off
 	# everything else
 	# sin(mean(4, 2)) ← the last parenthesis
-	proto_inner = find_match(m.group(2))
+	proto_inner = find_match(args)
 
 	# separate the arguments based on commas that are not
 	# within more than one set of parentheses
@@ -890,17 +894,17 @@ def statistics_functions(m):
 	list_ave = list(map((lambda x: float(simplify(x))), ave_args))
 
 	# perform the different functions
-	if m.group(1).lower() in ("ave", "average", "mean"):
+	if function.lower() in ("ave", "average", "mean"):
 		result = stats.mean(list_ave)
-	if m.group(1).lower() == "median":
+	if function.lower() == "median":
 		result = stats.median(list_ave)
-	if m.group(1).lower() == "mode":
+	if function.lower() == "mode":
 		result = stats.mode(list_ave)
-	if m.group(1).lower() == "max":
+	if function.lower() == "max":
 		result = max(list_ave)
-	if m.group(1).lower() == "min":
+	if function.lower() == "min":
 		result = min(list_ave)
-	if m.group(1).lower() in ("stdev"):
+	if function.lower() in ("stdev"):
 		result = stats.stdev(list_ave)
 
 	# add on anything that was was cut off the end when finding
@@ -909,7 +913,7 @@ def statistics_functions(m):
 	return(str(result) + proto_inner[1])
 
 
-def single_argument(m):
+def single_argument(func, args):
 	"""Evaluate trig functions and other unary operators."""
 
 	global degree_mode
@@ -918,7 +922,7 @@ def single_argument(m):
 	# everything else
 	# tan(sin(π)) ← the last parenthesis when
 	# evaluating sin
-	proto_inner = find_match(m.group(2))
+	proto_inner = find_match(args)
 
 	# looks for the degree symbol in the argument
 	# if the program finds it degree mode is set to true
@@ -934,78 +938,78 @@ def single_argument(m):
 	# check if in degree mode and if its doing an
 	# operation that takes an angle as an argument
 	if degree_mode > 0:
-		if m.group(1) in ("sin", "sec",
+		if func in ("sin", "sec",
 		"cos", "csc", "tan", "cot",
 		"sinh", "cosh", "tanh"):
 			inner = math.pi * inner / 180
 
 	# trig functions and inverse trig functions
-	if m.group(1) == "sin":
+	if func == "sin":
 		result = math.sin(inner)
-	if m.group(1) == "cos":
+	elif func == "cos":
 		result = math.cos(inner)
-	if m.group(1) == "tan":
+	elif func == "tan":
 		result = math.tan(inner)
-	if m.group(1) == "sec":
+	elif func == "sec":
 		result = 1/math.cos(inner)
-	if m.group(1) == "csc":
+	elif func == "csc":
 		result = 1/math.sin(inner)
-	if m.group(1) == "cot":
+	elif func == "cot":
 		result = 1/math.tan(inner)
-	if m.group(1) in ("asin", "arcsin"):
+	elif func in ("asin", "arcsin"):
 		result = math.asin(inner)
-	if m.group(1) in ("acos", "arccos"):
+	elif func in ("acos", "arccos"):
 		result = math.acos(inner)
-	if m.group(1) in ("atan", "arctan"):
+	elif func in ("atan", "arctan"):
 		result = math.atan(inner)
-	if m.group(1) in ("asec", "arcsec"):
+	elif func in ("asec", "arcsec"):
 		result = math.acos(1 / inner)
-	if m.group(1) in ("acsc", "arccsc"):
+	elif func in ("acsc", "arccsc"):
 		result = math.asin(1 / inner)
-	if m.group(1) in ("acot", "arccot"):
+	elif func in ("acot", "arccot"):
 		result = math.atan(1 / inner)
 
 	# hyperbolic functions and inverse hyperbolic functions
-	if m.group(1) == "sinh":
+	elif func == "sinh":
 		result = math.sinh(inner)
-	if m.group(1) == "cosh":
+	elif func == "cosh":
 		result = math.cosh(inner)
-	if m.group(1) == "tanh":
+	elif func == "tanh":
 		result = math.tanh(inner)
-	if m.group(1) == "sech":
+	elif func == "sech":
 		result = 1/math.cosh(inner)
-	if m.group(1) == "csch":
+	elif func == "csch":
 		result = 1/math.sinh(inner)
-	if m.group(1) == "coth":
+	elif func == "coth":
 		result = 1/math.tanh(inner)
-	if m.group(1) in ("asinh", "arcsinh"):
+	elif func in ("asinh", "arcsinh"):
 		result = math.asinh(inner)
-	if m.group(1) in ("acosh", "arccosh"):
+	elif func in ("acosh", "arccosh"):
 		result = math.acosh(inner)
-	if m.group(1) in ("atanh", "arctanh"):
+	elif func in ("atanh", "arctanh"):
 		result = math.atanh(inner)
-	if m.group(1) in ("asech", "arcsech"):
+	elif func in ("asech", "arcsech"):
 		result = math.acosh(1 / inner)
-	if m.group(1) in ("acsch", "arccsch"):
+	elif func in ("acsch", "arccsch"):
 		result = math.asinh(1 / inner)
-	if m.group(1) in ("acoth", "arccoth"):
+	elif func in ("acoth", "arccoth"):
 		result = math.atanh(1 / inner)
 
 	# other single argument functions
-	if m.group(1) == "abs":
+	elif func == "abs":
 		result = math.fabs(inner)
-	if m.group(1) == "ceil":
+	elif func == "ceil":
 		result = math.ceil(inner)
-	if m.group(1) == "floor":
+	elif func == "floor":
 		result = math.floor(inner)
-	if m.group(1) == "erf":
+	elif func == "erf":
 		result = math.erf(inner)
 
 	# checks if its in degree mode (not because of
 	# degree symbols in the argument) and if so
 	# converts the answer to degrees for functions that
 	# output an angle
-	if m.group(1) in ("asin",
+	if func in ("asin",
 	"arcsin", "acos", "arccos", "atan", "arctan",
 	"asinh", "arcsinh", "acosh", "arccosh",
 	"atanh", "arctanh") and degree_mode == 2:
@@ -1030,13 +1034,13 @@ def single_argument(m):
 	return(str(result) + proto_inner[1])
 
 
-def gamma_function(m):
+def gamma_function(arg):
 	"""Use the gamma function."""
 
 	# find the arguments of the function and cut off
 	# everything else
 	# sin(gamma(5)) ← the last parenthesis
-	proto_inner = find_match(m.group(1))
+	proto_inner = find_match(arg)
 
 	# evaluating the argument
 	inner = float(simplify(proto_inner[0]))
@@ -1050,7 +1054,7 @@ def gamma_function(m):
 	return(str(result) + proto_inner[1])
 
 
-def factorial_function(m):
+def factorial_function(arg):
 	"""Evaluate factorials."""
 
 	# interprets x! mathematically as gamma(x + 1)
@@ -1059,7 +1063,7 @@ def factorial_function(m):
 	# but before modulus
 
 	# doing the calculation
-	return(math.gamma(float(m.group(1)) + 1))
+	return(math.gamma(float(arg) + 1))
 
 
 def logarithm(m):
@@ -1214,7 +1218,7 @@ def simplify(s):
 
 			elif i == const_comp:
 
-				result = constant_function(m)
+				result = constant_function(m.group(1))
 
 			elif i == graph_comp:
 
@@ -1223,7 +1227,7 @@ def simplify(s):
 
 			elif i == alg_comp:
 
-				result = solve_equations(m)
+				result = solve_equations(m.group(1))
 
 			elif i == eval_comp:
 
@@ -1239,7 +1243,8 @@ def simplify(s):
 
 			elif i == int_comp:
 
-				result = integrate_function(m)
+				result = integrate_function(m.group(1), m.group(2),
+				m.group(3), m.group(4))
 
 			elif i in (comb_comp, choos_comp):
 
@@ -1247,20 +1252,20 @@ def simplify(s):
 
 			elif i == ave_comp:
 
-				result = statistics_functions(m)
+				result = statistics_functions(m.group(1), m.group(2))
 
 			elif i == trig_comp:
 
-				result = single_argument(m)
+				result = single_argument(m.group(1), m.group(2))
 
 			elif i in (gamma_comp, fact_comp):
 
 				# the user inputed the gamma function
 				if i == gamma_comp:
-					result = gamma_function(m)
+					result = gamma_function(m.group(1))
 
 				elif i == fact_comp:  # the user inputed a factorial
-					result = factorial_function(m)
+					result = factorial_function(m.group(1))
 
 			elif i == log_comp:
 
@@ -1498,25 +1503,8 @@ def switch_trig():
 		except IndexError:
 			pass
 
-	# sin cos tan
-	trig_func_buttons[0].grid(row = 3, column = 8)
-	trig_func_buttons[1].grid(row = 3, column = 9)
-	trig_func_buttons[2].grid(row = 3, column = 10)
-
-	# sec csc cot
-	trig_func_buttons[3].grid(row = 4, column = 8)
-	trig_func_buttons[4].grid(row = 4, column = 9)
-	trig_func_buttons[5].grid(row = 4, column = 10)
-
-	# arcsin arccos arctan
-	trig_func_buttons[6].grid(row = 5, column = 8)
-	trig_func_buttons[7].grid(row = 5, column = 9)
-	trig_func_buttons[8].grid(row = 5, column = 10)
-
-	# arcsec arccsc arccot
-	trig_func_buttons[9].grid(row = 6, column = 8)
-	trig_func_buttons[10].grid(row = 6, column = 9)
-	trig_func_buttons[11].grid(row = 6, column = 10)
+	for i in range(12):
+		trig_func_buttons[i].grid(row = i // 3 + 3, column = i % 3 + 8)
 
 
 def switch_hyperbolic():
@@ -1535,25 +1523,9 @@ def switch_hyperbolic():
 		except IndexError:
 			pass
 
-	# sinh cosh tanh
-	hyperbolic_func_buttons[0].grid(row = 3, column = 8)
-	hyperbolic_func_buttons[1].grid(row = 3, column = 9)
-	hyperbolic_func_buttons[2].grid(row = 3, column = 10)
-
-	# sech csch coth
-	hyperbolic_func_buttons[3].grid(row = 4, column = 8)
-	hyperbolic_func_buttons[4].grid(row = 4, column = 9)
-	hyperbolic_func_buttons[5].grid(row = 4, column = 10)
-
-	# arcsinh arccosh arctanh
-	hyperbolic_func_buttons[6].grid(row = 5, column = 8)
-	hyperbolic_func_buttons[7].grid(row = 5, column = 9)
-	hyperbolic_func_buttons[8].grid(row = 5, column = 10)
-
-	# arcsech arccsch arccoth
-	hyperbolic_func_buttons[9].grid(row = 6, column = 8)
-	hyperbolic_func_buttons[10].grid(row = 6, column = 9)
-	hyperbolic_func_buttons[11].grid(row = 6, column = 10)
+	for i in range(12):
+		hyperbolic_func_buttons[i].grid(row = i // 3 + 3,
+			column = i % 3 + 8)
 
 
 def switch_misc():
@@ -1569,26 +1541,8 @@ def switch_misc():
 		except IndexError:
 			pass
 
-	# log ln gamma
-	misc_func_buttons[0].grid(row = 3, column = 8)
-	misc_func_buttons[1].grid(row = 3, column = 9)
-	misc_func_buttons[2].grid(row = 3, column = 10)
-
-	# abs ceil floor
-	misc_func_buttons[3].grid(row = 4, column = 8)
-	misc_func_buttons[4].grid(row = 4, column = 9)
-	misc_func_buttons[5].grid(row = 4, column = 10)
-
-	# erf mod C
-	misc_func_buttons[6].grid(row = 5, column = 8)
-	misc_func_buttons[7].grid(row = 5, column = 9)
-	misc_func_buttons[8].grid(row = 5, column = 10)
-
-	# P
-	misc_func_buttons[9].grid(row = 6, column = 8)
-	# misc_func_buttons[10].grid(row = 3, column = 9)
-	# misc_func_buttons[11].grid(row = 3, column = 10)
-	pass
+	for i in range(10):
+		misc_func_buttons[i].grid(row = i // 3 + 3, column = i % 3 + 8)
 
 
 def switch_stats():
@@ -1605,23 +1559,9 @@ def switch_stats():
 			pass
 
 	# mean median mode
-	stats_func_buttons[0].grid(row = 3, column = 8)
-	stats_func_buttons[1].grid(row = 3, column = 9)
-	stats_func_buttons[2].grid(row = 3, column = 10)
-
-	# stdev max min
-	stats_func_buttons[3].grid(row = 4, column = 8)
-	stats_func_buttons[4].grid(row = 4, column = 9)
-	stats_func_buttons[5].grid(row = 4, column = 10)
-
-	# stats_func_buttons[6].grid(row = 5, column=8)
-	# stats_func_buttons[7].grid(row = 5, column=9)
-	# stats_func_buttons[8].grid(row = 5, column=10)
-
-	# stats_func_buttons[9].grid(row = 6, column = 8)
-	# misc_func_buttons[10].grid(row = 6, column = 9)
-	# misc_func_buttons[11].grid(row = 6, column = 10)
-	pass
+	for i in range(6):
+		stats_func_buttons[i].grid(row = i // 3 + 3,
+			column = i % 3 + 8)
 
 
 def format_default_screen():
