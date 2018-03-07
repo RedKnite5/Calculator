@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
+'''
+Written by: Max Friedman
+Licensed under GPLv3
 
-#   Calculator\re_calc.py
+Calculator\re_calc.py
+'''
 
 import math
 import statistics as stats
@@ -12,7 +16,6 @@ from pickle import load, dump
 from re import compile, sub
 from sympy import symbols, integrate, sympify
 from sympy.solvers import solve
-
 
 try:
 	import tkinter as tk
@@ -250,7 +253,7 @@ alg_var_comp = compile(alg_var_reg)
 
 
 def check_if_float(x):
-	"""Test if a object can be made a float."""
+	'''Test if a object can be made a float.'''
 
 	try:
 		float(x)
@@ -260,7 +263,7 @@ def check_if_float(x):
 
 
 def save_info():
-	"""Save options, history and other stuff to a file."""
+	'''Save options, history and other stuff to a file.'''
 
 	global calc_info
 
@@ -271,37 +274,43 @@ def save_info():
 
 
 def switch_degree_mode(mode):
-	"""Switch between degree mode and radian mode."""
+	'''Switch between degree mode and radian mode.'''
 
 	global degree_mode
 
 	if mode == "degree":
-		mode = 2
+		degree_mode = 2
 	elif mode == "radian":
-		mode = 0
+		degree_mode = 0
+	elif mode in (0, 2):
+		degree_mode = mode
+	else:
+		raise ValueError("Can not set degree_mode to " + str(mode))
 
-	degree_mode = mode
 	options[0] = degree_mode
 	save_info()
 
 
 def switch_polar_mode(mode):
-	"""Switch between polar and Cartesian graphing."""
+	'''Switch between polar and Cartesian graphing.'''
 
 	global polar_mode
 
 	if mode == "polar":
-		mode = True
-	if mode == "Cartesian":
-		mode = False
+		polar_mode = True
+	elif mode == "Cartesian":
+		polar_mode = False
+	elif mode in (True, False):
+		polar_mode = mode
+	else:
+		raise ValueError("Can not set polar_mode to " + str(mode))
 
-	polar_mode = mode
 	options[1] = polar_mode
 	save_info()
 
 
 def change_hist_len(entry_box, root):
-	"""Change the length of the hisstory print back."""
+	'''Change the length of the history print back.'''
 
 	global hist_len
 
@@ -310,7 +319,7 @@ def change_hist_len(entry_box, root):
 
 	# if the input is a digit set that to be the
 	# history print back length save and close the window
-	if input.isdigit():
+	if input.isdigit() and int(input) > 0:
 		hist_len = int(input)
 		options[3] = hist_len
 		save_info()
@@ -321,9 +330,9 @@ def change_hist_len(entry_box, root):
 
 
 def change_hist_len_win():
-	"""Create a popup to change the length of the
+	'''Create a popup to change the length of the
 	history print back.
-	"""
+	'''
 
 	root = tk.Toplevel()
 
@@ -345,7 +354,7 @@ def change_hist_len_win():
 
 
 def change_der_approx(entry_box, root):
-	"""Change the length of the history print back."""
+	'''Change the length of the history print back.'''
 
 	global der_approx
 
@@ -365,9 +374,9 @@ def change_der_approx(entry_box, root):
 
 
 def change_der_approx_win():
-	"""Create a popup to change the lenght of the
+	'''Create a popup to change the lenght of the
 	history print back.
-	"""
+	'''
 
 	root = tk.Toplevel()
 
@@ -388,7 +397,7 @@ def change_der_approx_win():
 
 
 def change_graph_win_set():
-	"""Change the graphing window bounds."""
+	'''Change the graphing window bounds.'''
 
 	global win_bound, g_bound_entry, g_bound_string
 
@@ -407,9 +416,13 @@ def change_graph_win_set():
 
 
 def find_match(s):
-	"""Find matching parentheses."""
+	'''Find matching parentheses.'''
 
 	x = 0
+	if not s.startswith("("):
+		raise ValueError(
+			"error '" + str(s) + "' is an invalid input.")
+				
 	for i in range(len(s)):
 
 		# count the parentheses
@@ -428,6 +441,10 @@ def find_match(s):
 
 			break
 
+		elif x < 0:
+			raise ValueError(
+				"error '" + str(s) + "' is an invalid input.")
+
 	try:
 		return(an, left)
 	except UnboundLocalError:
@@ -435,7 +452,7 @@ def find_match(s):
 
 
 def brackets(s):
-	"""Inform separate whether parentheses match."""
+	'''Inform separate whether parentheses match.'''
 
 	x = 0
 	for i in s:
@@ -443,14 +460,16 @@ def brackets(s):
 			x += 1
 		elif i == ")":
 			x -= 1
-	return(x)
+		if x < 0:
+			return(False)
+	return(not not x)
 
 
 def separate(s):
-	"""Split up arguments of a function with commas
+	'''Split up arguments of a function with commas
 	like mod(x, y) or log(x, y) based on where commas that are only
 	in one set of parentheses.
-	"""
+	'''
 
 	# separate based on all commas
 	terms = s.split(",")
@@ -468,19 +487,19 @@ def separate(s):
 		# reevaluate if its in the middle of parentheses
 		x = brackets(next_term)
 
-		# if its not in the middle add the curren term to final list
-		if x == 0:
+		# if its not in the middle add the current term to final list
+		if x:
 			new_terms.append(terms[i])
 			continue
 
 		# if it is in the middle of a group
-		if x > 0:
+		if x:
 
 			# add the current term to the string of previous terms
 			next_term = next_term + "," + terms[i + 1]
 
 			# check if that was the end of the group
-			if brackets(next_term) == 0:
+			if not brackets(next_term):
 				new_terms.append(next_term)
 				middle = False
 			else:
@@ -490,12 +509,12 @@ def separate(s):
 
 
 class graph(object):
-	"""Cartesian Graphing window class."""
+	'''Cartesian Graphing window class.'''
 
 	def __init__(self,
 	xmin = -5, xmax = 5, ymin = -5, ymax = 5,
 	wide = 400, high = 400):  # all the arguments you pass the object
-		"""Initialize the graphing window."""
+		'''Initialize the graphing window.'''
 
 		self.root = tk.Toplevel()
 
@@ -529,7 +548,7 @@ class graph(object):
 
 	# draw the axes
 	def axes(self):
-		"""Draw the axis."""
+		'''Draw the axis.'''
 
 		xrang = self.xmax - self.xmin
 		yrang = self.ymax - self.ymin
@@ -552,7 +571,7 @@ class graph(object):
 			pass
 
 	def draw(self, func, color = "black"):
-		"""Draw a Cartesian function."""
+		'''Draw a Cartesian function.'''
 
 		density = 1000
 		x = self.xmin
@@ -602,13 +621,13 @@ class graph(object):
 
 
 class polar_graph(graph):
-	"""Polar graphing window class."""
+	'''Polar graphing window class.'''
 
 	def __init__(self,
 	xmin = -5, xmax = 5, ymin = -5, ymax = 5,
 	theta_min = 0, theta_max = 10,
 	wide = 400, high = 400):  # all the arguments you pass the object
-		"""Initialize polar graphing window."""
+		'''Initialize polar graphing window.'''
 
 		super(polar_graph, self).__init__(
 			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
@@ -620,7 +639,7 @@ class polar_graph(graph):
 		self.theta_rang = self.theta_max - self.theta_min
 
 	def draw(self, func, color = "black"):
-		"""Draw a polar function."""
+		'''Draw a polar function.'''
 
 		density = 1000
 		theta = self.theta_min
@@ -671,7 +690,7 @@ class polar_graph(graph):
 #####################
 
 def constant_function(constant):
-	"""Evaluate mathematical constants."""
+	'''Evaluate mathematical constants.'''
 
 	constant_dict = {"pi": math.pi, "π": math.pi, "e": math.e,
 	"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
@@ -681,7 +700,7 @@ def constant_function(constant):
 
 
 def graph_function(func_arg):
-	"""Graph the given function."""
+	'''Graph the given function.'''
 
 	# looks for x bounds on the graph
 	range_m = graph_rang_comp.search(func_arg)
@@ -734,9 +753,9 @@ def graph_function(func_arg):
 
 
 def solve_equations(equation):
-	"""Solve equations using sympy. If there is no equals
+	'''Solve equations using sympy. If there is no equals
 	sign it is assumed the expression equals zero.
-	"""
+	'''
 
 	# find if there is a specified variable
 	varm = alg_var_comp.search(equation)
@@ -778,9 +797,9 @@ def solve_equations(equation):
 
 
 def evaluate_function(expression, point, var = "x"):
-	"""Evaluate the function by substituting x for the number you
+	'''Evaluate the function by substituting x for the number you
 	want to evaluate at.
-	"""
+	'''
 
 	# substituting the point for x in the function and evaluating
 	# that recursively
@@ -789,10 +808,10 @@ def evaluate_function(expression, point, var = "x"):
 
 
 def find_derivative(expression, point, var = "x"):
-	"""Calculate the derivative by evaluating the slope
+	'''Calculate the derivative by evaluating the slope
 	between two points on either side of the point you are
 	finding the derivative of.
-	"""
+	'''
 
 	# find the point on either side of the desired point
 	p = float(simplify(point))
@@ -808,7 +827,7 @@ def find_derivative(expression, point, var = "x"):
 
 
 def integrate_function(expression, var, a, b):
-	"""Integrate with sympy."""
+	'''Integrate with sympy.'''
 
 	# Integrals must be in a form that sympy can integrate
 	# The bounds must be numbers not expressions
@@ -818,41 +837,45 @@ def integrate_function(expression, var, a, b):
 	return(integrate(expression, (var, a, b)))
 
 
-def combinations_and_permutations(m, i):
-	"""Solve combinations and permutations."""
+def combinations_and_permutations(form, letter, n, m = None):
+	'''Solve combinations and permutations.
 
-	# combinations and permutations written
-	# both as C(5, 2) and 5C2 evaluated as: 5 choose 2
-	# if written as mCn it will only take numbers not expressions
-	# unless parentheses are used. In order of operations nCm comes
-	# first.
-	# Combinations and permutations both used the gamma function
-	# in place of factorials and as a result will take
-	# non-integer arguments
+	n is either n or all arguments depending of the for they're
+	written in
 
-	if i == choos_comp:  # if written as nCm
+	combinations and permutations written
+	both as C(5, 2) and 5C2 evaluated as: 5 choose 2
+	if written as mCn it will only take numbers not expressions
+	unless parentheses are used. In order of operations nCm comes
+	first.
+	Combinations and permutations both used the gamma function
+	in place of factorials and as a result will take
+	non-integer arguments
+	'''
+
+	if form == "choose":  # if written as nCm
 
 		# turn the arguments into floats and give them more
 		# descriptive names
-		inner_n = float(m.group(1))
-		inner_m = float(m.group(3))
+		inner_n = float(n)
+		inner_m = float(m)
 
 		# find permutations
 		temp_result = math.gamma(1 + inner_n) \
 			/ math.gamma(1 + inner_n - inner_m)
 
 		# if combinations also divide by m!
-		if m.group(2) == "C":
+		if letter == "C":
 			temp_result = temp_result / math.gamma(1 + inner_m)
 
 		return(temp_result)
 
-	else:  # if written as C(5, 2)
+	elif form == "func":  # if written as C(5, 2)
 
 		# find the arguments of the function and cut off
 		# everything else
 		# sin(C(5, 2)) ← the last parenthesis
-		proto_inner = find_match(m.group(2))
+		proto_inner = find_match(n)
 
 		# remove outer parentheses
 		x = proto_inner[0][1:-1]
@@ -869,7 +892,7 @@ def combinations_and_permutations(m, i):
 			/ math.gamma(1 + inner_n - inner_m)
 
 		# if combinations also divide by m!
-		if m.group(1) == "C":
+		if letter == "C":
 			temp_result = temp_result / math.gamma(1 + inner_m)
 
 		# add on anything that was was cut off the end when finding
@@ -879,7 +902,7 @@ def combinations_and_permutations(m, i):
 
 
 def statistics_functions(function, args):
-	"""Perform general statistics functions."""
+	'''Perform general statistics functions.'''
 
 	# this may in the future include any function that
 	# can have an arbitrarily large number of arguments
@@ -917,7 +940,7 @@ def statistics_functions(function, args):
 
 
 def single_argument(func, args):
-	"""Evaluate trig functions and other unary operators."""
+	'''Evaluate trig functions and other unary operators.'''
 
 	global degree_mode
 
@@ -1038,7 +1061,7 @@ def single_argument(func, args):
 
 
 def gamma_function(arg):
-	"""Use the gamma function."""
+	'''Use the gamma function.'''
 
 	# find the arguments of the function and cut off
 	# everything else
@@ -1058,7 +1081,7 @@ def gamma_function(arg):
 
 
 def factorial_function(arg):
-	"""Evaluate factorials."""
+	'''Evaluate factorials.'''
 
 	# interprets x! mathematically as gamma(x + 1)
 	# if written with an "!" will only take numbers as an argument.
@@ -1069,18 +1092,18 @@ def factorial_function(arg):
 	return(math.gamma(float(arg) + 1))
 
 
-def logarithm(m):
-	"""Solve logarithms."""
+def logarithm(log_arg, ln_arg):
+	'''Solve logarithms.'''
 
 	# logarithms written as log(x, y) where y
 	# is the base and written as ln(x)
 
-	if m.group(1) is not None:  # if written as log(x, y)
+	if log_arg is not None:  # if written as log(x, y)
 
 		# find the arguments of the function and cut off
 		# everything else
 		# sin(log(4, 2)) ← the last parenthesis
-		proto_inner = find_match(m.group(1))
+		proto_inner = find_match(log_arg)
 
 		# separate the arguments based on commas that are not
 		# within more than one set of parentheses
@@ -1094,12 +1117,12 @@ def logarithm(m):
 		# perform the logarithm
 		return(str(math.log(argument, base)) + proto_inner[1])
 
-	elif m.group(2) is not None:  # if written as ln(x)
+	elif ln_arg is not None:  # if written as ln(x)
 
 		# find the argument of the function and cut off
 		# everything else
 		# sin(ln(e)) ← the last parenthesis
-		proto_inner = find_match(m.group(2))
+		proto_inner = find_match(ln_arg)
 
 		# perform the logarithm
 		result = math.log(float(simplify(proto_inner[0])))
@@ -1110,13 +1133,13 @@ def logarithm(m):
 	return(str(result) + proto_inner[1])
 
 
-def modulus_function(m):
-	"""Find the modulus of the input."""
+def modulus_function(arg):
+	'''Find the modulus of the input.'''
 
 	# find the arguments of the function and cut off
 	# everything else
 	# sin(mod(5, 2)) ← the last parenthesis
-	proto_inner = find_match(m.group(1))
+	proto_inner = find_match(arg)
 
 	# separate the arguments based on commas that are not
 	# within more than one set of parentheses
@@ -1137,9 +1160,9 @@ def modulus_function(m):
 
 
 def abs_value(input):
-	"""Break up a expression based on where pipes are and return the
+	'''Break up a expression based on where pipes are and return the
 	the absolute value of what is in them.
-	"""
+	'''
 
 	parts = input.split("|")
 
@@ -1174,7 +1197,7 @@ def abs_value(input):
 
 # main func
 def simplify(s):
-	"""Simplify an expression."""
+	'''Simplify an expression.'''
 
 	global degree_mode
 
@@ -1251,7 +1274,12 @@ def simplify(s):
 
 			elif i in (comb_comp, choos_comp):
 
-				result = combinations_and_permutations(m, i)
+				if i == comb_comp:
+					result = combinations_and_permutations("func",
+						m.group(1), m.group(2))
+				elif i == choos_comp:
+					result = combinations_and_permutations("choose",
+						m.group(2), m.group(1), m.group(3))
 
 			elif i == ave_comp:
 
@@ -1272,7 +1300,7 @@ def simplify(s):
 
 			elif i == log_comp:
 
-				result = logarithm(m)
+				result = logarithm(m.group(1), m.group(2))
 
 			elif i == abs_comp:
 
@@ -1309,7 +1337,7 @@ def simplify(s):
 
 				if i == mod2_comp:
 
-					result = modulus_function(m)
+					result = modulus_function(m.group(1))
 
 				else:
 
@@ -1377,9 +1405,9 @@ def simplify(s):
 
 # pre and post processing for console
 def ask(s = None):
-	"""Ask the user what expression they want to simplify
+	'''Ask the user what expression they want to simplify
 	and do pre and post processing.
-	"""
+	'''
 
 	global ans
 	if s is None:
@@ -1409,7 +1437,7 @@ def ask(s = None):
 
 
 def key_pressed(event):
-	"""Handle keys pressed in the gui."""
+	'''Handle keys pressed in the gui.'''
 
 	global up_hist
 
@@ -1444,7 +1472,7 @@ def key_pressed(event):
 
 
 def input_backspace():
-	"""Delete the last character in the entry widget."""
+	'''Delete the last character in the entry widget.'''
 
 	global input_widget
 
@@ -1454,18 +1482,13 @@ def input_backspace():
 	input_widget.insert(0, a[:-1])
 
 
-def get_input():
-	"""Get user input from the entry widget."""
+def get_input(s = 5):
+	'''Get user input from the entry widget.'''
 
 	global ans, mess
 
-	s = input_widget.get()
-
-	# add the user input to the history
-	history.append(s)
-
-	# save history to file
-	save_info()
+	if s == 5:
+		s = input_widget.get()
 
 	if s == "":
 		if os.name == "posix":
@@ -1473,25 +1496,33 @@ def get_input():
 			exit()
 		elif os.name == "nt":
 			sys.exit()
+	
+	if s is not None:
+		
+		# add the user input to the history
+		history.append(s)
 
-	out = simplify(s)
+		# save history to file
+		save_info()
 
-	# save output to be used by the user
-	ans = out
+		out = simplify(s)
 
-	# display the output
-	if out is not None:
-		mess.set(s + " = " + out)
+		# save output to be used by the user
+		ans = out
 
-	# save answer to file to be used next session
-	save_info()
+		# display the output
+		if out is not None:
+			mess.set(s + " = " + out)
 
-	# clear the input box
-	input_widget.delete(0, "end")
+		# save answer to file to be used next session
+		save_info()
+
+		# clear the input box
+		input_widget.delete(0, "end")
 
 
 def switch_trig():
-	"""Use grid on the trig function buttons."""
+	'''Use grid on the trig function buttons.'''
 
 	# remove the buttons for the hyperbolic functions, misc functions,
 	# and stats functions
@@ -1511,7 +1542,7 @@ def switch_trig():
 
 
 def switch_hyperbolic():
-	"""Use grid on the trig function buttons."""
+	'''Use grid on the trig function buttons.'''
 
 	# remove the buttons for the trig functions, misc functions,
 	# and stats functions
@@ -1532,7 +1563,7 @@ def switch_hyperbolic():
 
 
 def switch_misc():
-	"""Use grid on miscellaneous functions."""
+	'''Use grid on miscellaneous functions.'''
 
 	# remove the buttons for the trig functions, hyperbolic functions,
 	# and stats functions
@@ -1549,7 +1580,7 @@ def switch_misc():
 
 
 def switch_stats():
-	"""Use grid on statistics functions."""
+	'''Use grid on statistics functions.'''
 
 	# remove the buttons for the trig functions, misc functions,
 	# and hyperbolic functions
@@ -1568,7 +1599,7 @@ def switch_stats():
 
 
 def format_default_screen():
-	"""Use grid to put in place the buttons"""
+	'''Use grid to put in place the buttons'''
 
 	# 7 8 9
 	digit_button[7].grid(row = 3, column = 0)
@@ -1614,7 +1645,7 @@ def format_default_screen():
 
 
 def switch_matrices():
-	"""Create window for dealing with matrices."""
+	'''Create window for dealing with matrices.'''
 
 	pass
 
@@ -1637,7 +1668,7 @@ def graph_win_key_press(event, index):
 
 
 def edit_graph_window():
-	"""Change the graph window options."""
+	'''Change the graph window options.'''
 
 	global g_bound_entry, g_bound_string
 
@@ -1669,7 +1700,7 @@ def edit_graph_window():
 
 
 def tkask(s = None):
-	"""Make a GUI for the program."""
+	'''Make a GUI for the program.'''
 
 	global input_widget, mess
 	global digit_button, equals_button, back_button, menubar
@@ -1805,29 +1836,30 @@ def tkask(s = None):
 	format_default_screen()
 
 	root.bind("<Key>", key_pressed)
+	
+	get_input(s = s)
 
 	root.mainloop()
 
 
-# default startup
-if len(sys.argv) == 1:
+if __name__ == "__main__":
+	# default startup
+	if len(sys.argv) == 1:
+		if "tkinter" in sys.modules and use_gui:
+			tkask()
+		else:
+			while True:
+				ask()
+
+	else:  # handling command line arguments and startup
+		if "tkinter" in sys.modules and use_gui:
+			tkask(" ".join(sys.argv[1:]))
+		else:
+			ask(" ".join(sys.argv[1:]))
+
+	# main loop if command line arguments passed
 	if "tkinter" in sys.modules and use_gui:
-		tkask()
+		pass
 	else:
 		while True:
 			ask()
-
-else:  # handling command line arguments and startup
-	history.append(" ".join(sys.argv[1:]))
-
-	if "tkinter" in sys.modules and use_gui:
-		tkask(" ".join(sys.argv[1:]))
-	else:
-		ask(" ".join(sys.argv[1:]))
-
-# main loop if command line arguments passed
-if "tkinter" in sys.modules and use_gui:
-	pass
-else:
-	while True:
-		ask()
