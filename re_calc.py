@@ -462,7 +462,7 @@ def brackets(s):
 			x -= 1
 		if x < 0:
 			return(False)
-	return(not not x)
+	return(not x)
 
 
 def separate(s):
