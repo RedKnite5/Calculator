@@ -680,27 +680,30 @@ def constant_function(constant):
 	return(constant_dict[constant])
 
 
-def graph_function(m):
+def graph_function(func_arg):
 	"""Graph the given function."""
 
 	# looks for x bounds on the graph
-	range_m = graph_rang_comp.search(m)
+	range_m = graph_rang_comp.search(func_arg)
 	if range_m is not None:
-		m = range_m
+		func_arg = range_m
 
 	# checks to see if tkinter is installed to graph things at all
 	if "tkinter" in sys.modules:
 
 		# finds multiple functions to graph
-		funcs_to_graph = m.group(1).split(" and ")
+		if range_m is None:
+			funcs_to_graph = func_arg.split(" and ")
+		else:
+			funcs_to_graph = func_arg.group(1).split(" and ")
 
 		# sets bounds to bounds given
 		if range_m is None:
 			temp_graph_xmin = win_bound["x min"]
 			temp_graph_xmax = win_bound["x max"]
 		else:
-			temp_graph_xmin = float(m.group(3))
-			temp_graph_xmax = float(m.group(4))
+			temp_graph_xmin = float(func_arg.group(3))
+			temp_graph_xmax = float(func_arg.group(4))
 
 		# creates graph object
 		if polar_mode is False:
@@ -1222,7 +1225,7 @@ def simplify(s):
 
 			elif i == graph_comp:
 
-				graph_function(m)
+				graph_function(m.group(1))
 				return(None)
 
 			elif i == alg_comp:
