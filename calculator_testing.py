@@ -3,6 +3,7 @@
 import unittest
 import os
 import tkinter as tk
+import math
 
 import re_calc as c
 
@@ -268,10 +269,81 @@ class test_brackets_function(unittest.TestCase):
 class test_separate(unittest.TestCase):
 	
 	def test_split_no_parentheses(self):
-		self.assertEqual(c.separate("(2, 4, 5, 6)"), ("2","4","5","6"))
+		self.assertEqual(c.separate("2,4,5,6"), ("2","4","5","6"))
 		
+	def test_split_parentheses(self):
+		self.assertEqual(
+		c.separate("3, 4, (5,6), 3"), ("3", " 4", " (5,6)", " 3"))
+		
+	def test_split_nested_parentheses(self):	
+		self.assertEqual(
+		c.separate("1, (2, 3, (4, 5), 6), 7, (8), (9, 10)"),
+		("1", " (2, 3, (4, 5), 6)", " 7", " (8)", " (9, 10)"))
+		
+class test_graph(unittest.TestCase):
 	
-
+	def test_create_graph(self):
+		g = c.graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+			wide = 40, high = 50)
+		self.assertEqual(g.xmin, -1)
+		self.assertEqual(g.xmax, 1)
+		self.assertEqual(g.ymin, 2)
+		self.assertEqual(g.ymax, 3)
+		self.assertEqual(g.wide, 40)
+		self.assertEqual(g.high, 50)
+		g.root.destroy()
+	
+	def test_close_while_graphing(self):
+		g = c.graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+			wide = 40, high = 50)
+		g.draw("1")
+		g.root.destroy()
+		
+	def test_graph_partial_undefined(self):
+		g = c.graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+			wide = 40, high = 50)
+		g.draw("x**.5")
+		g.root.destroy()
+		
+class test_polar_graph(unittest.TestCase):
+	
+	def test_create_graph(self):
+		g = c.polar_graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+			theta_min = -2, theta_max = 6, wide = 40, high = 50)
+		self.assertEqual(g.xmin, -1)
+		self.assertEqual(g.xmax, 1)
+		self.assertEqual(g.ymin, 2)
+		self.assertEqual(g.ymax, 3)
+		self.assertEqual(g.theta_min, -2)
+		self.assertEqual(g.theta_max, 6)
+		self.assertEqual(g.wide, 40)
+		self.assertEqual(g.high, 50)
+		g.root.destroy()
+	
+	def test_close_while_graphing(self):
+		g = c.polar_graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+			theta_min = -2, theta_max = 6, wide = 40, high = 50)
+		g.draw("1")
+		g.root.destroy()
+		
+	def test_graph_partial_undefined(self):
+		g = c.polar_graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+			theta_min = -2, theta_max = 6, wide = 40, high = 50)
+		g.draw("x**.5")
+		g.root.destroy()
+		
+class test_constant_function(unittest.TestCase):
+	
+	def test_all_the_constants(self):
+		self.assertEqual(c.constant_function("pi"), math.pi)
+		self.assertEqual(c.constant_function("e"), math.e)
+		self.assertEqual(c.constant_function("phi"), (1 + 5 ** 0.5) / 2)
+		self.assertEqual(c.constant_function("π"), math.pi)
+		self.assertEqual(c.constant_function("ans"), c.ans)
+		self.assertEqual(c.constant_function("answer"), c.ans)
+		self.assertEqual(c.constant_function("tau"), math.tau)
+		self.assertEqual(c.constant_function("τ"), math.tau)
+		self.assertEqual(c.constant_function("φ"), (1 + 5 ** 0.5) / 2)
 
 
 

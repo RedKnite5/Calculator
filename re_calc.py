@@ -90,8 +90,8 @@ up_hist = 0
 
 # multi session variables
 calc_path = os.path.abspath(os.path.dirname(__file__))
-calc_info = load(open(
-	os.path.join(calc_path, "re_calc_info.txt"), "rb"))
+with open(os.path.join(calc_path, "re_calc_info.txt"), "rb") as file:
+	calc_info = load(file)
 history = calc_info[0]
 ans = calc_info[1]
 options = calc_info[2]
@@ -269,8 +269,8 @@ def save_info():
 
 	calc_info = [history, ans, options, win_bound]
 
-	dump(calc_info, open(os.path.join(calc_path,
-	"re_calc_info.txt"), "wb"))
+	with open(os.path.join(calc_path, "re_calc_info.txt"), "wb") as file:
+		dump(calc_info, file)
 
 
 def switch_degree_mode(mode):
@@ -468,44 +468,26 @@ def brackets(s):
 def separate(s):
 	'''Split up arguments of a function with commas
 	like mod(x, y) or log(x, y) based on where commas that are only
-	in one set of parentheses.
+	in one set of parentheses are.
 	'''
-
-	# separate based on all commas
+	
 	terms = s.split(",")
-
+	
 	new_terms = []
 	middle = False
-
-	# iterate of over the groups separated by commas
-	for i in range(len(terms)):
-
-		# check if it is in the middle of a group of parentheses
-		if middle is False:
-			next_term = terms[i]
-
-		# reevaluate if its in the middle of parentheses
-		x = brackets(next_term)
-
-		# if its not in the middle add the current term to final list
+	term = ""
+	for i in terms:
+		if middle:
+			term = term + "," + i
+		else:
+			term = i
+		x = brackets(term)
 		if x:
-			new_terms.append(terms[i])
-			continue
-
-		# if it is in the middle of a group
-		if x:
-
-			# add the current term to the string of previous terms
-			next_term = next_term + "," + terms[i + 1]
-
-			# check if that was the end of the group
-			if not brackets(next_term):
-				new_terms.append(next_term)
-				middle = False
-			else:
-				middle = True
-
-	return(new_terms)
+			new_terms.append(term)
+			middle = False
+		else:
+			middle = True
+	return(tuple(new_terms))
 
 
 class graph(object):
@@ -593,7 +575,6 @@ class graph(object):
 					try:
 						slope = float(find_derivative(func, str(x)))
 					except (ValueError) as e:
-						print("slope")
 						slope = 10
 
 					# calculate how dense the points need to be
@@ -616,7 +597,6 @@ class graph(object):
 			try:
 				self.root.update()
 			except TclError as e:
-				print(e)
 				x = self.xmax + 1
 
 
