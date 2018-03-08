@@ -727,6 +727,8 @@ def graph_function(func_arg):
 		for f, c in zip(funcs_to_graph, graph_colors * color_loops):
 			made_graph.draw(f, color = c)
 
+		return(made_graph)
+
 	# informs the user of reason for failure
 	else:
 		print("Could not graph. Tkinter is not installed")

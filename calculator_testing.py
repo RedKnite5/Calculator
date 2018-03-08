@@ -322,13 +322,13 @@ class test_polar_graph(unittest.TestCase):
 	
 	def test_close_while_graphing(self):
 		g = c.polar_graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
-			theta_min = -2, theta_max = 6, wide = 40, high = 50)
+			theta_min = -.5, theta_max = .5, wide = 40, high = 50)
 		g.draw("1")
 		g.root.destroy()
 		
 	def test_graph_partial_undefined(self):
 		g = c.polar_graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
-			theta_min = -2, theta_max = 6, wide = 40, high = 50)
+			theta_min = -.5, theta_max = .5, wide = 40, high = 50)
 		g.draw("x**.5")
 		g.root.destroy()
 		
@@ -344,6 +344,85 @@ class test_constant_function(unittest.TestCase):
 		self.assertEqual(c.constant_function("tau"), math.tau)
 		self.assertEqual(c.constant_function("τ"), math.tau)
 		self.assertEqual(c.constant_function("φ"), (1 + 5 ** 0.5) / 2)
+
+class test_graph_function(unittest.TestCase):
+	
+	def setUp(self):
+		self.mode = c.polar_mode
+		c.switch_polar_mode(False)
+		
+	def test_basic_graph(self):
+		g = c.graph_function("x")
+		g.root.destroy()
+		
+	def test_graph_from(self):
+		g = c.graph_function("x from 10 to 11")
+		g.root.destroy()
+		
+	def test_multiple_graphs(self):
+		g = c.graph_function("x and 2*x")
+		g.root.destroy()
+		
+	def test_multiple_graphs_and_from(self):
+		g = c.graph_function("x and 2*x from 10 to 11")
+		g.root.destroy()
+
+	def tearDown(self):
+		c.switch_polar_mode(self.mode)
+
+class test_graph_function_polar(unittest.TestCase):
+	
+	def setUp(self):
+		self.mode = c.polar_mode
+		c.switch_polar_mode(True)
+		
+	def test_basic_graph(self):
+		g = c.graph_function("x")
+		g.root.destroy()
+		
+	def test_graph_from(self):
+		g = c.graph_function("x from 10 to 11")
+		g.root.destroy()
+		
+	def test_multiple_graphs(self):
+		g = c.graph_function("x and 2*x")
+		g.root.destroy()
+		
+	def test_multiple_graphs_and_from(self):
+		g = c.graph_function("x and 2*x from 10 to 11")
+		g.root.destroy()
+
+	def tearDown(self):
+		c.switch_polar_mode(self.mode)
+
+class test_solving_equations(unittest.TestCase):
+
+	def test_solve_with_no_equals_or_variable(self):
+		self.assertEqual(c.solve_equations("x-5"), 5)
+
+	def test_solve_with_no_equals(self):
+		self.assertEqual(c.solve_equations("t-5 for t"), 5)
+
+	def test_solve_with_no_variable(self):
+		self.assertEqual(c.solve_equations("2*x = 4"), 2)
+
+	def test_solve_with_everything(self):
+		self.assertEqual(c.solve_equations("2*t = 4 for t"), 2)
+
+class test_evaluation_function(unittest.TestCase):
+	
+	def test_eval_without_variable(self):
+		self.assertEqual(c.evaluate_function("x", "5"), 5)
+		
+	def test_eval_with_variable(self):
+		self.assertEqual(c.evaluate_function("t", "5", var = "t"))
+
+class test_find_derivative(unittest.TestCase):
+	
+	def test_find_basic_derivative(self):
+		pass
+
+
 
 
 
