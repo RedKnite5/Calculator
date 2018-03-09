@@ -33,6 +33,7 @@ class test_check_if_float(unittest.TestCase):
 	def test_list_type(self):
 		self.assertFalse(c.check_if_float([2]))
 
+
 class test_files(unittest.TestCase):
 	
 	def test_main_path(self):
@@ -45,7 +46,7 @@ class test_files(unittest.TestCase):
 	def test_tkinter_icon(self):
 		self.assertTrue(
 		os.path.isfile(os.path.join(c.calc_path, "calc_pic.ico")))
-		
+
 
 class test_switch_degree_mode(unittest.TestCase):
 	
@@ -135,6 +136,7 @@ class test_find_match(unittest.TestCase):
 		with self.assertRaises(ValueError):
 			c.find_match("word)")
 
+
 class test_brackets_function(unittest.TestCase):
 	
 	def test_matched_brackets(self):
@@ -150,6 +152,7 @@ class test_brackets_function(unittest.TestCase):
 		self.assertFalse(c.brackets(")("))
 		self.assertFalse(c.brackets("(()words"))
 		
+
 class test_separate(unittest.TestCase):
 	
 	def test_split_no_parentheses(self):
@@ -163,8 +166,8 @@ class test_separate(unittest.TestCase):
 		self.assertEqual(
 		c.separate("1, (2, 3, (4, 5), 6), 7, (8), (9, 10)"),
 		("1", " (2, 3, (4, 5), 6)", " 7", " (8)", " (9, 10)"))
-		
-	
+
+
 class test_constant_function(unittest.TestCase):
 	
 	def test_all_the_constants(self):
@@ -193,6 +196,7 @@ class test_solving_equations(unittest.TestCase):
 	def test_solve_with_everything(self):
 		self.assertEqual(c.solve_equations("2*t = 4 for t"), 2)
 
+
 class test_evaluation_function(unittest.TestCase):
 	
 	def test_eval_without_variable(self):
@@ -204,6 +208,7 @@ class test_evaluation_function(unittest.TestCase):
 	def test_double_eval_function(self):
 		self.assertEqual(
 			c.evaluate_function("eval t at x for t", "4"), "4.0")
+
 
 class test_find_derivative(unittest.TestCase):
 	
@@ -220,6 +225,7 @@ class test_find_derivative(unittest.TestCase):
 			float(c.find_derivative("x * derivative of t^2 at 3", "1")),
 			6.0)
 
+
 class test_integrate_function(unittest.TestCase):
 	
 	def test_basic_integral(self):
@@ -235,6 +241,7 @@ class test_integrate_function(unittest.TestCase):
 		self.assertEqual(
 			c.integrate_function("2*x", "x", "0", "1+2"), "9.0")
 			
+
 class test_combinations_and_permutations(unittest.TestCase):
 	
 	def test_basic_combination_choose_notation(self):
@@ -283,7 +290,16 @@ class test_combinations_and_permutations(unittest.TestCase):
 
 	def test_function_notation_needs_only_three_arguments(self):
 		with self.assertRaises(TypeError):
-			c.combinations_and_permutations("choose", "C", "5", m = "2")
+			c.combinations_and_permutations("func", "C", "5", m = "2")
+
+	def test_raises_value_errors_for_not_c_or_p_choose_notaion(self):
+		with self.assertRaises(ValueError):
+			c.combinations_and_permutations("choose", "R", "5", "2")
+			
+	def test_raises_value_errors_for_not_c_or_p_func_notaion(self):
+		with self.assertRaises(ValueError):
+			c.combinations_and_permutations("func", "R", "(5, 2)")
+
 
 class test_statistics_functions(unittest.TestCase):
 	
@@ -309,11 +325,24 @@ class test_statistics_functions(unittest.TestCase):
 		self.assertEqual(
 			c.statistics_functions("max", "(3, 6, 11, -7, -1, 55)"),
 			"55.0")
-		self.assertEqual(
-			c.statistics_functions("stdev", "(3, 4, 4, 5, 6, 8)"),
-			"5.0")
+		self.assertAlmostEqual(
+			float(c.statistics_functions("stdev", "(3, 4, 4, 6, 8)")),
+			2.0)
 			
+	def test_nested_stats_functions(self):
+		self.assertEqual(
+			c.statistics_functions("mean", "(1, 2, mean(1, 3, 5))"),
+			"2.0")
+			
+	def test_not_defined_functions(self):
+		with self.assertRaises(ValueError):
+			c.statistics_functions("sin", "(pi)")
 
+			
+class test_single_argument_function(unittest.TestCase):
+	
+	def test_all_basic_functions(self):
+		pass
 
 
 

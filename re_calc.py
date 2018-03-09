@@ -4,7 +4,7 @@
 Written by: Max Friedman
 Licensed under GPLv3
 
-Calculator\re_calc.py
+re_calc.py
 '''
 
 import math
@@ -12,6 +12,7 @@ import statistics as stats
 import sys
 import os
 
+from warnings import warn, simplefilter
 from pickle import load, dump
 from re import compile, sub
 from decimal import Context
@@ -22,7 +23,9 @@ try:
 	import tkinter as tk
 	from _tkinter import TclError
 except ModuleNotFoundError:
-	pass
+	simplefilter('default', ImportWarning)
+	warn("Tkinter can not be imported. Using command line interface",
+		category = ImportWarning)
 
 
 '''  Completed
@@ -58,7 +61,7 @@ except ModuleNotFoundError:
 22) unit conversions
 23) indefinite integrals
 24) derivatives of functions
-25) summation
+25) summation notation
 26) big pi notation
 27) series
 30) two expressions adjacent means multiplication
@@ -66,14 +69,15 @@ except ModuleNotFoundError:
 34) make icon of tkinter window when run on Fedora
 35) make compatible with other operating systems
 36) fix subtraction problem
-37)
+37) other weird trig functions
+38) setup and wheel files
+39) make tests for all parts of the program
+40) doc strings for at least some of the tests
+41) user defined functions
+42) user defined variables
+43)
 '''
 
-'''  Test inputs
-log(mean(ln(e^2),ln(e**2),mode(4),4*sin(arccos(-1)/2))+C(5C1,1),2!) = 3
-graph x/2 -1 from -10 to 2
-solve(2*r+4=r) for r  = -4
-'''
 
 # os handling
 if os.name == "nt":
@@ -104,6 +108,7 @@ der_approx = options[2]  # default = .0001
 hist_len = options[3]
 win_bound = calc_info[3]
 
+#                 enter up down           enter  up  down
 key_binds = {"nt": (13, 38, 40), "posix": (104, 111, 116)}
 g_bound_names = ("x min", "x max", "y min", "y max", "theta min",
 	"theta max")
@@ -688,7 +693,10 @@ def constant_function(constant):
 	"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
 	"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2}
 
-	return(constant_dict[constant])
+	if constant in constant_dict:
+		return(constant_dict[constant])
+	else:
+		raise ValueError("'%s' is not a recognized constant." % constant)
 
 
 def graph_function(func_arg):
@@ -866,12 +874,16 @@ def combinations_and_permutations(form, letter, n, m = None):
 		# if combinations also divide by m!
 		if letter == "C":
 			temp_result = temp_result / math.gamma(1 + inner_m)
+		elif letter == "P":
+			pass
+		else:
+			raise ValueError("Second argument must be 'C' or 'P' for "
+				"combinations or permutations not '%s'" % letter)
 
 		return(str(temp_result))
 
 	elif form == "func":  # if written as C(5, 2)
-		print(m)
-		if bool(m) is not None:
+		if m:
 			raise TypeError(
 				"combinations_and_permutations can not take a fourth "
 				"argument when using function notation")
@@ -898,11 +910,19 @@ def combinations_and_permutations(form, letter, n, m = None):
 		# if combinations also divide by m!
 		if letter == "C":
 			temp_result = temp_result / math.gamma(1 + inner_m)
+		elif letter == "P":
+			pass
+		else:
+			raise ValueError("Second argument must be 'C' or 'P' for "
+				"combinations or permutations not '%s'" % letter)
 
 		# add on anything that was was cut off the end when finding
 		# the arguments
 		# sin(C(5, 2)) ← the last parenthesis
 		return(str(temp_result) + proto_inner[1])
+	else:
+		raise ValueError("First argument must be 'choose' or 'func' "
+			"not '%s'" % form)
 
 
 def statistics_functions(function, args):
@@ -927,16 +947,20 @@ def statistics_functions(function, args):
 	# perform the different functions
 	if function.lower() in ("ave", "average", "mean"):
 		result = stats.mean(list_ave)
-	if function.lower() == "median":
+	elif function.lower() == "median":
 		result = stats.median(list_ave)
-	if function.lower() == "mode":
+	elif function.lower() == "mode":
 		result = stats.mode(list_ave)
-	if function.lower() == "max":
+	elif function.lower() == "max":
 		result = max(list_ave)
-	if function.lower() == "min":
+	elif function.lower() == "min":
 		result = min(list_ave)
-	if function.lower() in ("stdev"):
+	# this is the sample standard deviation
+	elif function.lower() in ("stdev"):
 		result = stats.stdev(list_ave)
+	else:
+		raise ValueError("%s is not a function that is defined in "
+			"statistics_functions" % function)
 
 	# add on anything that was was cut off the end when finding
 	# the arguments
@@ -969,9 +993,9 @@ def single_argument(func, args):
 	# check if in degree mode and if its doing an
 	# operation that takes an angle as an argument
 	if degree_mode > 0:
-		if func in ("sin", "sec",
-		"cos", "csc", "tan", "cot",
-		"sinh", "cosh", "tanh"):
+		if func in (
+		"sin", "sec", "cos", "csc", "tan", "cot",
+		"sinh", "sech", "cosh", "csch", "tanh", "coth"):
 			inner = math.pi * inner / 180
 
 	# trig functions and inverse trig functions
@@ -1035,15 +1059,20 @@ def single_argument(func, args):
 		result = math.floor(inner)
 	elif func == "erf":
 		result = math.erf(inner)
+		
+	else:
+		raise ValueError("'%s' is not a recognized function" % func)
 
 	# checks if its in degree mode (not because of
 	# degree symbols in the argument) and if so
 	# converts the answer to degrees for functions that
 	# output an angle
-	if func in ("asin",
-	"arcsin", "acos", "arccos", "atan", "arctan",
-	"asinh", "arcsinh", "acosh", "arccosh",
-	"atanh", "arctanh") and degree_mode == 2:
+	if func in (
+		"asin", "arcsin", "acos", "arccos", "atan", "arctan",
+		"asinh", "arcsinh", "acosh", "arccosh", "atanh", "arctanh",
+		"asec", "arcsec", "acsc", "arccsc", "acot", "arccot",
+		"asech", "arcsech", "acsch", "arccsch", "acoth", "arccoth"
+		) and degree_mode == 2:
 		result = result * 180 / math.pi
 
 	# resets the degree mode for the session
@@ -1086,23 +1115,26 @@ def gamma_function(arg):
 
 
 def factorial_function(arg):
-	'''Evaluate factorials.'''
+	'''Evaluate factorials.
 
-	# interprets x! mathematically as gamma(x + 1)
-	# if written with an "!" will only take numbers as an argument.
-	# In order of operations factorials come after exponents,
-	# but before modulus
+	Interprets x! mathematically as gamma(x + 1)
+	if written with an "!" will only take numbers as an argument.
+	In order of operations factorials come after exponents,
+	but before modulus
+	'''
 
 	# doing the calculation
 	return(math.gamma(float(arg) + 1))
 
 
 def logarithm(log_arg, ln_arg):
-	'''Solve logarithms.'''
+	'''Solve logarithms.
+	
+	log must be written with two arguments. ln only takes one argument
+	and is evaluated separately from log'''
 
 	# logarithms written as log(x, y) where y
 	# is the base and written as ln(x)
-
 	if log_arg is not None:  # if written as log(x, y)
 
 		# find the arguments of the function and cut off
@@ -1131,15 +1163,18 @@ def logarithm(log_arg, ln_arg):
 
 		# perform the logarithm
 		result = math.log(float(simplify(proto_inner[0])))
+	
+	else:
+		raise ValueError("log_arg or ln_arg must be something not None")
 
-		# add on anything that was was cut off the end when finding
-		# the arguments
-		# sin(log(4, 2)) ← the last parenthesis
+	# add on anything that was was cut off the end when finding
+	# the arguments
+	# sin(log(4, 2)) ← the last parenthesis
 	return(str(result) + proto_inner[1])
 
 
 def modulus_function(arg):
-	'''Find the modulus of the input.'''
+	'''Find the modulus of the input as a function not an operator.'''
 
 	# find the arguments of the function and cut off
 	# everything else
@@ -1244,6 +1279,10 @@ def simplify(s):
 				# set degree mode off for the session
 				elif m.group(4) is not None:
 					switch_degree_mode(0)
+					
+				else:
+					raise ValueError("Command must be 'history',"
+						" 'exit', 'quit', 'degree mode', or 'radian mode'")
 
 				return(None)
 
@@ -1302,6 +1341,11 @@ def simplify(s):
 
 				elif i == fact_comp:  # the user inputed a factorial
 					result = factorial_function(m.group(1))
+				
+				else:
+					raise ValueError("How could this possibly happen?"
+						" It just tested if i was 'gamma_comp' or "
+						"'fact_comp'.")
 
 			elif i == log_comp:
 
@@ -1344,11 +1388,16 @@ def simplify(s):
 
 					result = modulus_function(m.group(1))
 
-				else:
+				elif i == mod_comp:
 
 					# the x % y format
 					result = math.fmod(float(m.group(1)),
 					float(m.group(2)))
+				
+				else:
+					raise ValueError("How could this possibly happen?"
+						" It just tested if i was 'mod2_comp' or "
+						"'mod_comp'.")
 
 			elif i == per_comp:
 
@@ -1367,6 +1416,10 @@ def simplify(s):
 				elif m.group(2) in ("/", "÷"):
 
 					result = float(m.group(1)) / float(m.group(3))
+					
+				else:
+					raise ValueError("Mult_comp must match '*', '//', "
+						"or '÷'.")
 
 			elif i == add_comp:
 
@@ -1380,6 +1433,12 @@ def simplify(s):
 				elif m.group(2) == "-":
 
 					result = float(m.group(1)) - float(m.group(3))
+					
+				else:
+					raise ValueError("add_comp must match '+' or '-'.")
+			
+			else:
+				print("function not implemented.", i)
 
 			if i not in (command_comp, const_comp,
 			alg_comp, eval_comp, der_comp):
@@ -1486,17 +1545,18 @@ def input_backspace():
 	input_widget.insert(0, a[:-1])
 
 
-def get_input(s = 5):
+def get_input(s = None):
 	'''Get user input from the entry widget.'''
 
 	global ans, mess
 
-	if s == 5:
-		s = input_widget.get()
+	if s is None:
+		pre_s = input_widget.get()
+		if pre_s != "":
+			s = pre_s
 
 	if s == "":
 		if os.name == "posix":
-			print("exit")
 			exit()
 		elif os.name == "nt":
 			sys.exit()

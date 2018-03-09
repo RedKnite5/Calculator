@@ -4,7 +4,7 @@ import unittest
 import tkinter as tk
 
 import re_calc as c
-	
+
 
 class test_history_length_changing(unittest.TestCase):
 	
@@ -71,6 +71,7 @@ class test_history_length_changing(unittest.TestCase):
 		self.entry.insert(0, self.original_hist_len)
 		self.root.update()
 		c.change_hist_len(self.entry, self.root)
+
 		
 class test_change_der_approx(unittest.TestCase):
 
@@ -117,10 +118,11 @@ class test_change_der_approx(unittest.TestCase):
 		self.assertEqual(c.options[2], pre_der_approx)
 		self.root.destroy()
 
+
 class test_change_graph_win_set(unittest.TestCase):
 	pass
 
-		
+
 class test_graph(unittest.TestCase):
 	
 	def test_create_graph(self):
@@ -145,6 +147,7 @@ class test_graph(unittest.TestCase):
 			wide = 40, high = 50)
 		g.draw("x**.5")
 		g.root.destroy()
+
 		
 class test_polar_graph(unittest.TestCase):
 	
@@ -172,6 +175,7 @@ class test_polar_graph(unittest.TestCase):
 			theta_min = -.5, theta_max = .5, wide = 40, high = 50)
 		g.draw("x**.5")
 		g.root.destroy()
+
 		
 class test_graph_function(unittest.TestCase):
 	
@@ -197,6 +201,7 @@ class test_graph_function(unittest.TestCase):
 
 	def tearDown(self):
 		c.switch_polar_mode(self.mode)
+
 
 class test_graph_function_polar(unittest.TestCase):
 	
