@@ -14,6 +14,7 @@ import os
 
 from pickle import load, dump
 from re import compile, sub
+from decimal import Context
 from sympy import symbols, integrate, sympify
 from sympy.solvers import solve
 
@@ -39,6 +40,7 @@ except ModuleNotFoundError:
 19) pickle degree mode
 20) graph closes only when user dictates
 28) improve tkinter interface
+29) cut off trailing zeros
 31) polar graphs
 33) show request
 '''
@@ -59,7 +61,6 @@ except ModuleNotFoundError:
 25) summation
 26) big pi notation
 27) series
-29) cut off trailing zeros
 30) two expressions adjacent means multiplication
 32) 3d graphs
 34) make icon of tkinter window when run on Fedora
@@ -80,13 +81,15 @@ if os.name == "nt":
 elif os.name == "posix":
 	user_path = os.environ["HOME"]
 
+up_hist = 0
+ctx = Context()
+
 # changeable variables
 use_gui = True
 graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
-
-up_hist = 0
+ctx.prec = 15
 
 # multi session variables
 calc_path = os.path.abspath(os.path.dirname(__file__))
@@ -250,6 +253,15 @@ eq_sides_comp = compile(eq_sides_reg)
 # checks for specified variable when solving equations
 alg_var_reg = "(.+) for ([a-z])"
 alg_var_comp = compile(alg_var_reg)
+
+
+def float_to_str(f):
+	'''Convert the given float to a string,
+	without resorting to scientific notation
+	'''
+	
+	d1 = ctx.create_decimal(repr(float(f)))
+	return format(d1, 'f')
 
 
 def check_if_float(x):
@@ -816,7 +828,7 @@ def integrate_function(expression, var, a, b):
 	# The integral must have a "dx" or whatever variable you are using
 
 	# using sympy to integrate
-	return(integrate(expression, (var, a, b)))
+	return(str(float(integrate(expression, (var, a, b)))))
 
 
 def combinations_and_permutations(form, letter, n, m = None):
@@ -836,6 +848,11 @@ def combinations_and_permutations(form, letter, n, m = None):
 	'''
 
 	if form == "choose":  # if written as nCm
+	
+		if m is None:
+			raise TypeError(
+				"combinations_and_permutations requires a fourth "
+				"argument when using choose notation")
 
 		# turn the arguments into floats and give them more
 		# descriptive names
@@ -850,9 +867,14 @@ def combinations_and_permutations(form, letter, n, m = None):
 		if letter == "C":
 			temp_result = temp_result / math.gamma(1 + inner_m)
 
-		return(temp_result)
+		return(str(temp_result))
 
 	elif form == "func":  # if written as C(5, 2)
+	
+		if bool(m) is not None:
+			raise TypeError(
+				"combinations_and_permutations can not take a fourth "
+				"argument when using function notation")
 
 		# find the arguments of the function and cut off
 		# everything else
@@ -884,10 +906,11 @@ def combinations_and_permutations(form, letter, n, m = None):
 
 
 def statistics_functions(function, args):
-	'''Perform general statistics functions.'''
+	'''Perform general statistics functions.
 
-	# this may in the future include any function that
-	# can have an arbitrarily large number of arguments
+	This may in the future include any function that
+	can have an arbitrarily large number of arguments.
+	'''
 
 	# find the arguments of the function and cut off
 	# everything else
@@ -918,7 +941,7 @@ def statistics_functions(function, args):
 	# add on anything that was was cut off the end when finding
 	# the arguments
 	# sin(mean(4, 2)) ← the last parenthesis
-	return(str(result) + proto_inner[1])
+	return(float_to_str(result) + proto_inner[1])
 
 
 def single_argument(func, args):
@@ -1027,11 +1050,11 @@ def single_argument(func, args):
 	if degree_mode == 1:
 		degree_mode = 0
 
-	# this is a janky fix for the output being in
+	# this is a fix for the output being in
 	# scientific notation and the program mistaking the
 	# e for the constant e
 	try:
-		result = "{:.16f}".format(float(result))
+		result = float_to_str(result)
 	except (ValueError, TypeError):
 		pass
 
@@ -1188,11 +1211,11 @@ def simplify(s):
 	# iterates over all the operations
 	for i in operations:
 
-		# janky solution to scientific notation being mistaken
+		# solution to scientific notation being mistaken
 		# for the constant e
 		if i == const_comp:
 			try:
-				s = "{:.16f}".format(float(s))
+				s = float_to_str(s)
 			except (ValueError, TypeError):
 				pass
 
@@ -1361,12 +1384,11 @@ def simplify(s):
 			if i not in (command_comp, const_comp,
 			alg_comp, eval_comp, der_comp):
 
-				# this is a janky fix for python returning
+				# this is a fix for python returning
 				# answers in scientific notation which since
 				# it has e it mistakes the constant e
-
 				try:
-					result = "{:.16f}".format(result)
+					result = s = float_to_str(result)
 				except (ValueError, TypeError):
 					pass
 
@@ -1379,7 +1401,7 @@ def simplify(s):
 
 			m = i.search(s)
 	try:
-		s = "{:.16f}".format(s)
+		s = float_to_str(s)
 	except (ValueError, TypeError):
 		pass
 	return(s)
