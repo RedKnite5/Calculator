@@ -233,7 +233,7 @@ class test_integrate_function(unittest.TestCase):
 
 	def test_integrate_at_expression(self):
 		self.assertEqual(
-			c.integrate_function("2*x", "x", "0", "1+2"), "9")
+			c.integrate_function("2*x", "x", "0", "1+2"), "9.0")
 			
 class test_combinations_and_permutations(unittest.TestCase):
 	
@@ -283,7 +283,7 @@ class test_combinations_and_permutations(unittest.TestCase):
 
 	def test_function_notation_needs_only_three_arguments(self):
 		with self.assertRaises(TypeError):
-			c.combinations_and_permutations("choose", "C", "5", "2")
+			c.combinations_and_permutations("choose", "C", "5", m = "2")
 
 class test_statistics_functions(unittest.TestCase):
 	
@@ -308,7 +308,7 @@ class test_statistics_functions(unittest.TestCase):
 			"-7.0")
 		self.assertEqual(
 			c.statistics_functions("max", "(3, 6, 11, -7, -1, 55)"),
-			"-7.0")
+			"55.0")
 		self.assertEqual(
 			c.statistics_functions("stdev", "(3, 4, 4, 5, 6, 8)"),
 			"5.0")

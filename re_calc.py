@@ -870,7 +870,7 @@ def combinations_and_permutations(form, letter, n, m = None):
 		return(str(temp_result))
 
 	elif form == "func":  # if written as C(5, 2)
-	
+		print(m)
 		if bool(m) is not None:
 			raise TypeError(
 				"combinations_and_permutations can not take a fourth "
