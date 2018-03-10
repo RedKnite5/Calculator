@@ -381,6 +381,53 @@ class test_single_argument_function(unittest.TestCase):
 			float(c.single_argument("coth", "(1)")),
 			(math.e ** 2 + 1) / (math.e ** 2 - 1))
 		
+	def test_arctrig_functions(self):
+		self.assertAlmostEqual(
+			float(c.single_argument("asin", "(.5)")),
+			math.pi / 6)
+		self.assertAlmostEqual(
+			float(c.single_argument("acos", "(.5)")),
+			math.pi / 3)
+		self.assertAlmostEqual(
+			float(c.single_argument("atan", "(3 ** .5)")),
+			math.pi / 3)
+		self.assertAlmostEqual(
+			float(c.single_argument("asec", "(2)")),
+			math.pi / 3)
+		self.assertAlmostEqual(
+			float(c.single_argument("acsc", "(2)")),
+			math.pi / 6)
+		self.assertAlmostEqual(
+			float(c.single_argument("acot", "(3 ** .5)")),
+			math.pi / 6)
+
+	def test_inverse_hyperbolic_functions(self):
+		self.assertAlmostEqual(
+			float(c.single_argument("asinh",
+				"(((e ** 2) - 1) / (2 * e))")),
+			1)
+		self.assertAlmostEqual(
+			float(c.single_argument("acosh",
+				"((e ** 2 + 1) / (2 * e))")),
+			1)
+		self.assertAlmostEqual(
+			float(c.single_argument("atanh",
+				"((e ** 2 - 1) / (e ** 2 + 1))")),
+			1)
+		self.assertAlmostEqual(
+			float(c.single_argument("acsch",
+				"((2 * e) / (e ** 2 - 1))")),
+			1)
+		self.assertAlmostEqual(
+			float(c.single_argument("asech",
+				"((2 * e) / (e ** 2 + 1))")),
+			1)
+		self.assertAlmostEqual(
+			float(c.single_argument("acoth",
+				"((e ** 2 + 1) / (e ** 2 - 1))")),
+			1)
+
+
 
 
 

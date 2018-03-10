@@ -1038,6 +1038,7 @@ def single_argument(func, args):
 	elif func == "coth":
 		result = 1/math.tanh(inner)
 	elif func in ("asinh", "arcsinh"):
+		print(inner)
 		result = math.asinh(inner)
 	elif func in ("acosh", "arccosh"):
 		result = math.acosh(inner)
@@ -1242,6 +1243,8 @@ def simplify(s):
 	global degree_mode
 
 	original = s
+	
+	print("input", s)
 
 	# iterates over all the operations
 	for i in operations:
@@ -1455,8 +1458,8 @@ def simplify(s):
 			# with the result of the mathematical expression
 			s = sub(i, str(result), s, count = 1)
 
-			# print("result", "".join(m.groups()), " = ", result)
-			# print("sub",s)
+			print("result", "".join(m.groups()), " = ", result)
+			print("sub",s)
 
 			m = i.search(s)
 	try:
