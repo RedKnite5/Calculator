@@ -1091,7 +1091,7 @@ def single_argument(func, args):
 	# argument of the inner function
 	# tan(sin(π)) ← the last parenthesis when
 	# evaluating sin
-	return(str(result) + proto_inner[1])
+	return(float_to_str(str(result) + proto_inner[1]))
 
 
 def gamma_function(arg):
@@ -1451,7 +1451,7 @@ def simplify(s):
 				except (ValueError, TypeError):
 					pass
 
-			# replace the text matched by i: the regular expression
+			# replace the text matched by i (the regular expression)
 			# with the result of the mathematical expression
 			s = sub(i, str(result), s, count = 1)
 
@@ -1500,7 +1500,7 @@ def ask(s = None):
 
 
 def key_pressed(event):
-	'''Handle keys pressed in the gui.'''
+	'''Handle keys pressed in the GUI.'''
 
 	global up_hist
 
@@ -1586,7 +1586,7 @@ def get_input(s = None):
 
 
 def switch_trig():
-	'''Use grid on the trig function buttons.'''
+	'''Put the trig function buttons on the GUI.'''
 
 	# remove the buttons for the hyperbolic functions, misc functions,
 	# and stats functions
@@ -1606,7 +1606,7 @@ def switch_trig():
 
 
 def switch_hyperbolic():
-	'''Use grid on the trig function buttons.'''
+	'''Put the hyperbolic function buttons in the GUI.'''
 
 	# remove the buttons for the trig functions, misc functions,
 	# and stats functions
@@ -1627,7 +1627,7 @@ def switch_hyperbolic():
 
 
 def switch_misc():
-	'''Use grid on miscellaneous functions.'''
+	'''Put the miscellaneous function buttons on the GUI.'''
 
 	# remove the buttons for the trig functions, hyperbolic functions,
 	# and stats functions
@@ -1644,7 +1644,7 @@ def switch_misc():
 
 
 def switch_stats():
-	'''Use grid on statistics functions.'''
+	'''Put the statistics function buttons in the GUI.'''
 
 	# remove the buttons for the trig functions, misc functions,
 	# and hyperbolic functions
@@ -1663,7 +1663,7 @@ def switch_stats():
 
 
 def format_default_screen():
-	'''Use grid to put in place the buttons'''
+	'''Put the buttons in place on the GUI'''
 
 	# 7 8 9
 	digit_button[7].grid(row = 3, column = 0)

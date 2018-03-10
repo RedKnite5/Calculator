@@ -341,8 +341,46 @@ class test_statistics_functions(unittest.TestCase):
 			
 class test_single_argument_function(unittest.TestCase):
 	
-	def test_all_basic_functions(self):
-		pass
+	def test_basic_trig_functions(self):
+		self.assertAlmostEqual(
+			float(c.single_argument("sin", "(pi/6)")),
+			0.5)
+		self.assertAlmostEqual(
+			float(c.single_argument("cos", "(pi/3)")),
+			0.5)
+		self.assertAlmostEqual(
+			float(c.single_argument("tan", "(pi/4)")),
+			1.0)
+		self.assertAlmostEqual(
+			float(c.single_argument("sec", "(pi/3)")),
+			2.0)
+		self.assertAlmostEqual(
+			float(c.single_argument("csc", "(pi/6)")),
+			2.0)
+		self.assertAlmostEqual(
+			float(c.single_argument("cot", "(pi/4)")),
+			1.0)
+			
+	def test_hyperbolic_trig_functions(self):
+		self.assertAlmostEqual(
+			float(c.single_argument("sinh", "(1)")),
+			(math.e ** 2 - 1) / (2 * math.e))
+		self.assertAlmostEqual(
+			float(c.single_argument("cosh", "(1)")),
+			(math.e ** 2 + 1) / (2 * math.e))
+		self.assertAlmostEqual(
+			float(c.single_argument("tanh", "(1)")),
+			(math.e ** 2 - 1) / (math.e ** 2 + 1))
+		self.assertAlmostEqual(
+			float(c.single_argument("csch", "(1)")),
+			(2 * math.e) / (math.e ** 2 - 1))
+		self.assertAlmostEqual(
+			float(c.single_argument("sech", "(1)")),
+			(2 * math.e) / (math.e ** 2 + 1))
+		self.assertAlmostEqual(
+			float(c.single_argument("coth", "(1)")),
+			(math.e ** 2 + 1) / (math.e ** 2 - 1))
+		
 
 
 
