@@ -128,6 +128,57 @@ win_bound = calc_info[3]
 key_binds = {"nt": (13, 38, 40), "posix": (104, 111, 116)}
 g_bound_names = ("x min", "x max", "y min", "y max", "theta min",
 	"theta max")
+one_arg_funcs = {
+	# name     function    angle  alt names
+	"asinh": (math.asinh, "out"),
+	"acosh": (math.acosh, "out"),
+	"atanh": (math.atanh, "out"),
+	"asech": (lambda x: math.acosh(1 / x), "out"),
+	"acsch": (lambda x: math.asinh(1 / x), "out"),
+	"acoth": (lambda x: math.atanh(1 / x), "out"),
+	
+	"arcsinh": (math.asinh, "out"),
+	"arccosh": (math.acosh, "out"),
+	"arctanh": (math.atanh, "out"),
+	"arcsech": (lambda x: math.acosh(1 / x), "out"),
+	"arccsch": (lambda x: math.asinh(1 / x), "out"),
+	"arccoth": (lambda x: math.atanh(1 / x), "out"),
+
+	"sinh": (math.sinh, "in"),
+	"cosh": (math.cosh, "in"),
+	"tanh": (math.tanh, "in"),
+	"sech": (lambda x: 1 / math.cosh(x), "in"),
+	"csch": (lambda x: 1 / math.sinh(x), "in"),
+	"coth": (lambda x: 1 / math.tanh(x), "in"),
+
+	"asin": (math.asin, "out"),
+	"acos": (math.acos, "out"),
+	"atan": (math.atan, "out"),
+	"asec": (lambda x: math.acos(1 / x), "out"),
+	"acsc": (lambda x: math.asin(1 / x), "out"),
+	"acot": (lambda x: math.atan(1 / x), "out"),
+	
+	"arcsin": (math.asin, "out"),
+	"arccos": (math.acos, "out"),
+	"arctan": (math.atan, "out"),
+	"arcsec": (lambda x: math.acos(1 / x), "out"),
+	"arccsc": (lambda x: math.asin(1 / x), "out"),
+	"arccot": (lambda x: math.atan(1 / x), "out"),
+
+	"sin": (math.sin, "in"),
+	"cos": (math.cos, "in"),
+	"tan": (math.tan, "in"),
+	"sec": (lambda x: 1 / math.cos(x), "in"),
+	"csc": (lambda x: 1 / math.sin(x), "in"),
+	"cot": (lambda x: 1 / math.tan(x), "in"),
+
+	"abs": (math.fabs, ""),
+	"ceil": (math.ceil, ""),
+	"floor": (math.floor, ""),
+	"erf": (math.erf, ""),
+	"erfc": (math.erfc, "")
+}
+
 
 # regular expressions
 if True:
@@ -191,6 +242,8 @@ if True:
 	"asec|acsc|acot|arcsec|arccsc|arccot|"
 	"abs|ceil|floor|erf"
 	")(.+)")
+	
+	# trig_reg = "(" + "|".join(key for key in one_arg_funcs) + ")(.+)"
 	trig_comp = compile(trig_reg)
 
 	# regex for gamma function
@@ -1008,12 +1061,12 @@ def single_argument(func, args):
 
 	# check if in degree mode and if its doing an
 	# operation that takes an angle as an argument
-	if degree_mode > 0:
-		if func in (
-		"sin", "sec", "cos", "csc", "tan", "cot",
-		"sinh", "sech", "cosh", "csch", "tanh", "coth"):
-			inner = math.pi * inner / 180
+	if degree_mode > 0 and "in" in one_arg_funcs[func][1]:
+		inner = math.pi * inner / 180
+		
+	result = one_arg_funcs[func][0](inner)
 
+	'''
 	# trig functions and inverse trig functions
 	if func == "sin":
 		result = math.sin(inner)
@@ -1078,17 +1131,13 @@ def single_argument(func, args):
 		
 	else:
 		raise ValueError("'%s' is not a recognized function" % func)
+	'''
 
 	# checks if its in degree mode (not because of
 	# degree symbols in the argument) and if so
 	# converts the answer to degrees for functions that
 	# output an angle
-	if func in (
-		"asin", "arcsin", "acos", "arccos", "atan", "arctan",
-		"asinh", "arcsinh", "acosh", "arccosh", "atanh", "arctanh",
-		"asec", "arcsec", "acsc", "arccsc", "acot", "arccot",
-		"asech", "arcsech", "acsch", "arccsch", "acoth", "arccoth"
-		) and degree_mode == 2:
+	if degree_mode == 2 and "out" in one_arg_funcs[func][1]:
 		result = result * 180 / math.pi
 
 	# resets the degree mode for the session
