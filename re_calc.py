@@ -1038,7 +1038,6 @@ def single_argument(func, args):
 	elif func == "coth":
 		result = 1/math.tanh(inner)
 	elif func in ("asinh", "arcsinh"):
-		print(inner)
 		result = math.asinh(inner)
 	elif func in ("acosh", "arccosh"):
 		result = math.acosh(inner)
@@ -1361,7 +1360,6 @@ def simplify(s):
 			elif i == paren_comp:
 
 				# recursively evaluates the innermost parentheses
-
 				result = simplify(m.group(1))
 
 			elif i == comma_comp:
@@ -1450,16 +1448,13 @@ def simplify(s):
 				# answers in scientific notation which since
 				# it has e it mistakes the constant e
 				try:
-					result = s = float_to_str(result)
+					result = float_to_str(result)
 				except (ValueError, TypeError):
 					pass
 
 			# replace the text matched by i (the regular expression)
 			# with the result of the mathematical expression
 			s = sub(i, str(result), s, count = 1)
-
-			print("result", "".join(m.groups()), " = ", result)
-			print("sub",s)
 
 			m = i.search(s)
 	try:
