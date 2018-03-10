@@ -1,4 +1,10 @@
-#   calculator_tkinter_testing.py
+# -*- coding: utf-8 -*-
+
+'''
+Tkinter tests for re_calc.
+
+Calculator_tkinter_testing.py
+'''
 
 import unittest
 import tkinter as tk

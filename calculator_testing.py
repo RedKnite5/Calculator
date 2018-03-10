@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-#   calculator_testing.py
+'''
+Tests for re_calc.
+
+calculator_testing.py
+'''
 
 import unittest
 import os
@@ -429,8 +433,33 @@ class test_single_argument_function(unittest.TestCase):
 				"((e ** 2 + 1) / (e ** 2 - 1))")),
 			1)
 
-
-
+	def test_other_functions(self):
+		self.assertEqual(
+			c.single_argument("abs", "(-1)"),
+			"1.0")
+		self.assertEqual(
+			c.single_argument("abs", "(3)"),
+			"3.0")
+		self.assertEqual(
+			c.single_argument("ceil", "(.5)"),
+			"1.0")
+		self.assertEqual(
+			c.single_argument("ceil", "(-1.5)"),
+			"-1.0")
+		self.assertEqual(
+			c.single_argument("floor", "(4.8)"),
+			"4.0")
+		self.assertEqual(
+			c.single_argument("floor", "(-4.8)"),
+			"-5.0")
+		self.assertAlmostEqual(
+			float(c.single_argument("erf", "(e)")),
+			0.9998790689599)
+			
+	def test_trig_functions_with_degree_symbol(self):
+		self.assertAlmostEqual(
+			float(c.single_argument("sin", "(30°)")),
+			"0.5")
 
 
 

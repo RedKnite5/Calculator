@@ -5,6 +5,22 @@ Written by: Max Friedman
 Licensed under GPLv3
 
 re_calc.py
+
+This is a graphing calculator written in python 3.6.
+It has defined:
+addition, subtraction, multiplication, division, exponents,
+logarithms, trig functions, inverse trig functions, hyperbolic
+functions, inverse hyperbolic functions, the ceiling function,
+the floor function, the gauss error function, modulus, absolute value,
+factorials, the gamma function, combinations, permutations, max, min,
+mean, median, mode, sample standard deviation, definite integrals,
+derivatives at a point, evaluating a function at a point, graphing
+functions in Cartesian and polar, and solving equations.
+
+It has a GUI made with tkinter that it will default to using if tkinter
+is installed. It defines graphing and polar graphing classes. It remembers
+every input it is given.
+
 '''
 
 import math
@@ -1242,8 +1258,6 @@ def simplify(s):
 	global degree_mode
 
 	original = s
-	
-	print("input", s)
 
 	# iterates over all the operations
 	for i in operations:
