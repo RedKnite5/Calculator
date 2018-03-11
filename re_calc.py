@@ -129,7 +129,18 @@ key_binds = {"nt": (13, 38, 40), "posix": (104, 111, 116)}
 g_bound_names = ("x min", "x max", "y min", "y max", "theta min",
 	"theta max")
 one_arg_funcs = {
-	# name     function    angle  alt names
+	#   name                 function                angles
+	"hacovercosin": (lambda x: .5 + math.sin(x) / 2, "in"),
+	"hacoversin": (lambda x: .5 - math.sin(x) / 2, "in"),
+	"havercosin": (lambda x: .5 + math.cos(x) / 2, "in"),
+	"haversin": (lambda x: .5 - math.cos(x) / 2, "in"),
+	"covercosin": (lambda x: 1 + math.sin(x), "in"),
+	"coversin": (lambda x: 1 - math.sin(x), "in"),
+	"vercosin": (lambda x: 1 + math.cos(x), "in"),
+	"versin": (lambda x: 1 - math.cos(x), "in"),
+	"exsec": (lambda x: 1 / math.cos(x) - 1, "in"),
+	"excsc": (lambda x: 1 / math.sin(x) - 1, "in"),
+	
 	"asinh": (math.asinh, "out"),
 	"acosh": (math.acosh, "out"),
 	"atanh": (math.atanh, "out"),
@@ -233,6 +244,9 @@ if True:
 	# before hyperbolic functions the "h" is interpreted as
 	# part of the argument for the function
 	trig_reg = ("("
+	"hacovercosin|hacoversin|havercosin|haversin|"
+	"covercosin|coversin|vercosin|versin|"
+	"exsec|excsc|"
 	"sinh|cosh|tanh|asinh|acosh|atanh|"
 	"arcsinh|arccosh|arctanh|"
 	"sech|csch|coth|asech|acsch|acoth|"
@@ -331,7 +345,10 @@ alg_var_comp = compile(alg_var_reg)
 
 def float_to_str(f):
 	'''Convert the given float to a string,
-	without resorting to scientific notation
+	without resorting to scientific notation.
+	
+	>>> float_to_str(3.0030)
+	'3.003'
 	'''
 	
 	d1 = ctx.create_decimal(repr(float(f)))
@@ -339,7 +356,14 @@ def float_to_str(f):
 
 
 def check_if_float(x):
-	'''Test if a object can be made a float.'''
+	'''Test if a object can be made a float.
+	
+	>>> check_if_float("4.5")
+	True
+	
+	>>> check_if_float("this")
+	False
+	'''
 
 	try:
 		float(x)
@@ -371,7 +395,7 @@ def switch_degree_mode(mode):
 	elif mode in (0, 2):
 		degree_mode = mode
 	else:
-		raise ValueError("Can not set degree_mode to " + str(mode))
+		raise CalculatorError("Can not set degree_mode to " + str(mode))
 
 	options[0] = degree_mode
 	save_info()
@@ -389,7 +413,7 @@ def switch_polar_mode(mode):
 	elif mode in (True, False):
 		polar_mode = mode
 	else:
-		raise ValueError("Can not set polar_mode to " + str(mode))
+		raise CalculatorError("Can not set polar_mode to " + str(mode))
 
 	options[1] = polar_mode
 	save_info()
@@ -502,11 +526,15 @@ def change_graph_win_set():
 
 
 def find_match(s):
-	'''Find matching parentheses.'''
+	'''Find matching parentheses.
+	
+	>>> find_match("(4, (5), 3) + 2")
+	('(4, (5), 3)', ' + 2')
+	'''
 
 	x = 0
 	if not s.startswith("("):
-		raise ValueError(
+		raise CalculatorError(
 			"error '" + str(s) + "' is an invalid input.")
 				
 	for i in range(len(s)):
@@ -528,17 +556,27 @@ def find_match(s):
 			break
 
 		elif x < 0:
-			raise ValueError(
+			raise CalculatorError(
 				"error '" + str(s) + "' is an invalid input.")
 
 	try:
 		return(an, left)
 	except UnboundLocalError:
-		raise ValueError("error '" + str(s) + "' is an invalid input.")
+		raise CalculatorError("error '" + str(s) + "' is an invalid input.")
 
 
 def brackets(s):
-	'''Inform separate whether parentheses match.'''
+	'''Inform separate whether parentheses match.
+	
+	>>> brackets("())")
+	False
+	
+	>>> brackets("(()())")
+	True
+	
+	>>> brackets("w(h)(a()t)")
+	True
+	'''
 
 	x = 0
 	for i in s:
@@ -553,8 +591,11 @@ def brackets(s):
 
 def separate(s):
 	'''Split up arguments of a function with commas
-	like mod(x, y) or log(x, y) based on where commas that are only
-	in one set of parentheses are.
+	like mod(x, y) or log(x, y) based on where commas that aren't in
+	parentheses.
+	
+	>>> separate("5, 6 , (4, 7)")
+	('5', ' 6 ', ' (4, 7)')
 	'''
 	
 	terms = s.split(",")
@@ -574,6 +615,10 @@ def separate(s):
 		else:
 			middle = True
 	return(tuple(new_terms))
+
+
+class CalculatorError(Exception):
+	pass
 
 
 class graph(object):
@@ -756,7 +801,14 @@ class polar_graph(graph):
 #####################
 
 def constant_function(constant):
-	'''Evaluate mathematical constants.'''
+	'''Evaluate mathematical constants.
+	
+	>>> constant_function("pi")
+	3.141592653589793
+	
+	>>> constant_function("phi")
+	1.618033988749895
+	'''
 
 	constant_dict = {"pi": math.pi, "π": math.pi, "e": math.e,
 	"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
@@ -765,7 +817,7 @@ def constant_function(constant):
 	if constant in constant_dict:
 		return(constant_dict[constant])
 	else:
-		raise ValueError("'%s' is not a recognized constant." % constant)
+		raise CalculatorError("'%s' is not a recognized constant." % constant)
 
 
 def graph_function(func_arg):
@@ -825,7 +877,14 @@ def graph_function(func_arg):
 
 def solve_equations(equation):
 	'''Solve equations using sympy. If there is no equals
-	sign it is assumed the expression equals zero.
+	sign it is assumed the expression equals zero. If there is more
+	than one answer it will return a list of the answers.
+	
+	>>> solve_equations("x^2 = 4")
+	[-2, 2]
+	
+	>>> solve_equations("x-7 = 13")
+	20
 	'''
 
 	# find if there is a specified variable
@@ -868,14 +927,20 @@ def solve_equations(equation):
 
 
 def evaluate_function(expression, point, var = "x"):
-	'''Evaluate the function by substituting x for the number you
+	'''Evaluate the function by substituting var for the number you
 	want to evaluate at.
+	
+	>>> evaluate_function("r^2", 5, var = "r")
+	'25.0'
+	
+	>>> evaluate_function("3*b", "2", "b")
+	'6.0'
 	'''
 
 	# substituting the point for x in the function and evaluating
 	# that recursively
 	return(simplify(sub("(?<![a-z])" + var + "(?![a-z])",
-	point, expression)))
+	str(point), expression)))
 
 
 def find_derivative(expression, point, var = "x"):
@@ -927,7 +992,7 @@ def combinations_and_permutations(form, letter, n, m = None):
 	if form == "choose":  # if written as nCm
 	
 		if m is None:
-			raise TypeError(
+			raise CalculatorError(
 				"combinations_and_permutations requires a fourth "
 				"argument when using choose notation")
 
@@ -946,14 +1011,14 @@ def combinations_and_permutations(form, letter, n, m = None):
 		elif letter == "P":
 			pass
 		else:
-			raise ValueError("Second argument must be 'C' or 'P' for "
+			raise CalculatorError("Second argument must be 'C' or 'P' for "
 				"combinations or permutations not '%s'" % letter)
 
 		return(str(temp_result))
 
 	elif form == "func":  # if written as C(5, 2)
 		if m:
-			raise TypeError(
+			raise CalculatorError(
 				"combinations_and_permutations can not take a fourth "
 				"argument when using function notation")
 
@@ -982,7 +1047,7 @@ def combinations_and_permutations(form, letter, n, m = None):
 		elif letter == "P":
 			pass
 		else:
-			raise ValueError("Second argument must be 'C' or 'P' for "
+			raise CalculatorError("Second argument must be 'C' or 'P' for "
 				"combinations or permutations not '%s'" % letter)
 
 		# add on anything that was was cut off the end when finding
@@ -990,7 +1055,7 @@ def combinations_and_permutations(form, letter, n, m = None):
 		# sin(C(5, 2)) ← the last parenthesis
 		return(str(temp_result) + proto_inner[1])
 	else:
-		raise ValueError("First argument must be 'choose' or 'func' "
+		raise CalculatorError("First argument must be 'choose' or 'func' "
 			"not '%s'" % form)
 
 
@@ -1028,7 +1093,7 @@ def statistics_functions(function, args):
 	elif function.lower() in ("stdev"):
 		result = stats.stdev(list_ave)
 	else:
-		raise ValueError("%s is not a function that is defined in "
+		raise CalculatorError("%s is not a function that is defined in "
 			"statistics_functions" % function)
 
 	# add on anything that was was cut off the end when finding
@@ -1046,13 +1111,14 @@ def single_argument(func, args):
 	# everything else
 	# tan(sin(π)) ← the last parenthesis when
 	# evaluating sin
-	proto_inner = find_match(args)
+	proto_inner = list(find_match(args))
 
 	# looks for the degree symbol in the argument
 	# if the program finds it degree mode is set to true
 	# for the particular operation
-	if "°" in proto_inner[0] and degree_mode == 0:
-		degree_mode = 1
+	if "°" in proto_inner[0]:
+		if degree_mode == 0:
+			degree_mode = 1
 		proto_inner[0] = sub("[°]", "", proto_inner[0])
 
 	# evaluate the argument into a form that math.log
@@ -1065,73 +1131,6 @@ def single_argument(func, args):
 		inner = math.pi * inner / 180
 		
 	result = one_arg_funcs[func][0](inner)
-
-	'''
-	# trig functions and inverse trig functions
-	if func == "sin":
-		result = math.sin(inner)
-	elif func == "cos":
-		result = math.cos(inner)
-	elif func == "tan":
-		result = math.tan(inner)
-	elif func == "sec":
-		result = 1/math.cos(inner)
-	elif func == "csc":
-		result = 1/math.sin(inner)
-	elif func == "cot":
-		result = 1/math.tan(inner)
-	elif func in ("asin", "arcsin"):
-		result = math.asin(inner)
-	elif func in ("acos", "arccos"):
-		result = math.acos(inner)
-	elif func in ("atan", "arctan"):
-		result = math.atan(inner)
-	elif func in ("asec", "arcsec"):
-		result = math.acos(1 / inner)
-	elif func in ("acsc", "arccsc"):
-		result = math.asin(1 / inner)
-	elif func in ("acot", "arccot"):
-		result = math.atan(1 / inner)
-
-	# hyperbolic functions and inverse hyperbolic functions
-	elif func == "sinh":
-		result = math.sinh(inner)
-	elif func == "cosh":
-		result = math.cosh(inner)
-	elif func == "tanh":
-		result = math.tanh(inner)
-	elif func == "sech":
-		result = 1/math.cosh(inner)
-	elif func == "csch":
-		result = 1/math.sinh(inner)
-	elif func == "coth":
-		result = 1/math.tanh(inner)
-	elif func in ("asinh", "arcsinh"):
-		result = math.asinh(inner)
-	elif func in ("acosh", "arccosh"):
-		result = math.acosh(inner)
-	elif func in ("atanh", "arctanh"):
-		result = math.atanh(inner)
-	elif func in ("asech", "arcsech"):
-		result = math.acosh(1 / inner)
-	elif func in ("acsch", "arccsch"):
-		result = math.asinh(1 / inner)
-	elif func in ("acoth", "arccoth"):
-		result = math.atanh(1 / inner)
-
-	# other single argument functions
-	elif func == "abs":
-		result = math.fabs(inner)
-	elif func == "ceil":
-		result = math.ceil(inner)
-	elif func == "floor":
-		result = math.floor(inner)
-	elif func == "erf":
-		result = math.erf(inner)
-		
-	else:
-		raise ValueError("'%s' is not a recognized function" % func)
-	'''
 
 	# checks if its in degree mode (not because of
 	# degree symbols in the argument) and if so
@@ -1195,8 +1194,9 @@ def factorial_function(arg):
 def logarithm(log_arg, ln_arg):
 	'''Solve logarithms.
 	
-	log must be written with two arguments. ln only takes one argument
-	and is evaluated separately from log'''
+	Log must be written with two arguments. Ln only takes one argument
+	and is evaluated separately from log.
+	'''
 
 	# logarithms written as log(x, y) where y
 	# is the base and written as ln(x)
@@ -1217,7 +1217,14 @@ def logarithm(log_arg, ln_arg):
 		base = float(simplify(log_args[1]))
 
 		# perform the logarithm
-		return(str(math.log(argument, base)) + proto_inner[1])
+		if base == 2:
+			result = math.log2(argument)
+		elif base == 10:
+			result = math.log10(argument)
+		else:
+			result = math.log(argument, base)
+		
+		return(str(result) + proto_inner[1])
 
 	elif ln_arg is not None:  # if written as ln(x)
 
@@ -1230,7 +1237,7 @@ def logarithm(log_arg, ln_arg):
 		result = math.log(float(simplify(proto_inner[0])))
 	
 	else:
-		raise ValueError("log_arg or ln_arg must be something not None")
+		raise CalculatorError("log_arg or ln_arg must be something not None")
 
 	# add on anything that was was cut off the end when finding
 	# the arguments
@@ -1306,8 +1313,6 @@ def simplify(s):
 
 	global degree_mode
 
-	original = s
-
 	# iterates over all the operations
 	for i in operations:
 
@@ -1346,7 +1351,7 @@ def simplify(s):
 					switch_degree_mode(0)
 					
 				else:
-					raise ValueError("Command must be 'history',"
+					raise CalculatorError("Command must be 'history',"
 						" 'exit', 'quit', 'degree mode', or 'radian mode'")
 
 				return(None)
@@ -1408,7 +1413,7 @@ def simplify(s):
 					result = factorial_function(m.group(1))
 				
 				else:
-					raise ValueError("How could this possibly happen?"
+					raise CalculatorError("How could this possibly happen?"
 						" It just tested if i was 'gamma_comp' or "
 						"'fact_comp'.")
 
@@ -1459,7 +1464,7 @@ def simplify(s):
 					float(m.group(2)))
 				
 				else:
-					raise ValueError("How could this possibly happen?"
+					raise CalculatorError("How could this possibly happen?"
 						" It just tested if i was 'mod2_comp' or "
 						"'mod_comp'.")
 
@@ -1482,7 +1487,7 @@ def simplify(s):
 					result = float(m.group(1)) / float(m.group(3))
 					
 				else:
-					raise ValueError("Mult_comp must match '*', '//', "
+					raise CalculatorError("Mult_comp must match '*', '//', "
 						"or '÷'.")
 
 			elif i == add_comp:
@@ -1499,7 +1504,7 @@ def simplify(s):
 					result = float(m.group(1)) - float(m.group(3))
 					
 				else:
-					raise ValueError("add_comp must match '+' or '-'.")
+					raise CalculatorError("add_comp must match '+' or '-'.")
 			
 			else:
 				print("function not implemented.", i)

@@ -7,27 +7,37 @@ calculator_testing.py
 '''
 
 import unittest
+import doctest
 import os
 import math
 
 import re_calc as c
 
-
 class test_check_if_float(unittest.TestCase):
 
 	def test_float(self):
+		'''Check that it works for floats.'''
+		
 		self.assertTrue(c.check_if_float(3.4))
 
 	def test_int_type(self):
+		'''Check that it works for ints.'''
+		
 		self.assertTrue(c.check_if_float(4))
 
 	def test_string_type(self):
+		'''Check that it works for floats as strings.'''
+		
 		self.assertTrue(c.check_if_float("3.4"))
 
 	def test_word(self):
+		'''Check that it returns false for words.'''
+		
 		self.assertFalse(c.check_if_float("hello"))
 
 	def test_int_string(self):
+		'''Check it works for ints as strings.'''
+		
 		self.assertTrue(c.check_if_float("2"))
 
 	def test_mixed(self):
@@ -43,13 +53,19 @@ class test_check_if_float(unittest.TestCase):
 class test_files(unittest.TestCase):
 	
 	def test_main_path(self):
+		'''Test that the path of the module actually exists.'''
+		
 		self.assertTrue(os.path.exists(c.calc_path))
 		
 	def test_picked_data(self):
+		'''Check that the information file is present.'''
+		
 		self.assertTrue(
 		os.path.isfile(os.path.join(c.calc_path, "re_calc_info.txt")))
 		
 	def test_tkinter_icon(self):
+		'''Check that the icon for the window is present.'''
+		
 		self.assertTrue(
 		os.path.isfile(os.path.join(c.calc_path, "calc_pic.ico")))
 
@@ -57,6 +73,8 @@ class test_files(unittest.TestCase):
 class test_switch_degree_mode(unittest.TestCase):
 	
 	def setUp(self):
+		'''Remember what the degree_mode started as.'''
+		
 		self.original_degree_mode = c.degree_mode
 	
 	def test_set_degree_mode(self):
@@ -80,14 +98,16 @@ class test_switch_degree_mode(unittest.TestCase):
 		self.assertEqual(c.options[0], 0)
 		
 	def test_set_not_option(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaises(c.CalculatorError):
 			c.switch_degree_mode(1)
 			
 	def test_set_to_random_word(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaises(c.CalculatorError):
 			c.switch_degree_mode("random")
 		
 	def tearDown(self):
+		'''Set the degree_mode back to what it started as.'''
+		
 		c.switch_degree_mode(self.original_degree_mode)
 
 
@@ -117,7 +137,7 @@ class test_switch_polar_cartesian(unittest.TestCase):
 		self.assertEqual(c.options[1], False)
 		
 	def test_set_not_option(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaises(c.CalculatorError):
 			c.switch_polar_mode(4)
 			
 	def tearDown(self):
@@ -135,11 +155,11 @@ class test_find_match(unittest.TestCase):
 		c.find_match("((inside)))"), ('((inside))', ')'))
 		
 	def test_mismatched_parentheses_left(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaises(c.CalculatorError):
 			c.find_match("(word")
 			
 	def test_mismatched_parentheses_right(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaises(c.CalculatorError):
 			c.find_match("word)")
 
 
@@ -238,10 +258,15 @@ class test_integrate_function(unittest.TestCase):
 		self.assertEqual(c.integrate_function("2*x", "x", "0", "3"), "9.0")
 
 	def test_other_variables(self):
-		self.assertEqual(c.integrate_function("2*r", "r", "0", "3"), "9.0")
-		self.assertEqual(c.integrate_function("2*w", "w", "0", "3"), "9.0")
-		self.assertEqual(c.integrate_function("2*l", "l", "0", "3"), "9.0")
-		self.assertEqual(c.integrate_function("2*o", "o", "0", "3"), "9.0")
+		with self.subTest():
+			self.assertEqual(
+				c.integrate_function("2*r", "r", "0", "3"), "9.0")
+			self.assertEqual(
+				c.integrate_function("2*w", "w", "0", "3"), "9.0")
+			self.assertEqual(
+				c.integrate_function("2*l", "l", "0", "3"), "9.0")
+			self.assertEqual(
+				c.integrate_function("2*o", "o", "0", "3"), "9.0")
 
 	def test_integrate_at_expression(self):
 		self.assertEqual(
@@ -291,49 +316,50 @@ class test_combinations_and_permutations(unittest.TestCase):
 			"10.0")
 			
 	def test_choose_notation_needs_four_arguments(self):
-		with self.assertRaises(TypeError):
+		with self.assertRaises(c.CalculatorError):
 			c.combinations_and_permutations("choose", "C", "(5,2)")
 
 	def test_function_notation_needs_only_three_arguments(self):
-		with self.assertRaises(TypeError):
+		with self.assertRaises(c.CalculatorError):
 			c.combinations_and_permutations("func", "C", "5", m = "2")
 
 	def test_raises_value_errors_for_not_c_or_p_choose_notaion(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaises(c.CalculatorError):
 			c.combinations_and_permutations("choose", "R", "5", "2")
 			
 	def test_raises_value_errors_for_not_c_or_p_func_notaion(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaises(c.CalculatorError):
 			c.combinations_and_permutations("func", "R", "(5, 2)")
 
 
 class test_statistics_functions(unittest.TestCase):
 	
 	def test_all_basic_statistics(self):
-		self.assertEqual(
-			c.statistics_functions("mean", "(4, 6, 39, 2, 11)"),
-			"12.4")
-		self.assertEqual(
-			c.statistics_functions("ave", "(4, 6, 39, 2, 11)"),
-			"12.4")
-		self.assertEqual(
-			c.statistics_functions("mean", "(4, 6, 39, 2, 11)"),
-			"12.4")
-		self.assertEqual(
-			c.statistics_functions("median", "(1, 2, 3, 1, 7)"),
-			"2.0")
-		self.assertEqual(
-			c.statistics_functions("mode", "(1, 2, 3, 1, 7)"),
-			"1.0")
-		self.assertEqual(
-			c.statistics_functions("min", "(3, 6, 11, -7, -1, 55)"),
-			"-7.0")
-		self.assertEqual(
-			c.statistics_functions("max", "(3, 6, 11, -7, -1, 55)"),
-			"55.0")
-		self.assertAlmostEqual(
-			float(c.statistics_functions("stdev", "(3, 4, 4, 6, 8)")),
-			2.0)
+		with self.subTest():
+			self.assertEqual(
+				c.statistics_functions("mean", "(4, 6, 39, 2, 11)"),
+				"12.4")
+			self.assertEqual(
+				c.statistics_functions("ave", "(4, 6, 39, 2, 11)"),
+				"12.4")
+			self.assertEqual(
+				c.statistics_functions("mean", "(4, 6, 39, 2, 11)"),
+				"12.4")
+			self.assertEqual(
+				c.statistics_functions("median", "(1, 2, 3, 1, 7)"),
+				"2.0")
+			self.assertEqual(
+				c.statistics_functions("mode", "(1, 2, 3, 1, 7)"),
+				"1.0")
+			self.assertEqual(
+				c.statistics_functions("min", "(3, 6, 11, -7, -1, 55)"),
+				"-7.0")
+			self.assertEqual(
+				c.statistics_functions("max", "(3, 6, 11, -7, -1, 55)"),
+				"55.0")
+			self.assertAlmostEqual(
+				float(c.statistics_functions("stdev", "(3, 4, 4, 6, 8)")),
+				2.0)
 			
 	def test_nested_stats_functions(self):
 		self.assertEqual(
@@ -341,137 +367,164 @@ class test_statistics_functions(unittest.TestCase):
 			"2.0")
 			
 	def test_not_defined_functions(self):
-		with self.assertRaises(ValueError):
+		with self.assertRaises(c.CalculatorError):
 			c.statistics_functions("sin", "(pi)")
 
 			
 class test_single_argument_function(unittest.TestCase):
 	
 	def test_basic_trig_functions(self):
-		self.assertAlmostEqual(
-			float(c.single_argument("sin", "(pi/6)")),
-			0.5)
-		self.assertAlmostEqual(
-			float(c.single_argument("cos", "(pi/3)")),
-			0.5)
-		self.assertAlmostEqual(
-			float(c.single_argument("tan", "(pi/4)")),
-			1.0)
-		self.assertAlmostEqual(
-			float(c.single_argument("sec", "(pi/3)")),
-			2.0)
-		self.assertAlmostEqual(
-			float(c.single_argument("csc", "(pi/6)")),
-			2.0)
-		self.assertAlmostEqual(
-			float(c.single_argument("cot", "(pi/4)")),
-			1.0)
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument("sin", "(pi/6)")),
+				0.5)
+			self.assertAlmostEqual(
+				float(c.single_argument("cos", "(pi/3)")),
+				0.5)
+			self.assertAlmostEqual(
+				float(c.single_argument("tan", "(pi/4)")),
+				1.0)
+			self.assertAlmostEqual(
+				float(c.single_argument("sec", "(pi/3)")),
+				2.0)
+			self.assertAlmostEqual(
+				float(c.single_argument("csc", "(pi/6)")),
+				2.0)
+			self.assertAlmostEqual(
+				float(c.single_argument("cot", "(pi/4)")),
+				1.0)
 			
 	def test_hyperbolic_trig_functions(self):
-		self.assertAlmostEqual(
-			float(c.single_argument("sinh", "(1)")),
-			(math.e ** 2 - 1) / (2 * math.e))
-		self.assertAlmostEqual(
-			float(c.single_argument("cosh", "(1)")),
-			(math.e ** 2 + 1) / (2 * math.e))
-		self.assertAlmostEqual(
-			float(c.single_argument("tanh", "(1)")),
-			(math.e ** 2 - 1) / (math.e ** 2 + 1))
-		self.assertAlmostEqual(
-			float(c.single_argument("csch", "(1)")),
-			(2 * math.e) / (math.e ** 2 - 1))
-		self.assertAlmostEqual(
-			float(c.single_argument("sech", "(1)")),
-			(2 * math.e) / (math.e ** 2 + 1))
-		self.assertAlmostEqual(
-			float(c.single_argument("coth", "(1)")),
-			(math.e ** 2 + 1) / (math.e ** 2 - 1))
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument("sinh", "(1)")),
+				(math.e ** 2 - 1) / (2 * math.e))
+			self.assertAlmostEqual(
+				float(c.single_argument("cosh", "(1)")),
+				(math.e ** 2 + 1) / (2 * math.e))
+			self.assertAlmostEqual(
+				float(c.single_argument("tanh", "(1)")),
+				(math.e ** 2 - 1) / (math.e ** 2 + 1))
+			self.assertAlmostEqual(
+				float(c.single_argument("csch", "(1)")),
+				(2 * math.e) / (math.e ** 2 - 1))
+			self.assertAlmostEqual(
+				float(c.single_argument("sech", "(1)")),
+				(2 * math.e) / (math.e ** 2 + 1))
+			self.assertAlmostEqual(
+				float(c.single_argument("coth", "(1)")),
+				(math.e ** 2 + 1) / (math.e ** 2 - 1))
 		
-	def test_arctrig_functions(self):
-		self.assertAlmostEqual(
-			float(c.single_argument("asin", "(.5)")),
-			math.pi / 6)
-		self.assertAlmostEqual(
-			float(c.single_argument("acos", "(.5)")),
-			math.pi / 3)
-		self.assertAlmostEqual(
-			float(c.single_argument("atan", "(3 ** .5)")),
-			math.pi / 3)
-		self.assertAlmostEqual(
-			float(c.single_argument("asec", "(2)")),
-			math.pi / 3)
-		self.assertAlmostEqual(
-			float(c.single_argument("acsc", "(2)")),
-			math.pi / 6)
-		self.assertAlmostEqual(
-			float(c.single_argument("acot", "(3 ** .5)")),
-			math.pi / 6)
+	def test_inverse_trig_functions(self):
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument("asin", "(.5)")),
+				math.pi / 6)
+			self.assertAlmostEqual(
+				float(c.single_argument("acos", "(.5)")),
+				math.pi / 3)
+			self.assertAlmostEqual(
+				float(c.single_argument("atan", "(3 ** .5)")),
+				math.pi / 3)
+			self.assertAlmostEqual(
+				float(c.single_argument("asec", "(2)")),
+				math.pi / 3)
+			self.assertAlmostEqual(
+				float(c.single_argument("acsc", "(2)")),
+				math.pi / 6)
+			self.assertAlmostEqual(
+				float(c.single_argument("acot", "(3 ** .5)")),
+				math.pi / 6)
 
 	def test_inverse_hyperbolic_functions(self):
-		self.assertAlmostEqual(
-			float(c.single_argument("asinh",
-				"(((e ** 2) - 1) / (2 * e))")),
-			1)
-		self.assertAlmostEqual(
-			float(c.single_argument("acosh",
-				"((e ** 2 + 1) / (2 * e))")),
-			1)
-		self.assertAlmostEqual(
-			float(c.single_argument("atanh",
-				"((e ** 2 - 1) / (e ** 2 + 1))")),
-			1)
-		self.assertAlmostEqual(
-			float(c.single_argument("acsch",
-				"((2 * e) / (e ** 2 - 1))")),
-			1)
-		self.assertAlmostEqual(
-			float(c.single_argument("asech",
-				"((2 * e) / (e ** 2 + 1))")),
-			1)
-		self.assertAlmostEqual(
-			float(c.single_argument("acoth",
-				"((e ** 2 + 1) / (e ** 2 - 1))")),
-			1)
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument("asinh",
+					"(((e ** 2) - 1) / (2 * e))")),
+				1)
+			self.assertAlmostEqual(
+				float(c.single_argument("acosh",
+					"((e ** 2 + 1) / (2 * e))")),
+				1)
+			self.assertAlmostEqual(
+				float(c.single_argument("atanh",
+					"((e ** 2 - 1) / (e ** 2 + 1))")),
+				1)
+			self.assertAlmostEqual(
+				float(c.single_argument("acsch",
+					"((2 * e) / (e ** 2 - 1))")),
+				1)
+			self.assertAlmostEqual(
+				float(c.single_argument("asech",
+					"((2 * e) / (e ** 2 + 1))")),
+				1)
+			self.assertAlmostEqual(
+				float(c.single_argument("acoth",
+					"((e ** 2 + 1) / (e ** 2 - 1))")),
+				1)
+			
+	def test_archaic_trig_functions(self):
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument("versin", "(pi/3)")),
+				.5)
+			self.assertAlmostEqual(
+				float(c.single_argument("vercosin", "(pi/3)")),
+				1.5)
+			self.assertAlmostEqual(
+				float(c.single_argument("coversin", "(pi/6)")),
+				.5)
+			self.assertAlmostEqual(
+				float(c.single_argument("covercosin", "(pi/6)")),
+				1.5)
+			self.assertAlmostEqual(
+				float(c.single_argument("haversin", "(pi/3)")),
+				.25)
+			self.assertAlmostEqual(
+				float(c.single_argument("havercosin", "(pi/3)")),
+				.75)
+			self.assertAlmostEqual(
+				float(c.single_argument("hacoversin", "(pi/6)")),
+				.25)
+			self.assertAlmostEqual(
+				float(c.single_argument("hacovercosin", "(pi/6)")),
+				.75)
+			self.assertAlmostEqual(
+				float(c.single_argument("exsec", "(0)")),
+				0)
+			self.assertAlmostEqual(
+				float(c.single_argument("excsc", "(pi/2)")),
+				0)
+			
 
 	def test_other_functions(self):
-		self.assertEqual(
-			c.single_argument("abs", "(-1)"),
-			"1.0")
-		self.assertEqual(
-			c.single_argument("abs", "(3)"),
-			"3.0")
-		self.assertEqual(
-			c.single_argument("ceil", "(.5)"),
-			"1.0")
-		self.assertEqual(
-			c.single_argument("ceil", "(-1.5)"),
-			"-1.0")
-		self.assertEqual(
-			c.single_argument("floor", "(4.8)"),
-			"4.0")
-		self.assertEqual(
-			c.single_argument("floor", "(-4.8)"),
-			"-5.0")
-		self.assertAlmostEqual(
-			float(c.single_argument("erf", "(e)")),
-			0.9998790689599)
+		with self.subTest():
+			self.assertEqual(
+				c.single_argument("abs", "(-1)"),
+				"1.0")
+			self.assertEqual(
+				c.single_argument("abs", "(3)"),
+				"3.0")
+			self.assertEqual(
+				c.single_argument("ceil", "(.5)"),
+				"1.0")
+			self.assertEqual(
+				c.single_argument("ceil", "(-1.5)"),
+				"-1.0")
+			self.assertEqual(
+				c.single_argument("floor", "(4.8)"),
+				"4.0")
+			self.assertEqual(
+				c.single_argument("floor", "(-4.8)"),
+				"-5.0")
+			self.assertAlmostEqual(
+				float(c.single_argument("erf", "(e)")),
+				0.9998790689599)
 			
 	def test_trig_functions_with_degree_symbol(self):
 		self.assertAlmostEqual(
 			float(c.single_argument("sin", "(30°)")),
-			"0.5")
-
-
-
-
-
-
-
-
-
-
-
-
+			0.5)
 
 
 
@@ -491,4 +544,7 @@ class test_single_argument_function(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+	for i in range(5):
+		print("")
+	doctest.testmod(c)
+	unittest.main()
