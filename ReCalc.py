@@ -3,7 +3,7 @@
 '''
 Author: Max Friedman
 License: GPLv3
-Title: reCalc
+Title: ReCalc
 
 ReCalc.py
 
@@ -540,7 +540,7 @@ def find_match(s):
 	x = 0
 	if not s.startswith("("):
 		raise CalculatorError(
-			"error '" + str(s) + "' is an invalid input.")
+			"error '%s' is an invalid input." % s)
 				
 	for i in range(len(s)):
 

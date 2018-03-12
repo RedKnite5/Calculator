@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 '''
-Tests for re_calc.
+Tests for ReCalc.
 
-calculator_testing.py
+ReCalc_testing.py
 '''
 
 import unittest
@@ -11,7 +11,8 @@ import doctest
 import os
 import math
 
-import re_calc as c
+import ReCalc as c
+
 
 class test_check_if_float(unittest.TestCase):
 
@@ -61,13 +62,13 @@ class test_files(unittest.TestCase):
 		'''Check that the information file is present.'''
 		
 		self.assertTrue(
-		os.path.isfile(os.path.join(c.calc_path, "re_calc_info.txt")))
+		os.path.isfile(os.path.join(c.calc_path, "ReCalc_info.txt")))
 		
 	def test_tkinter_icon(self):
 		'''Check that the icon for the window is present.'''
 		
 		self.assertTrue(
-		os.path.isfile(os.path.join(c.calc_path, "calc_pic.ico")))
+		os.path.isfile(os.path.join(c.calc_path, "ReCalc_icon.ico")))
 
 
 class test_switch_degree_mode(unittest.TestCase):
@@ -80,22 +81,22 @@ class test_switch_degree_mode(unittest.TestCase):
 	def test_set_degree_mode(self):
 		c.switch_degree_mode(2)
 		self.assertEqual(c.degree_mode, 2)
-		self.assertEqual(c.options[0], 2)
+		self.assertEqual(c.options["degree mode"], 2)
 		
 	def test_set_radian_mode(self):
 		c.switch_degree_mode(0)
 		self.assertEqual(c.degree_mode, 0)
-		self.assertEqual(c.options[0], 0)
+		self.assertEqual(c.options["degree mode"], 0)
 		
 	def test_set_degree_mode_string(self):
 		c.switch_degree_mode("degree")
 		self.assertEqual(c.degree_mode, 2)
-		self.assertEqual(c.options[0], 2)
+		self.assertEqual(c.options["degree mode"], 2)
 		
 	def test_set_radian_mode_string(self):
 		c.switch_degree_mode("radian")
 		self.assertEqual(c.degree_mode, 0)
-		self.assertEqual(c.options[0], 0)
+		self.assertEqual(c.options["degree mode"], 0)
 		
 	def test_set_not_option(self):
 		with self.assertRaises(c.CalculatorError):
@@ -119,22 +120,22 @@ class test_switch_polar_cartesian(unittest.TestCase):
 	def test_set_polar(self):
 		c.switch_polar_mode("polar")
 		self.assertEqual(c.polar_mode, True)
-		self.assertEqual(c.options[1], True)
+		self.assertEqual(c.options["polar mode"], True)
 		
 	def test_set_cartesian(self):
 		c.switch_polar_mode("Cartesian")
 		self.assertEqual(c.polar_mode, False)
-		self.assertEqual(c.options[1], False)
+		self.assertEqual(c.options["polar mode"], False)
 		
 	def test_set_polar_boolean(self):
 		c.switch_polar_mode(True)
 		self.assertEqual(c.polar_mode, True)
-		self.assertEqual(c.options[1], True)
+		self.assertEqual(c.options["polar mode"], True)
 		
 	def test_set_cartesian_boolean(self):
 		c.switch_polar_mode(False)
 		self.assertEqual(c.polar_mode, False)
-		self.assertEqual(c.options[1], False)
+		self.assertEqual(c.options["polar mode"], False)
 		
 	def test_set_not_option(self):
 		with self.assertRaises(c.CalculatorError):
@@ -231,6 +232,7 @@ class test_evaluation_function(unittest.TestCase):
 	def test_eval_with_variable(self):
 		self.assertEqual(c.evaluate_function("t", "5", var = "t"), "5.0")
 		
+	@unittest.expectedFailure
 	def test_double_eval_function(self):
 		self.assertEqual(
 			c.evaluate_function("eval t at x for t", "4"), "4.0")
@@ -246,6 +248,7 @@ class test_find_derivative(unittest.TestCase):
 		self.assertAlmostEqual(
 			float(c.find_derivative("t^2", "3", var = "t")), 6.0)
 
+	@unittest.expectedFailure
 	def test_double_derivative(self):
 		self.assertAlmostEqual(
 			float(c.find_derivative("x * derivative of t^2 at 3", "1")),
@@ -372,7 +375,7 @@ class test_statistics_functions(unittest.TestCase):
 		with self.assertRaises(c.CalculatorError):
 			c.statistics_functions("sin", "(pi)")
 
-			
+
 class test_single_argument_function(unittest.TestCase):
 	
 	def test_basic_trig_functions(self):
@@ -550,7 +553,8 @@ class test_single_argument_function(unittest.TestCase):
 			self.assertAlmostEqual(
 				float(c.single_argument("cot", "(45°)")),
 				1.0)
-	
+
+
 class test_inverse_trig_functions_degree_mode(unittest.TestCase):
 	def setUp(self):
 		self.mode = c.degree_mode
@@ -559,9 +563,11 @@ class test_inverse_trig_functions_degree_mode(unittest.TestCase):
 	def test_inverse_trig_functions_degree_mode(self):
 		with self.subTest():
 			self.assertAlmostEqual(
-				float(c.single_argument("asin", ".5")),
-				math.pi / 6)
+				float(c.single_argument("asin", "(.5)")),
+				30)
 	
+	def tearDown(self):
+		c.switch_degree_mode(self.mode)
 	
 
 

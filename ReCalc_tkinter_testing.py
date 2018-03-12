@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 '''
-Tkinter tests for re_calc.
+Tkinter tests for ReCalc.
 
-Calculator_tkinter_testing.py
+ReCalc_tkinter_testing.py
 '''
 
 import unittest
 import tkinter as tk
 
-import re_calc as c
+import ReCalc as c
 
 
 class test_history_length_changing(unittest.TestCase):
