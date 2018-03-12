@@ -1,4 +1,4 @@
-# Calculator
+# ReCalc
 This is a graphing calculator written in python.
 
 prerequisites:

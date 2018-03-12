@@ -26,15 +26,7 @@ root.mainloop()
 
 
 
+x = True
 
-def func():
-	root = tk.Tk()
-	
-	root.mainloop()
-	
-	return(None)
-
-
-
-func()
-print("hi")
+print("num %s"
+	% x)

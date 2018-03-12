@@ -335,6 +335,8 @@ class test_combinations_and_permutations(unittest.TestCase):
 class test_statistics_functions(unittest.TestCase):
 	
 	def test_all_basic_statistics(self):
+		'''Test basic usage of statistics functions.'''
+		
 		with self.subTest():
 			self.assertEqual(
 				c.statistics_functions("mean", "(4, 6, 39, 2, 11)"),
@@ -437,6 +439,8 @@ class test_single_argument_function(unittest.TestCase):
 				math.pi / 6)
 
 	def test_inverse_hyperbolic_functions(self):
+		'''Test basic usage of inverse hyperbolic trig functions.'''
+		
 		with self.subTest():
 			self.assertAlmostEqual(
 				float(c.single_argument("asinh",
@@ -464,6 +468,8 @@ class test_single_argument_function(unittest.TestCase):
 				1)
 			
 	def test_archaic_trig_functions(self):
+		'''Test basic usage of old mostly abandoned trig functions.'''
+		
 		with self.subTest():
 			self.assertAlmostEqual(
 				float(c.single_argument("versin", "(pi/3)")),
@@ -498,6 +504,9 @@ class test_single_argument_function(unittest.TestCase):
 			
 
 	def test_other_functions(self):
+		'''Test basic usage of single argument functions that
+		are not in anyway trig functions.'''
+		
 		with self.subTest():
 			self.assertEqual(
 				c.single_argument("abs", "(-1)"),
@@ -522,10 +531,38 @@ class test_single_argument_function(unittest.TestCase):
 				0.9998790689599)
 			
 	def test_trig_functions_with_degree_symbol(self):
-		self.assertAlmostEqual(
-			float(c.single_argument("sin", "(30°)")),
-			0.5)
-
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument("sin", "(30°)")),
+				0.5)
+			self.assertAlmostEqual(
+				float(c.single_argument("cos", "(60°)")),
+				0.5)
+			self.assertAlmostEqual(
+				float(c.single_argument("tan", "(45°)")),
+				1.0)
+			self.assertAlmostEqual(
+				float(c.single_argument("sec", "(60°)")),
+				2.0)
+			self.assertAlmostEqual(
+				float(c.single_argument("csc", "(30°)")),
+				2.0)
+			self.assertAlmostEqual(
+				float(c.single_argument("cot", "(45°)")),
+				1.0)
+	
+class test_inverse_trig_functions_degree_mode(unittest.TestCase):
+	def setUp(self):
+		self.mode = c.degree_mode
+		c.switch_degree_mode(2)
+		
+	def test_inverse_trig_functions_degree_mode(self):
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument("asin", ".5")),
+				math.pi / 6)
+	
+	
 
 
 

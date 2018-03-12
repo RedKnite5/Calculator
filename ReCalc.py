@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 '''
-Written by: Max Friedman
-Licensed under GPLv3
+Author: Max Friedman
+License: GPLv3
+Title: reCalc
 
-re_calc.py
+ReCalc.py
 
 This is a graphing calculator written in python 3.6.
-It has defined:
+It can do:
 addition, subtraction, multiplication, division, exponents,
 logarithms, trig functions, inverse trig functions, hyperbolic
 functions, inverse hyperbolic functions, the ceiling function,
@@ -18,8 +19,8 @@ derivatives at a point, evaluating a function at a point, graphing
 functions in Cartesian and polar, and solving equations.
 
 It has a GUI made with tkinter that it will default to using if tkinter
-is installed. It defines graphing and polar graphing classes. It remembers
-every input it is given.
+is installed. It defines graphing and polar graphing classes. It
+remembers every input it is given.
 
 '''
 
@@ -28,9 +29,6 @@ import statistics as stats
 import sys
 import os
 
-import numpy as np
-from PIL import Image
-from PIL import ImageTk
 from warnings import warn, simplefilter
 from pickle import load, dump
 from re import compile, sub
@@ -65,6 +63,7 @@ except ModuleNotFoundError:
 29) cut off trailing zeros
 31) polar graphs
 33) show request
+37) other weird trig functions
 '''
 
 '''  To Do
@@ -88,13 +87,15 @@ except ModuleNotFoundError:
 34) make icon of tkinter window when run on Fedora
 35) make compatible with other operating systems
 36) fix subtraction problem
-37) other weird trig functions
 38) setup and wheel files
 39) make tests for all parts of the program
-40) doc strings for at least some of the tests
+40) doc strings for all of the tests that need them
 41) user defined functions
 42) user defined variables
-43)
+43) save graphs
+44) on fedora only one enter key is bound in the GUI
+45) parametric functions
+46)
 '''
 
 
@@ -116,16 +117,16 @@ ctx.prec = 15
 
 # multi session variables
 calc_path = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(calc_path, "re_calc_info.txt"), "rb") as file:
+with open(os.path.join(calc_path, "ReCalc_info.txt"), "rb") as file:
 	calc_info = load(file)
-history = calc_info[0]
-ans = calc_info[1]
-options = calc_info[2]
-degree_mode = options[0]  # in degree mode 0 = off 2 = on
-polar_mode = options[1]
-der_approx = options[2]  # default = .0001
-hist_len = options[3]
-win_bound = calc_info[3]
+history = calc_info["history"]
+ans = calc_info["ans"]
+options = calc_info["options"]
+degree_mode = options["degree mode"]  # in degree mode 0 = off 2 = on
+polar_mode = options["polar mode"]
+der_approx = options["der approx"]  # default = .0001
+hist_len = options["hist len"]
+win_bound = calc_info["window bounds"]
 
 #                 enter up down           enter  up  down
 key_binds = {"nt": (13, 38, 40), "posix": (104, 111, 116)}
@@ -259,7 +260,7 @@ if True:
 	"asec|acsc|acot|arcsec|arccsc|arccot|"
 	"abs|ceil|floor|erf"
 	")(.+)")
-	
+
 	# trig_reg = "(" + "|".join(key for key in one_arg_funcs) + ")(.+)"
 	trig_comp = compile(trig_reg)
 
@@ -329,23 +330,8 @@ operations = [command_comp, const_comp, graph_comp,
 	comma_comp, choos_comp,
 	exp_comp, fact_comp, mod_comp, per_comp, mult_comp, add_comp]
 
-#######################################################
-# regular expressions not used on the immediate input #
-#######################################################
 
-# check for bounds on graph
-graph_rang_reg = "(.+(?=from))(from "+reg_num+" to "+reg_num+")"
-graph_rang_comp = compile(graph_rang_reg)
-
-# check for equals sign when solving equations
-eq_sides_reg = "(.+)=(.+)|(.+)"
-eq_sides_comp = compile(eq_sides_reg)
-
-# checks for specified variable when solving equations
-alg_var_reg = "(.+) for ([a-z])"
-alg_var_comp = compile(alg_var_reg)
-
-
+# could be moved to other file
 def float_to_str(f):
 	'''Convert the given float to a string,
 	without resorting to scientific notation.
@@ -358,6 +344,7 @@ def float_to_str(f):
 	return format(d1, 'f')
 
 
+# could be moved to other file
 def check_if_float(x):
 	'''Test if a object can be made a float.
 	
@@ -375,14 +362,21 @@ def check_if_float(x):
 		return(False)
 
 
-def save_info():
-	'''Save options, history and other stuff to a file.'''
+def save_info(history = [], ans = 0, options = {"degree mode": 0,
+	"polar mode": False, "der approx": 0.0001, "hist len": 100},
+	win_bound = {'x min': -10.0, 'x max': 10.0, 'y min': -10.0,
+		'y max': 10.0, 'theta min': 0.0, 'theta max': 10.0}):
+	'''Save options, history, ans, and win_bound to a file.'''
+	
+	if history == []:
+		raise CalculatorError(
+			"The entire history was about to be deleted.")
 
-	global calc_info
+	calc_info = {"history": history, "ans": ans, "options": options,
+		"window bounds": win_bound}
 
-	calc_info = [history, ans, options, win_bound]
-
-	with open(os.path.join(calc_path, "re_calc_info.txt"), "wb") as file:
+	with open(os.path.join(
+		calc_path, "ReCalc_info.txt"), "wb") as file:
 		dump(calc_info, file)
 
 
@@ -398,10 +392,11 @@ def switch_degree_mode(mode):
 	elif mode in (0, 2):
 		degree_mode = mode
 	else:
-		raise CalculatorError("Can not set degree_mode to " + str(mode))
+		raise CalculatorError("Can not set degree_mode to '%s'" % mode)
 
-	options[0] = degree_mode
-	save_info()
+	options["degree mode"] = degree_mode
+	save_info(history = history, ans = ans, options = options,
+		win_bound = win_bound)
 
 
 def switch_polar_mode(mode):
@@ -416,10 +411,11 @@ def switch_polar_mode(mode):
 	elif mode in (True, False):
 		polar_mode = mode
 	else:
-		raise CalculatorError("Can not set polar_mode to " + str(mode))
+		raise CalculatorError("Can not set polar_mode to '%s'" % mode)
 
-	options[1] = polar_mode
-	save_info()
+	options["polar mode"] = polar_mode
+	save_info(history = history, ans = ans, options = options,
+		win_bound = win_bound)
 
 
 def change_hist_len(entry_box, root):
@@ -434,8 +430,9 @@ def change_hist_len(entry_box, root):
 	# history print back length save and close the window
 	if input.isdigit() and int(input) > 0:
 		hist_len = int(input)
-		options[3] = hist_len
-		save_info()
+		options["hist len"] = hist_len
+		save_info(history = history, ans = ans, options = options,
+			win_bound = win_bound)
 
 		root.destroy()
 	else:
@@ -478,8 +475,9 @@ def change_der_approx(entry_box, root):
 	# der_approx value save and close the window
 	if check_if_float(input) and "-" not in input:
 		der_approx = float(input)
-		options[2] = der_approx
-		save_info()
+		options["der approx"] = der_approx
+		save_info(history = history, ans = ans, options = options,
+			win_bound = win_bound)
 
 		root.destroy()
 	else:
@@ -522,15 +520,19 @@ def change_graph_win_set():
 		if check_if_float(g_bound_input[i]):
 			win_bound[i] = float(g_bound_input[i])
 
-	save_info()
+	save_info(history = history, ans = ans, options = options,
+		win_bound = win_bound)
 
 	for i in g_bound_names:
 		g_bound_string[i].set(i + " = " + str(win_bound[i]))
 
 
+# could be moved to other file
 def find_match(s):
-	'''Find matching parentheses.
-	
+	'''Split a string into two parts. The first part contains the
+	string until the first time parentheses are completely matched. The
+	second part contains the rest of the string.
+
 	>>> find_match("(4, (5), 3) + 2")
 	('(4, (5), 3)', ' + 2')
 	'''
@@ -565,11 +567,12 @@ def find_match(s):
 	try:
 		return(an, left)
 	except UnboundLocalError:
-		raise CalculatorError("error '" + str(s) + "' is an invalid input.")
+		raise CalculatorError("error '%s' is an invalid input." % s)
 
 
+# could be moved to other file
 def brackets(s):
-	'''Inform separate whether parentheses match.
+	'''Return True if the parentheses match, False otherwise.
 	
 	>>> brackets("())")
 	False
@@ -592,6 +595,7 @@ def brackets(s):
 	return(not x)
 
 
+# could be moved to other file
 def separate(s):
 	'''Split up arguments of a function with commas
 	like mod(x, y) or log(x, y) based on where commas that aren't in
@@ -619,7 +623,7 @@ def separate(s):
 			middle = True
 	return(tuple(new_terms))
 
-
+# could be moved to other file
 class CalculatorError(Exception):
 	pass
 
@@ -648,26 +652,17 @@ class graph(object):
 		# dimensions of the window
 		self.wide = wide
 		self.high = high
-		
-		self.data = np.zeros((self.high, self.wide, 3), dtype = np.uint8)
-		self.data.fill(255)
 
 		# create the canvas
 		self.screen = tk.Canvas(self.root,
 		width = self.wide, height = self.high)
 		self.screen.pack()
-		
-		# create the image
-		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = self.pic)
 
 		# button that close the window and program immediately
 		self.close = tk.Button(self.root, text = "Close",
 		command = self.root.destroy)
 		self.close.pack()
 
-		print(sys.getrefcount(self.pic))
 		# draws the axes
 		self.axes()
 
@@ -675,28 +670,18 @@ class graph(object):
 	def axes(self):
 		'''Draw the axis.'''
 
-		xrang = self.xmax - self.xmin
-		yrang = self.ymax - self.ymin
-
 		# adjusted y coordinate of x-axis
-		b = self.high + (self.ymin * self.high / yrang)
+		b = self.high + (self.ymin * self.high / self.yrang)
 
 		# adjusted x coordinate of y-axis
-		a = -1 * self.xmin * self.wide / xrang
-		
-		self.data[int(round(b, 0)), :, :] = 0
-		self.data[:, int(round(a, 0)), :] = 0
-		self.data.fill(0)
-		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = self.pic)
+		a = -1 * self.xmin * self.wide / self.xrang
 
 		try:
 			# draw x-axis
-			#self.screen.create_line(0, b, self.wide, b, fill = "gray")
+			self.screen.create_line(0, b, self.wide, b, fill = "gray")
 
 			# draw y-axis
-			#self.screen.create_line(a, self.high, a, 0, fill = "gray")
+			self.screen.create_line(a, self.high, a, 0, fill = "gray")
 
 			self.root.update()
 		except TclError as e:
@@ -819,6 +804,7 @@ class polar_graph(graph):
 # List of Functions #
 #####################
 
+# could be moved to other file
 def constant_function(constant):
 	'''Evaluate mathematical constants.
 	
@@ -836,11 +822,16 @@ def constant_function(constant):
 	if constant in constant_dict:
 		return(constant_dict[constant])
 	else:
-		raise CalculatorError("'%s' is not a recognized constant." % constant)
+		raise CalculatorError("'%s' is not a recognized constant."
+			% constant)
 
 
 def graph_function(func_arg):
-	'''Graph the given function.'''
+	'''Graph the given function or functions.'''
+	
+	# check for bounds on graph
+	graph_rang_reg = "(.+(?=from))(from "+reg_num+" to "+reg_num+")"
+	graph_rang_comp = compile(graph_rang_reg)
 
 	# looks for x bounds on the graph
 	range_m = graph_rang_comp.search(func_arg)
@@ -877,7 +868,6 @@ def graph_function(func_arg):
 				theta_min = win_bound["theta min"],
 				theta_max = win_bound["theta max"],
 				wide = graph_w, high = graph_h)
-		print(sys.getrefcount(made_graph.pic))
 
 		# works out how many times it needs to
 		# loop the colors its using
@@ -895,6 +885,7 @@ def graph_function(func_arg):
 		print("Could not graph. Tkinter is not installed")
 
 
+# could be moved to other file
 def solve_equations(equation):
 	'''Solve equations using sympy. If there is no equals
 	sign it is assumed the expression equals zero. If there is more
@@ -906,6 +897,14 @@ def solve_equations(equation):
 	>>> solve_equations("x-7 = 13")
 	20
 	'''
+	
+	# check for equals sign when solving equations
+	eq_sides_reg = "(.+)=(.+)|(.+)"
+	eq_sides_comp = compile(eq_sides_reg)
+
+	# checks for specified variable when solving equations
+	alg_var_reg = "(.+) for ([a-z])"
+	alg_var_comp = compile(alg_var_reg)
 
 	# find if there is a specified variable
 	varm = alg_var_comp.search(equation)
@@ -975,20 +974,21 @@ def find_derivative(expression, point, var = "x"):
 	x_two = p - der_approx
 
 	# find the change in y value between the two points
-	delta_y = (float(evaluate_function(expression, str(x_one), var = var))
+	delta_y = (float(evaluate_function(
+		expression, str(x_one), var = var))
 	- float(evaluate_function(expression, str(x_two), var = var)))
 
 	# divide by the length of the interval to find the slope
 	return(delta_y / (2 * der_approx))
 
 
+# could be moved to other file
 def integrate_function(expression, var, a, b):
 	'''Integrate with sympy.'''
 
 	# Integrals must be in a form that sympy can integrate
 	# The bounds must be numbers not expressions
 	# The integral must have a "dx" or whatever variable you are using
-
 	# using sympy to integrate
 	return(str(float(integrate(expression, (var, a, b)))))
 
@@ -1031,8 +1031,8 @@ def combinations_and_permutations(form, letter, n, m = None):
 		elif letter == "P":
 			pass
 		else:
-			raise CalculatorError("Second argument must be 'C' or 'P' for "
-				"combinations or permutations not '%s'" % letter)
+			raise CalculatorError("Second argument must be 'C' or 'P'"
+			" for combinations or permutations not '%s'" % letter)
 
 		return(str(temp_result))
 
@@ -1067,16 +1067,16 @@ def combinations_and_permutations(form, letter, n, m = None):
 		elif letter == "P":
 			pass
 		else:
-			raise CalculatorError("Second argument must be 'C' or 'P' for "
-				"combinations or permutations not '%s'" % letter)
+			raise CalculatorError("Second argument must be 'C' or 'P'"
+			" for combinations or permutations not '%s'" % letter)
 
 		# add on anything that was was cut off the end when finding
 		# the arguments
 		# sin(C(5, 2)) ← the last parenthesis
 		return(str(temp_result) + proto_inner[1])
 	else:
-		raise CalculatorError("First argument must be 'choose' or 'func' "
-			"not '%s'" % form)
+		raise CalculatorError("First argument must be 'choose' or "
+		"'func' not '%s'" % form)
 
 
 def statistics_functions(function, args):
@@ -1113,8 +1113,8 @@ def statistics_functions(function, args):
 	elif function.lower() in ("stdev"):
 		result = stats.stdev(list_ave)
 	else:
-		raise CalculatorError("%s is not a function that is defined in "
-			"statistics_functions" % function)
+		raise CalculatorError("%s is not a function that is defined in"
+			" statistics_functions" % function)
 
 	# add on anything that was was cut off the end when finding
 	# the arguments
@@ -1198,6 +1198,7 @@ def gamma_function(arg):
 	return(str(result) + proto_inner[1])
 
 
+# could be moved to other file
 def factorial_function(arg):
 	'''Evaluate factorials.
 
@@ -1205,6 +1206,9 @@ def factorial_function(arg):
 	if written with an "!" will only take numbers as an argument.
 	In order of operations factorials come after exponents,
 	but before modulus
+	
+	>>> factorial_function("5")
+	120.0
 	'''
 
 	# doing the calculation
@@ -1257,7 +1261,8 @@ def logarithm(log_arg, ln_arg):
 		result = math.log(float(simplify(proto_inner[0])))
 	
 	else:
-		raise CalculatorError("log_arg or ln_arg must be something not None")
+		raise CalculatorError("log_arg or ln_arg must be something "
+			"not None")
 
 	# add on anything that was was cut off the end when finding
 	# the arguments
@@ -1329,7 +1334,10 @@ def abs_value(input):
 
 # main func
 def simplify(s):
-	'''Simplify an expression.'''
+	'''Simplify an expression.
+	
+	This is the main body of the program.
+	'''
 
 	global degree_mode
 
@@ -1372,7 +1380,8 @@ def simplify(s):
 					
 				else:
 					raise CalculatorError("Command must be 'history',"
-						" 'exit', 'quit', 'degree mode', or 'radian mode'")
+						" 'exit', 'quit', 'degree mode', or 'radian "
+						"mode'")
 
 				return(None)
 
@@ -1382,7 +1391,7 @@ def simplify(s):
 
 			elif i == graph_comp:
 
-				g = graph_function(m.group(1))
+				graph_function(m.group(1))
 				return(None)
 
 			elif i == alg_comp:
@@ -1433,9 +1442,9 @@ def simplify(s):
 					result = factorial_function(m.group(1))
 				
 				else:
-					raise CalculatorError("How could this possibly happen?"
-						" It just tested if i was 'gamma_comp' or "
-						"'fact_comp'.")
+					raise CalculatorError("How could this possibly "
+						"happen? It just tested if i was 'gamma_comp'"
+						" or 'fact_comp'.")
 
 			elif i == log_comp:
 
@@ -1484,9 +1493,9 @@ def simplify(s):
 					float(m.group(2)))
 				
 				else:
-					raise CalculatorError("How could this possibly happen?"
-						" It just tested if i was 'mod2_comp' or "
-						"'mod_comp'.")
+					raise CalculatorError("How could this possibly "
+						"happen? It just tested if i was 'mod2_comp' "
+						"or 'mod_comp'.")
 
 			elif i == per_comp:
 
@@ -1507,8 +1516,8 @@ def simplify(s):
 					result = float(m.group(1)) / float(m.group(3))
 					
 				else:
-					raise CalculatorError("Mult_comp must match '*', '//', "
-						"or '÷'.")
+					raise CalculatorError("Mult_comp must match '*', "
+						"'//', or '÷'.")
 
 			elif i == add_comp:
 
@@ -1524,7 +1533,8 @@ def simplify(s):
 					result = float(m.group(1)) - float(m.group(3))
 					
 				else:
-					raise CalculatorError("add_comp must match '+' or '-'.")
+					raise CalculatorError("add_comp must match '+' or "
+						"'-'.")
 			
 			else:
 				print("function not implemented.", i)
@@ -1568,7 +1578,8 @@ def ask(s = None):
 		history.append(s)
 
 		# save history to file
-		save_info()
+		save_info(history = history, ans = ans, options = options,
+			win_bound = win_bound)
 
 	# evaluate the expression
 	out = simplify(s)
@@ -1582,7 +1593,8 @@ def ask(s = None):
 	print("")
 
 	# save answer to file to be used next session
-	save_info()
+	save_info(history = history, ans = ans, options = options,
+		win_bound = win_bound)
 
 
 def key_pressed(event):
@@ -1653,7 +1665,8 @@ def get_input(s = None):
 		history.append(s)
 
 		# save history to file
-		save_info()
+		save_info(history = history, ans = ans, options = options,
+			win_bound = win_bound)
 
 		out = simplify(s)
 
@@ -1665,7 +1678,8 @@ def get_input(s = None):
 			mess.set(s + " = " + out)
 
 		# save answer to file to be used next session
-		save_info()
+		save_info(history = history, ans = ans, options = options,
+			win_bound = win_bound)
 
 		# clear the input box
 		input_widget.delete(0, "end")
@@ -1864,7 +1878,7 @@ def tkask(s = None):
 
 	if os.name == "nt":
 		root.iconbitmap(default = os.path.join(calc_path,
-		"calc_pic.ico"))
+		"ReCalc_icon.ico"))
 
 	mess = tk.StringVar()
 	mess.set("Input an expression")
