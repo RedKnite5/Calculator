@@ -1,6 +1,8 @@
 # calc_experimentation.py
 
 import tkinter as tk
+
+
 '''
 from PIL import Image
 from PIL import ImageTk
@@ -26,7 +28,5 @@ root.mainloop()
 
 
 
-x = True
 
-print("num %s"
-	% x)
+

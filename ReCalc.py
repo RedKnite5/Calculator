@@ -5,8 +5,6 @@ Author: Max Friedman
 License: GPLv3
 Title: ReCalc
 
-ReCalc.py
-
 This is a graphing calculator written in python 3.6.
 It can do:
 addition, subtraction, multiplication, division, exponents,
@@ -23,6 +21,11 @@ is installed. It defines graphing and polar graphing classes. It
 remembers every input it is given.
 
 '''
+
+# Windows:
+# C:\Users\Max\Documents\Python\Calculator\ReCalc.py
+# Bash:
+# C:/Users/Max/Documents/Python/Calculator/ReCalc.py
 
 import math
 import statistics as stats
@@ -144,14 +147,14 @@ one_arg_funcs = {
 	"versin": (lambda x: 1 - math.cos(x), "in"),
 	"exsec": (lambda x: 1 / math.cos(x) - 1, "in"),
 	"excsc": (lambda x: 1 / math.sin(x) - 1, "in"),
-	
+
 	"asinh": (math.asinh, "out"),
 	"acosh": (math.acosh, "out"),
 	"atanh": (math.atanh, "out"),
 	"asech": (lambda x: math.acosh(1 / x), "out"),
 	"acsch": (lambda x: math.asinh(1 / x), "out"),
 	"acoth": (lambda x: math.atanh(1 / x), "out"),
-	
+
 	"arcsinh": (math.asinh, "out"),
 	"arccosh": (math.acosh, "out"),
 	"arctanh": (math.atanh, "out"),
@@ -172,7 +175,7 @@ one_arg_funcs = {
 	"asec": (lambda x: math.acos(1 / x), "out"),
 	"acsc": (lambda x: math.asin(1 / x), "out"),
 	"acot": (lambda x: math.atan(1 / x), "out"),
-	
+
 	"arcsin": (math.asin, "out"),
 	"arccos": (math.acos, "out"),
 	"arctan": (math.atan, "out"),
@@ -333,7 +336,8 @@ operations = [command_comp, const_comp, graph_comp,
 
 # could be moved to other file
 def float_to_str(f):
-	'''Convert the given float to a string,
+	'''
+	Convert the given float to a string,
 	without resorting to scientific notation.
 	
 	>>> float_to_str(3.0030)
@@ -346,7 +350,8 @@ def float_to_str(f):
 
 # could be moved to other file
 def check_if_float(x):
-	'''Test if a object can be made a float.
+	'''
+	Test if a object can be made a float.
 	
 	>>> check_if_float("4.5")
 	True
@@ -363,10 +368,12 @@ def check_if_float(x):
 
 
 def save_info(history = [], ans = 0, options = {"degree mode": 0,
-	"polar mode": False, "der approx": 0.0001, "hist len": 100},
-	win_bound = {'x min': -10.0, 'x max': 10.0, 'y min': -10.0,
+		"polar mode": False, "der approx": 0.0001, "hist len": 100},
+		win_bound = {'x min': -10.0, 'x max': 10.0, 'y min': -10.0,
 		'y max': 10.0, 'theta min': 0.0, 'theta max': 10.0}):
-	'''Save options, history, ans, and win_bound to a file.'''
+	'''
+	Save options, history, ans, and win_bound to a file.
+	'''
 	
 	if history == []:
 		raise CalculatorError(
@@ -381,7 +388,9 @@ def save_info(history = [], ans = 0, options = {"degree mode": 0,
 
 
 def switch_degree_mode(mode):
-	'''Switch between degree mode and radian mode.'''
+	'''
+	Switch between degree mode and radian mode.
+	'''
 
 	global degree_mode
 
@@ -400,7 +409,9 @@ def switch_degree_mode(mode):
 
 
 def switch_polar_mode(mode):
-	'''Switch between polar and Cartesian graphing.'''
+	'''
+	Switch between polar and Cartesian graphing.
+	'''
 
 	global polar_mode
 
@@ -419,7 +430,9 @@ def switch_polar_mode(mode):
 
 
 def change_hist_len(entry_box, root):
-	'''Change the length of the history print back.'''
+	'''
+	Change the length of the history print back.
+	'''
 
 	global hist_len
 
@@ -440,7 +453,8 @@ def change_hist_len(entry_box, root):
 
 
 def change_hist_len_win():
-	'''Create a popup to change the length of the
+	'''
+	Create a popup to change the length of the
 	history print back.
 	'''
 
@@ -464,7 +478,9 @@ def change_hist_len_win():
 
 
 def change_der_approx(entry_box, root):
-	'''Change the length of the history print back.'''
+	'''
+	Change the length of the history print back.
+	'''
 
 	global der_approx
 
@@ -485,7 +501,8 @@ def change_der_approx(entry_box, root):
 
 
 def change_der_approx_win():
-	'''Create a popup to change the lenght of the
+	'''
+	Create a popup to change the length of the
 	history print back.
 	'''
 
@@ -508,7 +525,9 @@ def change_der_approx_win():
 
 
 def change_graph_win_set():
-	'''Change the graphing window bounds.'''
+	'''
+	Change the graphing window bounds.
+	'''
 
 	global win_bound, g_bound_entry, g_bound_string
 
@@ -524,12 +543,13 @@ def change_graph_win_set():
 		win_bound = win_bound)
 
 	for i in g_bound_names:
-		g_bound_string[i].set(i + " = " + str(win_bound[i]))
+		g_bound_string[i].set("%s = %s" % (i, win_bound[i]))
 
 
 # could be moved to other file
 def find_match(s):
-	'''Split a string into two parts. The first part contains the
+	'''
+	Split a string into two parts. The first part contains the
 	string until the first time parentheses are completely matched. The
 	second part contains the rest of the string.
 
@@ -562,7 +582,7 @@ def find_match(s):
 
 		elif x < 0:
 			raise CalculatorError(
-				"error '" + str(s) + "' is an invalid input.")
+				"error '%s' is an invalid input." % s)
 
 	try:
 		return(an, left)
@@ -572,7 +592,8 @@ def find_match(s):
 
 # could be moved to other file
 def brackets(s):
-	'''Return True if the parentheses match, False otherwise.
+	'''
+	Return True if the parentheses match, False otherwise.
 	
 	>>> brackets("())")
 	False
@@ -597,7 +618,8 @@ def brackets(s):
 
 # could be moved to other file
 def separate(s):
-	'''Split up arguments of a function with commas
+	'''
+	Split up arguments of a function with commas
 	like mod(x, y) or log(x, y) based on where commas that aren't in
 	parentheses.
 	
@@ -623,18 +645,23 @@ def separate(s):
 			middle = True
 	return(tuple(new_terms))
 
+
 # could be moved to other file
 class CalculatorError(Exception):
 	pass
 
 
 class graph(object):
-	'''Cartesian Graphing window class.'''
+	'''
+	Cartesian Graphing window class.
+	'''
 
 	def __init__(self,
-	xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-	wide = 400, high = 400):  # all the arguments you pass the object
-		'''Initialize the graphing window.'''
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		wide = 400, high = 400):
+		'''
+		Initialize the graphing window.
+		'''
 
 		self.root = tk.Toplevel()
 
@@ -668,7 +695,9 @@ class graph(object):
 
 	# draw the axes
 	def axes(self):
-		'''Draw the axis.'''
+		'''
+		Draw the axis.
+		'''
 
 		# adjusted y coordinate of x-axis
 		b = self.high + (self.ymin * self.high / self.yrang)
@@ -688,7 +717,9 @@ class graph(object):
 			pass
 
 	def draw(self, func, color = "black"):
-		'''Draw a Cartesian function.'''
+		'''
+		Draw a Cartesian function.
+		'''
 
 		density = 1000
 		x = self.xmin
@@ -736,13 +767,17 @@ class graph(object):
 
 
 class polar_graph(graph):
-	'''Polar graphing window class.'''
+	'''
+	Polar graphing window class.
+	'''
 
 	def __init__(self,
 	xmin = -5, xmax = 5, ymin = -5, ymax = 5,
 	theta_min = 0, theta_max = 10,
 	wide = 400, high = 400):  # all the arguments you pass the object
-		'''Initialize polar graphing window.'''
+		'''
+		Initialize polar graphing window.
+		'''
 
 		super(polar_graph, self).__init__(
 			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
@@ -754,7 +789,9 @@ class polar_graph(graph):
 		self.theta_rang = self.theta_max - self.theta_min
 
 	def draw(self, func, color = "black"):
-		'''Draw a polar function.'''
+		'''
+		Draw a polar function.
+		'''
 
 		density = 1000
 		theta = self.theta_min
@@ -806,7 +843,8 @@ class polar_graph(graph):
 
 # could be moved to other file
 def constant_function(constant):
-	'''Evaluate mathematical constants.
+	'''
+	Evaluate mathematical constants.
 	
 	>>> constant_function("pi")
 	3.141592653589793
@@ -827,7 +865,9 @@ def constant_function(constant):
 
 
 def graph_function(func_arg):
-	'''Graph the given function or functions.'''
+	'''
+	Graph the given function or functions.
+	'''
 	
 	# check for bounds on graph
 	graph_rang_reg = "(.+(?=from))(from "+reg_num+" to "+reg_num+")"
@@ -887,7 +927,8 @@ def graph_function(func_arg):
 
 # could be moved to other file
 def solve_equations(equation):
-	'''Solve equations using sympy. If there is no equals
+	'''
+	Solve equations using sympy. If there is no equals
 	sign it is assumed the expression equals zero. If there is more
 	than one answer it will return a list of the answers.
 	
@@ -946,7 +987,8 @@ def solve_equations(equation):
 
 
 def evaluate_function(expression, point, var = "x"):
-	'''Evaluate the function by substituting var for the number you
+	'''
+	Evaluate the function by substituting var for the number you
 	want to evaluate at.
 	
 	>>> evaluate_function("r^2", 5, var = "r")
@@ -963,7 +1005,8 @@ def evaluate_function(expression, point, var = "x"):
 
 
 def find_derivative(expression, point, var = "x"):
-	'''Calculate the derivative by evaluating the slope
+	'''
+	Calculate the derivative by evaluating the slope
 	between two points on either side of the point you are
 	finding the derivative of.
 	'''
@@ -976,7 +1019,7 @@ def find_derivative(expression, point, var = "x"):
 	# find the change in y value between the two points
 	delta_y = (float(evaluate_function(
 		expression, str(x_one), var = var))
-	- float(evaluate_function(expression, str(x_two), var = var)))
+		- float(evaluate_function(expression, str(x_two), var = var)))
 
 	# divide by the length of the interval to find the slope
 	return(delta_y / (2 * der_approx))
@@ -984,7 +1027,9 @@ def find_derivative(expression, point, var = "x"):
 
 # could be moved to other file
 def integrate_function(expression, var, a, b):
-	'''Integrate with sympy.'''
+	'''
+	Integrate with sympy.
+	'''
 
 	# Integrals must be in a form that sympy can integrate
 	# The bounds must be numbers not expressions
@@ -994,7 +1039,8 @@ def integrate_function(expression, var, a, b):
 
 
 def combinations_and_permutations(form, letter, n, m = None):
-	'''Solve combinations and permutations.
+	'''
+	Solve combinations and permutations.
 
 	n is either n or all arguments depending of the for they're
 	written in
@@ -1080,7 +1126,8 @@ def combinations_and_permutations(form, letter, n, m = None):
 
 
 def statistics_functions(function, args):
-	'''Perform general statistics functions.
+	'''
+	Perform general statistics functions.
 
 	This may in the future include any function that
 	can have an arbitrarily large number of arguments.
@@ -1123,7 +1170,9 @@ def statistics_functions(function, args):
 
 
 def single_argument(func, args):
-	'''Evaluate trig functions and other unary operators.'''
+	'''
+	Evaluate trig functions and other unary operators.
+	'''
 
 	global degree_mode
 
@@ -1179,7 +1228,9 @@ def single_argument(func, args):
 
 
 def gamma_function(arg):
-	'''Use the gamma function.'''
+	'''
+	Use the gamma function.
+	'''
 
 	# find the arguments of the function and cut off
 	# everything else
@@ -1200,7 +1251,8 @@ def gamma_function(arg):
 
 # could be moved to other file
 def factorial_function(arg):
-	'''Evaluate factorials.
+	'''
+	Evaluate factorials.
 
 	Interprets x! mathematically as gamma(x + 1)
 	if written with an "!" will only take numbers as an argument.
@@ -1216,7 +1268,8 @@ def factorial_function(arg):
 
 
 def logarithm(log_arg, ln_arg):
-	'''Solve logarithms.
+	'''
+	Solve logarithms.
 	
 	Log must be written with two arguments. Ln only takes one argument
 	and is evaluated separately from log.
@@ -1271,7 +1324,9 @@ def logarithm(log_arg, ln_arg):
 
 
 def modulus_function(arg):
-	'''Find the modulus of the input as a function not an operator.'''
+	'''
+	Find the modulus of the input as a function not an operator.
+	'''
 
 	# find the arguments of the function and cut off
 	# everything else
@@ -1297,7 +1352,8 @@ def modulus_function(arg):
 
 
 def abs_value(input):
-	'''Break up a expression based on where pipes are and return the
+	'''
+	Break up a expression based on where pipes are and return the
 	the absolute value of what is in them.
 	'''
 
@@ -1334,7 +1390,8 @@ def abs_value(input):
 
 # main func
 def simplify(s):
-	'''Simplify an expression.
+	'''
+	Simplify an expression.
 	
 	This is the main body of the program.
 	'''
@@ -1564,7 +1621,8 @@ def simplify(s):
 
 # pre and post processing for console
 def ask(s = None):
-	'''Ask the user what expression they want to simplify
+	'''
+	Ask the user what expression they want to simplify
 	and do pre and post processing.
 	'''
 
@@ -1598,7 +1656,9 @@ def ask(s = None):
 
 
 def key_pressed(event):
-	'''Handle keys pressed in the GUI.'''
+	'''
+	Handle keys pressed in the GUI.
+	'''
 
 	global up_hist
 
@@ -1633,7 +1693,9 @@ def key_pressed(event):
 
 
 def input_backspace():
-	'''Delete the last character in the entry widget.'''
+	'''
+	Delete the last character in the entry widget.
+	'''
 
 	global input_widget
 
@@ -1644,7 +1706,9 @@ def input_backspace():
 
 
 def get_input(s = None):
-	'''Get user input from the entry widget.'''
+	'''
+	Get user input from the entry widget.
+	'''
 
 	global ans, mess
 
@@ -1686,7 +1750,9 @@ def get_input(s = None):
 
 
 def switch_trig():
-	'''Put the trig function buttons on the GUI.'''
+	'''
+	Put the trig function buttons on the GUI.
+	'''
 
 	# remove the buttons for the hyperbolic functions, misc functions,
 	# and stats functions
@@ -1706,7 +1772,9 @@ def switch_trig():
 
 
 def switch_hyperbolic():
-	'''Put the hyperbolic function buttons in the GUI.'''
+	'''
+	Put the hyperbolic function buttons in the GUI.
+	'''
 
 	# remove the buttons for the trig functions, misc functions,
 	# and stats functions
@@ -1727,7 +1795,9 @@ def switch_hyperbolic():
 
 
 def switch_misc():
-	'''Put the miscellaneous function buttons on the GUI.'''
+	'''
+	Put the miscellaneous function buttons on the GUI.
+	'''
 
 	# remove the buttons for the trig functions, hyperbolic functions,
 	# and stats functions
@@ -1744,7 +1814,9 @@ def switch_misc():
 
 
 def switch_stats():
-	'''Put the statistics function buttons in the GUI.'''
+	'''
+	Put the statistics function buttons in the GUI.
+	'''
 
 	# remove the buttons for the trig functions, misc functions,
 	# and hyperbolic functions
@@ -1762,8 +1834,10 @@ def switch_stats():
 			column = i % 3 + 8)
 
 
-def format_default_screen():
-	'''Put the buttons in place on the GUI'''
+def format_default_screen(menubar):
+	'''
+	Put the buttons in place on the GUI.
+	'''
 
 	# 7 8 9
 	digit_button[7].grid(row = 3, column = 0)
@@ -1809,13 +1883,17 @@ def format_default_screen():
 
 
 def switch_matrices():
-	'''Create window for dealing with matrices.'''
+	'''
+	Create window for dealing with matrices.
+	'''
 
 	pass
 
 
 def graph_win_key_press(event, index):
-	'''Deal with key presses while editing the graph window.'''
+	'''
+	Deal with key presses while editing the graph window.
+	'''
 
 	global g_bound_entry
 
@@ -1832,7 +1910,9 @@ def graph_win_key_press(event, index):
 
 
 def edit_graph_window():
-	'''Change the graph window options.'''
+	'''
+	Change the graph window options.
+	'''
 
 	global g_bound_entry, g_bound_string
 
@@ -1847,7 +1927,7 @@ def edit_graph_window():
 		g_bound_entry[val].grid(row = index, column = 1)
 
 		g_bound_string[val] = tk.StringVar()
-		g_bound_string[val].set(val + " = " + str(win_bound[val]))
+		g_bound_string[val].set("%s = %s" % (val, win_bound[val]))
 
 		g_bound_disp[val] = tk.Message(root,
 			textvariable = g_bound_string[val],
@@ -1864,17 +1944,19 @@ def edit_graph_window():
 
 
 def tkask(s = None):
-	'''Make a GUI for the program.'''
+	'''
+	Make a GUI for the program.
+	'''
 
 	global input_widget, mess
-	global digit_button, equals_button, back_button, menubar
+	global digit_button, equals_button, back_button
 	global trig_func_buttons, inverse_trig_func_buttons
 	global hyperbolic_func_buttons, inverse_hyperbolic_func_buttons
 	global misc_func_buttons, stats_func_buttons
 
 	root = tk.Tk()
 
-	root.title("Calculator")
+	root.title("ReCalc")
 
 	if os.name == "nt":
 		root.iconbitmap(default = os.path.join(calc_path,
@@ -1997,7 +2079,7 @@ def tkask(s = None):
 
 	root.config(menu = options_menu)
 
-	format_default_screen()
+	format_default_screen(menubar)
 
 	root.bind("<Key>", key_pressed)
 	

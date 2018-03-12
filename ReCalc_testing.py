@@ -555,7 +555,7 @@ class test_single_argument_function(unittest.TestCase):
 				1.0)
 
 
-class test_inverse_trig_functions_degree_mode(unittest.TestCase):
+class test_inverse_functions_degree_mode(unittest.TestCase):
 	def setUp(self):
 		self.mode = c.degree_mode
 		c.switch_degree_mode(2)
@@ -565,6 +565,48 @@ class test_inverse_trig_functions_degree_mode(unittest.TestCase):
 			self.assertAlmostEqual(
 				float(c.single_argument("asin", "(.5)")),
 				30)
+			self.assertAlmostEqual(
+				float(c.single_argument("acos", "(.5)")),
+				60)
+			self.assertAlmostEqual(
+				float(c.single_argument("atan", "(1)")),
+				45)
+			self.assertAlmostEqual(
+				float(c.single_argument("asec", "(2)")),
+				60)
+			self.assertAlmostEqual(
+				float(c.single_argument("acsc", "(2)")),
+				30)
+			self.assertAlmostEqual(
+				float(c.single_argument("acot", "(1)")),
+				45)
+
+	def test_inverse_hyperbolic_functions_degree_mode(self):
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument(
+					"asinh", "(0.5478534738880397)")),
+				30)
+			self.assertAlmostEqual(
+				float(c.single_argument(
+					"acosh", "(1.600286857702386)")),
+				60)
+			self.assertAlmostEqual(
+				float(c.single_argument(
+					"atanh", "(0.6557942026326724)")),
+				45)
+			self.assertAlmostEqual(
+				float(c.single_argument(
+					"asech", "(0.6248879662960872)")),
+				60)
+			self.assertAlmostEqual(
+				float(c.single_argument(
+					"acsch", "(1.8253055746879534)")),
+				30)
+			self.assertAlmostEqual(
+				float(c.single_argument(
+					"acoth", "(1.5248686188220641)")),
+				45)
 	
 	def tearDown(self):
 		c.switch_degree_mode(self.mode)

@@ -3,10 +3,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = "Calculator",
+    name = "ReCalc",
     version = "0.1",
     packages = find_packages(),
-	scripts = ["re_calc.py"],
+	scripts = ["ReCalc.py", "ReCalc_testing.py",
+		"ReCalc_tkinter_testing.py"]
 	
 	classifiers = [
 	"Programming Language :: Python :: 3.6",
@@ -26,7 +27,7 @@ setup(
 	},
 	zip_safe = False,
 	
-	url = "https://github.com/RedKnite5/Calculator.git",
+	url = "https://github.com/RedKnite5/ReCalc.git",
 	
 	author = "Max Friedman",
 	author_email = "mr.awesome10000@gmail.com",
