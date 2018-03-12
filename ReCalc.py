@@ -20,12 +20,13 @@ It has a GUI made with tkinter that it will default to using if tkinter
 is installed. It defines graphing and polar graphing classes. It
 remembers every input it is given.
 
+
 '''
 
-# Windows:
-# C:\Users\Max\Documents\Python\Calculator\ReCalc.py
-# Bash:
-# C:/Users/Max/Documents/Python/Calculator/ReCalc.py
+#  Windows:
+#  C:\Users\Max\Documents\Python\Calculator\ReCalc.py
+#  Bash:
+#  C:/Users/Max/Documents/Python/Calculator/ReCalc.py
 
 import math
 import statistics as stats
@@ -334,21 +335,19 @@ operations = [command_comp, const_comp, graph_comp,
 	exp_comp, fact_comp, mod_comp, per_comp, mult_comp, add_comp]
 
 
-# could be moved to other file
 def float_to_str(f):
 	'''
 	Convert the given float to a string,
 	without resorting to scientific notation.
-	
+
 	>>> float_to_str(3.0030)
 	'3.003'
 	'''
-	
+
 	d1 = ctx.create_decimal(repr(float(f)))
 	return format(d1, 'f')
 
 
-# could be moved to other file
 def check_if_float(x):
 	'''
 	Test if a object can be made a float.
@@ -546,7 +545,6 @@ def change_graph_win_set():
 		g_bound_string[i].set("%s = %s" % (i, win_bound[i]))
 
 
-# could be moved to other file
 def find_match(s):
 	'''
 	Split a string into two parts. The first part contains the
@@ -590,7 +588,6 @@ def find_match(s):
 		raise CalculatorError("error '%s' is an invalid input." % s)
 
 
-# could be moved to other file
 def brackets(s):
 	'''
 	Return True if the parentheses match, False otherwise.
@@ -616,7 +613,6 @@ def brackets(s):
 	return(not x)
 
 
-# could be moved to other file
 def separate(s):
 	'''
 	Split up arguments of a function with commas
@@ -646,7 +642,6 @@ def separate(s):
 	return(tuple(new_terms))
 
 
-# could be moved to other file
 class CalculatorError(Exception):
 	pass
 
@@ -841,7 +836,6 @@ class polar_graph(graph):
 # List of Functions #
 #####################
 
-# could be moved to other file
 def constant_function(constant):
 	'''
 	Evaluate mathematical constants.
@@ -925,7 +919,6 @@ def graph_function(func_arg):
 		print("Could not graph. Tkinter is not installed")
 
 
-# could be moved to other file
 def solve_equations(equation):
 	'''
 	Solve equations using sympy. If there is no equals
@@ -1025,7 +1018,6 @@ def find_derivative(expression, point, var = "x"):
 	return(delta_y / (2 * der_approx))
 
 
-# could be moved to other file
 def integrate_function(expression, var, a, b):
 	'''
 	Integrate with sympy.
@@ -1249,7 +1241,6 @@ def gamma_function(arg):
 	return(str(result) + proto_inner[1])
 
 
-# could be moved to other file
 def factorial_function(arg):
 	'''
 	Evaluate factorials.
