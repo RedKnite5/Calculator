@@ -22,6 +22,7 @@ remembers every input it is given.
 
 '''
 
+
 #  Windows:
 #  C:\Users\Max\Documents\Python\Calculator\ReCalc.py
 #  Bash:
