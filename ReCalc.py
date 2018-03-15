@@ -2163,7 +2163,7 @@ def tkask(s = None):
 	root.mainloop()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":3
 	# default startup
 	if len(sys.argv) == 1:
 		if "tkinter" in sys.modules and use_gui:
