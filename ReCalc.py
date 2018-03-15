@@ -137,9 +137,17 @@ hist_len = options["hist len"]
 win_bound = calc_info["window bounds"]
 
 #                 enter up down           enter  up  down
-key_binds = {"nt": (13, 38, 40), "posix": (104, 111, 116)}
-g_bound_names = ("x min", "x max", "y min", "y max", "theta min",
-	"theta max")
+key_binds = {
+	"nt": (13, 38, 40),
+	"posix": (104, 111, 116)
+}
+
+g_bound_names = (
+	"x min", "x max",
+	"y min", "y max",
+	"theta min", "theta max"
+)
+
 one_arg_funcs = {
 	#   name                 function                angles
 	"hacovercosin": (lambda x: .5 + math.sin(x) / 2, "in"),
@@ -340,10 +348,21 @@ def check_if_float(x):
 		return(False)
 
 
-def save_info(history = [], ans = 0, options = {"degree mode": 0,
-		"polar mode": False, "der approx": 0.0001, "hist len": 100},
-		win_bound = {'x min': -10.0, 'x max': 10.0, 'y min': -10.0,
-		'y max': 10.0, 'theta min': 0.0, 'theta max': 10.0}):
+def save_info(
+		history = [],
+		ans = 0,
+		options = {
+			"degree mode": 0,
+			"polar mode": False,
+			"der approx": 0.0001,
+			"hist len": 100
+		},
+		win_bound = {
+			'x min': -10.0, 'x max': 10.0,
+			'y min': -10.0, 'y max': 10.0,
+			'theta min': 0.0, 'theta max': 10.0
+		}
+	):
 	'''
 	Save options, history, ans, and win_bound to a file.
 	'''
@@ -2163,7 +2182,12 @@ def tkask(s = None):
 	root.mainloop()
 
 
-if __name__ == "__main__":3
+def main():
+	'''
+	Handle command line arguments and decide whether or not to use
+	the GUI.
+	'''
+
 	# default startup
 	if len(sys.argv) == 1:
 		if "tkinter" in sys.modules and use_gui:
@@ -2177,10 +2201,9 @@ if __name__ == "__main__":3
 			tkask(" ".join(sys.argv[1:]))
 		else:
 			ask(" ".join(sys.argv[1:]))
+			while True:
+				ask()
 
-	# main loop if command line arguments passed
-	if "tkinter" in sys.modules and use_gui:
-		pass
-	else:
-		while True:
-			ask()
+
+if __name__ == "__main__":
+	main()

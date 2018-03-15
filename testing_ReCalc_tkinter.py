@@ -3,7 +3,7 @@
 '''
 Tkinter tests for ReCalc.
 
-ReCalc_tkinter_testing.py
+testing_ReCalc_tkinter.py
 '''
 
 import unittest
