@@ -10,34 +10,50 @@ import unittest
 import doctest
 import os
 import math
+import string
+
+import numpy as np
 
 import ReCalc as c
 
 
-class test_check_if_float(unittest.TestCase):
+class check_if_float(unittest.TestCase):
+	'''
+	Test that the check_if_float function works as expected.
+	'''
 
 	def test_float(self):
-		'''Check that it works for floats.'''
+		'''
+		Check that it works for floats.
+		'''
 		
 		self.assertTrue(c.check_if_float(3.4))
 
 	def test_int_type(self):
-		'''Check that it works for ints.'''
+		'''
+		Check that it works for ints.
+		'''
 		
 		self.assertTrue(c.check_if_float(4))
 
 	def test_string_type(self):
-		'''Check that it works for floats as strings.'''
+		'''
+		Check that it works for floats as strings.
+		'''
 		
 		self.assertTrue(c.check_if_float("3.4"))
 
 	def test_word(self):
-		'''Check that it returns false for words.'''
+		'''
+		Check that it returns false for words.
+		'''
 		
 		self.assertFalse(c.check_if_float("hello"))
 
 	def test_int_string(self):
-		'''Check it works for ints as strings.'''
+		'''
+		Check it works for ints as strings.
+		'''
 		
 		self.assertTrue(c.check_if_float("2"))
 
@@ -51,30 +67,44 @@ class test_check_if_float(unittest.TestCase):
 		self.assertFalse(c.check_if_float([2]))
 
 
-class test_files(unittest.TestCase):
+class files(unittest.TestCase):
+	'''
+	Check that require files and paths are present and exits.
+	'''
 	
 	def test_main_path(self):
-		'''Test that the path of the module actually exists.'''
+		'''
+		Test that the path of the module actually exists.
+		'''
 		
 		self.assertTrue(os.path.exists(c.calc_path))
 		
 	def test_picked_data(self):
-		'''Check that the information file is present.'''
+		'''
+		Check that the information file is present.
+		'''
 		
 		self.assertTrue(
 		os.path.isfile(os.path.join(c.calc_path, "ReCalc_info.txt")))
 		
 	def test_tkinter_icon(self):
-		'''Check that the icon for the window is present.'''
+		'''
+		Check that the icon for the window is present.
+		'''
 		
 		self.assertTrue(
 		os.path.isfile(os.path.join(c.calc_path, "ReCalc_icon.ico")))
 
 
-class test_switch_degree_mode(unittest.TestCase):
+class switch_degree_mode(unittest.TestCase):
+	'''
+	Test the switch_degree_mode function works as expected.
+	'''
 	
 	def setUp(self):
-		'''Remember what the degree_mode started as.'''
+		'''
+		Remember what the degree_mode started as.
+		'''
 		
 		self.original_degree_mode = c.degree_mode
 	
@@ -82,27 +112,37 @@ class test_switch_degree_mode(unittest.TestCase):
 		c.switch_degree_mode(2)
 		self.assertEqual(c.degree_mode, 2)
 		self.assertEqual(c.options["degree mode"], 2)
-		
+
 	def test_set_radian_mode(self):
 		c.switch_degree_mode(0)
 		self.assertEqual(c.degree_mode, 0)
 		self.assertEqual(c.options["degree mode"], 0)
-		
+
 	def test_set_degree_mode_string(self):
 		c.switch_degree_mode("degree")
 		self.assertEqual(c.degree_mode, 2)
 		self.assertEqual(c.options["degree mode"], 2)
-		
+
 	def test_set_radian_mode_string(self):
 		c.switch_degree_mode("radian")
 		self.assertEqual(c.degree_mode, 0)
 		self.assertEqual(c.options["degree mode"], 0)
-		
+
 	def test_set_not_option(self):
+		'''
+		Check that switch_degree_mode throws an error if you pass it
+		an invalid integer.
+		'''
+
 		with self.assertRaises(c.CalculatorError):
 			c.switch_degree_mode(1)
 			
 	def test_set_to_random_word(self):
+		'''
+		Check that switch_degree_mode throws an error if you pass it
+		an invalid string.
+		'''
+
 		with self.assertRaises(c.CalculatorError):
 			c.switch_degree_mode("random")
 		
@@ -112,7 +152,7 @@ class test_switch_degree_mode(unittest.TestCase):
 		c.switch_degree_mode(self.original_degree_mode)
 
 
-class test_switch_polar_cartesian(unittest.TestCase):
+class switch_polar_cartesian(unittest.TestCase):
 	
 	def setUp(self):
 		self.original_graphing_mode = c.polar_mode
@@ -145,7 +185,7 @@ class test_switch_polar_cartesian(unittest.TestCase):
 		c.switch_polar_mode(self.original_graphing_mode)
 
 
-class test_find_match(unittest.TestCase):
+class find_match(unittest.TestCase):
 	
 	def test_basic_functionality(self):
 		self.assertEqual(
@@ -164,7 +204,7 @@ class test_find_match(unittest.TestCase):
 			c.find_match("word)")
 
 
-class test_brackets_function(unittest.TestCase):
+class brackets_function(unittest.TestCase):
 	
 	def test_matched_brackets(self):
 		self.assertTrue(c.brackets(""))
@@ -178,9 +218,9 @@ class test_brackets_function(unittest.TestCase):
 		self.assertFalse(c.brackets(")"))
 		self.assertFalse(c.brackets(")("))
 		self.assertFalse(c.brackets("(()words"))
-		
 
-class test_separate(unittest.TestCase):
+
+class separate(unittest.TestCase):
 	
 	def test_split_no_parentheses(self):
 		self.assertEqual(c.separate("2,4,5,6"), ("2","4","5","6"))
@@ -195,21 +235,37 @@ class test_separate(unittest.TestCase):
 		("1", " (2, 3, (4, 5), 6)", " 7", " (8)", " (9, 10)"))
 
 
-class test_constant_function(unittest.TestCase):
+class constant(unittest.TestCase):
+	'''
+	Test that the constant function works as exprected.
+	'''
 	
 	def test_all_the_constants(self):
-		self.assertEqual(c.constant_function("pi"), math.pi)
-		self.assertEqual(c.constant_function("e"), math.e)
-		self.assertEqual(c.constant_function("phi"), (1 + 5 ** 0.5) / 2)
-		self.assertEqual(c.constant_function("π"), math.pi)
-		self.assertEqual(c.constant_function("ans"), c.ans)
-		self.assertEqual(c.constant_function("answer"), c.ans)
-		self.assertEqual(c.constant_function("tau"), math.tau)
-		self.assertEqual(c.constant_function("τ"), math.tau)
-		self.assertEqual(c.constant_function("φ"), (1 + 5 ** 0.5) / 2)
+		'''
+		Test all the constants in the constant function.
+		'''
+
+		self.assertEqual(c.constant("pi"), math.pi)
+		self.assertEqual(c.constant("e"), math.e)
+		self.assertEqual(c.constant("phi"), (1 + 5 ** 0.5) / 2)
+		self.assertEqual(c.constant("π"), math.pi)
+		self.assertEqual(c.constant("ans"), c.ans)
+		self.assertEqual(c.constant("answer"), c.ans)
+		self.assertEqual(c.constant("tau"), math.tau)
+		self.assertEqual(c.constant("τ"), math.tau)
+		self.assertEqual(c.constant("φ"), (1 + 5 ** 0.5) / 2)
+		
+	def test_unknown_constant(self):
+		'''
+		Test that the constant function throws a CalculatorError if
+		it gets passed an unknown constant.
+		'''
+
+		with self.assertRaises(c.CalculatorError):
+			c.constant("pie")
 
 
-class test_solving_equations(unittest.TestCase):
+class solving_equations(unittest.TestCase):
 
 	def test_solve_with_no_equals_or_variable(self):
 		self.assertEqual(c.solve_equations("x-5"), 5)
@@ -224,21 +280,25 @@ class test_solving_equations(unittest.TestCase):
 		self.assertEqual(c.solve_equations("2*t = 4 for t"), 2)
 
 
-class test_evaluation_function(unittest.TestCase):
+class evaluation_function(unittest.TestCase):
 	
 	def test_eval_without_variable(self):
-		self.assertEqual(c.evaluate_function("x", "5"), "5.0")
+		self.assertEqual(c.evaluate("x", "5"), "5.0")
 		
 	def test_eval_with_variable(self):
-		self.assertEqual(c.evaluate_function("t", "5", var = "t"), "5.0")
+		self.assertEqual(c.evaluate("t", "5", var = "t"), "5.0")
 		
 	@unittest.expectedFailure
 	def test_double_eval_function(self):
+		'''
+		Test nested evaluate statements.
+		'''
+
 		self.assertEqual(
-			c.evaluate_function("eval t at x for t", "4"), "4.0")
+			c.evaluate("eval t at x for t", "4"), "4.0")
 
 
-class test_find_derivative(unittest.TestCase):
+class find_derivative(unittest.TestCase):
 	
 	def test_find_basic_derivative(self):
 		self.assertAlmostEqual(
@@ -250,33 +310,52 @@ class test_find_derivative(unittest.TestCase):
 
 	@unittest.expectedFailure
 	def test_double_derivative(self):
+		'''
+		Test nested derivative statements.
+		'''
+
 		self.assertAlmostEqual(
 			float(c.find_derivative("x * derivative of t^2 at 3", "1")),
 			6.0)
 
 
-class test_integrate_function(unittest.TestCase):
-	
+class integrate_function(unittest.TestCase):
+	'''
+	Check that integration works as expected.
+	'''
+
 	def test_basic_integral(self):
 		self.assertEqual(c.integrate_function("2*x", "x", "0", "3"), "9.0")
 
 	def test_other_variables(self):
+		'''
+		Test integration works with respect to any lowercase variable.
+		
+		It will not work with 'I', 'E', 'S', 'N', 'C', 'O', or 'Q'
+		because sympy uses those letters to represent other things.
+		'''
+
 		with self.subTest():
+			for i in string.ascii_lowercase:
+				self.assertEqual(
+					c.integrate_function("2*%s" % i, i, "0", "3"),
+					"9.0",
+					msg = "Integrating with respect to %s failed" % i)
+			
 			self.assertEqual(
-				c.integrate_function("2*r", "r", "0", "3"), "9.0")
-			self.assertEqual(
-				c.integrate_function("2*w", "w", "0", "3"), "9.0")
-			self.assertEqual(
-				c.integrate_function("2*l", "l", "0", "3"), "9.0")
-			self.assertEqual(
-				c.integrate_function("2*o", "o", "0", "3"), "9.0")
+				c.integrate_function("2*A", "A", "0", "3"), "9.0")
 
 	def test_integrate_at_expression(self):
+		'''
+		Test that integrate can integrate from a point that is not
+		a single number.
+		'''
+
 		self.assertEqual(
 			c.integrate_function("2*x", "x", "0", "1+2"), "9.0")
-			
 
-class test_combinations_and_permutations(unittest.TestCase):
+
+class combinations_and_permutations(unittest.TestCase):
 	
 	def test_basic_combination_choose_notation(self):
 		self.assertEqual(
@@ -335,7 +414,7 @@ class test_combinations_and_permutations(unittest.TestCase):
 			c.combinations_and_permutations("func", "R", "(5, 2)")
 
 
-class test_statistics_functions(unittest.TestCase):
+class statistics_functions(unittest.TestCase):
 	
 	def test_all_basic_statistics(self):
 		'''Test basic usage of statistics functions.'''
@@ -376,7 +455,7 @@ class test_statistics_functions(unittest.TestCase):
 			c.statistics_functions("sin", "(pi)")
 
 
-class test_single_argument_function(unittest.TestCase):
+class single_argument_function(unittest.TestCase):
 	
 	def test_basic_trig_functions(self):
 		with self.subTest():
@@ -553,9 +632,27 @@ class test_single_argument_function(unittest.TestCase):
 			self.assertAlmostEqual(
 				float(c.single_argument("cot", "(45°)")),
 				1.0)
+				
+	def test_nested_trig_functions(self):
+		with self.subTest():
+			self.assertAlmostEqual(
+				float(c.single_argument("sin", "(asin(.56))")),
+				.56)
+			self.assertAlmostEqual(
+				float(c.single_argument("cos", "(sin(0))")),
+				1)
+			self.assertAlmostEqual(
+				float(c.single_argument("sin", "(cos(pi/2))")),
+				0)
+			self.assertAlmostEqual(
+				float(c.single_argument("sin", "(asin(.12))")),
+				.12)
+			self.assertAlmostEqual(
+				float(c.single_argument("asin", "(sin(1.33))")),
+				1.33)
 
 
-class test_inverse_functions_degree_mode(unittest.TestCase):
+class inverse_functions_degree_mode(unittest.TestCase):
 	def setUp(self):
 		self.mode = c.degree_mode
 		c.switch_degree_mode(2)
@@ -610,14 +707,25 @@ class test_inverse_functions_degree_mode(unittest.TestCase):
 	
 	def tearDown(self):
 		c.switch_degree_mode(self.mode)
-	
 
 
+class gamma_and_factorial(unittest.TestCase):
+	def test_gamma(self):
+		with self.subTest():
+			for i in np.arange(1.0, 10.0, .5):
+				self.assertEqual(
+					c.gamma("(%s)" % i), str(math.gamma(i)))
+
+	def test_factorial(self):
+		with self.subTest():
+			for i in range(10):
+				self.assertEqual(
+					c.factorial(str(i)), math.gamma(i + 1))
 
 
-
-
-
+class logarithm(unittest.TestCase):
+	def test_log(self):
+		pass
 
 
 

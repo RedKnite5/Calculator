@@ -33,6 +33,10 @@ import statistics as stats
 import sys
 import os
 
+import numpy as np
+from PIL import Image
+from PIL import ImageTk
+from collections import OrderedDict
 from warnings import warn, simplefilter
 from pickle import load, dump
 from re import compile, sub
@@ -117,7 +121,7 @@ use_gui = True
 graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
-ctx.prec = 15
+ctx.prec = 17
 
 # multi session variables
 calc_path = os.path.abspath(os.path.dirname(__file__))
@@ -198,60 +202,51 @@ one_arg_funcs = {
 	"erfc": (math.erfc, "")
 }
 
+# regex for a number
+reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
 
 # regular expressions
-if True:
-	# regex for a number
-	reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
+regular_expr = OrderedDict(
 
 	# regex for commands
 	# ^$ is for an empty string
-	command_reg = ("([Hh]istory)|([Qq]uit|[Ee]xit|^$)|"
-		"([Dd]egree [Mm]ode)|([Rr]adian [Mm]ode)")
-	command_comp = compile(command_reg)
+	command_comp = compile("([Hh]istory)|([Qq]uit|[Ee]xit|^$)|"
+		"([Dd]egree [Mm]ode)|([Rr]adian [Mm]ode)"),
 
 	# regex for constants
-	const_reg = ("(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
-	"ans(?:wer)?|tau|τ|phi|φ)")
-	const_comp = compile(const_reg)
+	const_comp = compile("(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
+		"ans(?:wer)?|tau|τ|phi|φ)"),
 
 	# regex for graphing
-	graph_reg = "[Gg]raph (.+)"
-	graph_comp = compile(graph_reg)
+	graph_comp = compile("[Gg]raph (.+)"),
 
 	# regex for equation solving
-	alg_reg = "[Ss]olve(.+)"
-	alg_comp = compile(alg_reg)
+	alg_comp = compile("[Ss]olve(.+)"),
 
 	# regex for evaluating functions
-	eval_reg = ("[Ee]val(?:uate)? (.+) (?:for|at) (.+)")
-	eval_comp = compile(eval_reg)
+	eval_comp = compile("[Ee]val(?:uate)? (.+) (?:for|at) (.+)"),
 
 	# regex for derivatives (must be at a number)
-	der_reg = ("[Dd]erivative of (.+) at (.+?)"
-	"( with respect to [a-z])?")
-	der_comp = compile(der_reg)
+	der_comp = compile("[Dd]erivative of (.+) at (.+?)"
+		"( with respect to [a-z])?"),
 
 	# regex for integrals (bounds must be numbers)
-	int_reg = ("(?:[Ii]ntegra(?:te ?|l ?)|∫)(.+)d([a-z])"
-	" (?:from )?"+reg_num+" to "+reg_num)
-	int_comp = compile(int_reg)
+	int_comp = compile("(?:[Ii]ntegra(?:te ?|l ?)|∫)(.+)d([a-z])"
+		" (?:from )?" + reg_num + " to " + reg_num),
 
 	# regex for combinations and permutations
 	# parentheses is to differentiate it from choose notation
-	comb_reg = "(C|P)(\(.+)"
-	comb_comp = compile(comb_reg)
+	comb_comp = compile("(C|P)(\(.+)"),
 
 	# regex for statistics functions
-	ave_reg = ("([Aa]verage|[Aa]ve|[Mm]ean|[Mm]edian|[Mm]ode|"
-	"[Mm]ax|[Mm]in|[Ss]tdev)(.+)")
-	ave_comp = compile(ave_reg)
+	ave_comp = compile("([Aa]verage|[Aa]ve|[Mm]ean|[Mm]edian|[Mm]ode|"
+		"[Mm]ax|[Mm]in|[Ss]tdev)(.+)"),
 
 	# regex for one argument functions
 	# the order does matter because if trig functions come
 	# before hyperbolic functions the "h" is interpreted as
 	# part of the argument for the function
-	trig_reg = ("("
+	trig_comp = compile("("
 	"hacovercosin|hacoversin|havercosin|haversin|"
 	"covercosin|coversin|vercosin|versin|"
 	"exsec|excsc|"
@@ -263,76 +258,55 @@ if True:
 	"asin|arcsin|acos|arccos|atan|arctan|"
 	"asec|acsc|acot|arcsec|arccsc|arccot|"
 	"abs|ceil|floor|erf"
-	")(.+)")
-
-	# trig_reg = "(" + "|".join(key for key in one_arg_funcs) + ")(.+)"
-	trig_comp = compile(trig_reg)
+	")(.+)"),
 
 	# regex for gamma function
-	gamma_reg = "(?:[Gg]amma|Γ)(.+)"
-	gamma_comp = compile(gamma_reg)
+	gamma_comp = compile("(?:[Gg]amma|Γ)(.+)"),
 
 	# regex for logarithms
-	log_reg = "[Ll]og(.+)|ln(.+)"
-	log_comp = compile(log_reg)
+	log_comp = compile("[Ll]og(.+)|ln(.+)"),
 
 	# regex for modulus
-	mod2_reg = "[Mm]od(.+)"
-	mod2_comp = compile(mod2_reg)
+	mod2_comp = compile("[Mm]od(.+)"),
 
 	# regex for detecting absolute value
-	abs_reg = "(.*\|.*)"
-	abs_comp = compile(abs_reg)
+	abs_comp = compile("(.*\|.*)"),
+	
+	# here is where the order of operations starts to matter
+	# it goes: parentheses, choose notation(nCm), exponents, factorial,
+	# modulus, multiplication, addition
 
 	# regex for parentheses
 	# [^()] makes it only find the inner most parentheses
-	paren_reg = "\(([^()]+)\)"
-	paren_comp = compile(paren_reg)
-
-	# regex for choose notation (not recursive)
-	# in the form of "nCm" or "nPm"
-	choos_reg = reg_num+"(C|P)"+reg_num
-	choos_comp = compile(choos_reg)
-
+	paren_comp = compile("\(([^()]+)\)"),
+	
 	# ignores commas in the middle of numbers
 	# could be problematic if two floats ever
 	# end up next to each other
-	comma_comp = compile(reg_num+","+reg_num)
+	comma_comp = compile(reg_num + "," + reg_num),
+
+	# regex for choose notation (not recursive)
+	# in the form of "nCm" or "nPm"
+	choos_comp = compile(reg_num + "(C|P)" + reg_num),
 
 	# regex for exponents (not recursive)
-	exp_reg = reg_num+" ?(\*\*|\^) ?"+reg_num
-	exp_comp = compile(exp_reg)
+	exp_comp = compile(reg_num + " ?(\*\*|\^) ?" + reg_num),
 
 	# regex for factorials (not recursive)
-	fact_reg = reg_num+"\!"
-	fact_comp = compile(fact_reg)
+	fact_comp = compile(reg_num + "\!"),
 
-	# regex in the form x%y (not recursive)
-	mod_reg = reg_num+" ?% ?"+reg_num
-	mod_comp = compile(mod_reg)
+	# regex in the form x % y (not recursive)
+	mod_comp = compile(reg_num + " ?% ?" + reg_num),
 
 	# regex for percentages (should probably be done without regex)
-	per_reg = "%"
-	per_comp = compile(per_reg)
+	per_comp = compile("%"),
 
 	# regex for multiplication (not recursive)
-	mult_reg = reg_num + " ?([*/÷]) ?" + reg_num
-	mult_comp = compile(mult_reg)
+	mult_comp = compile(reg_num + " ?([*/÷]) ?" + reg_num),
 
 	# regex for addition (not recursive)
-	add_reg = reg_num+" ?([+-]) ?"+reg_num
-	add_comp = compile(add_reg)
-
-# list of compiled regular expressions in order
-operations = [command_comp, const_comp, graph_comp,
-	alg_comp, eval_comp, der_comp, int_comp,
-	comb_comp, ave_comp, trig_comp, gamma_comp, log_comp, mod2_comp,
-	abs_comp, paren_comp,
-	# here is where the order of operations starts to matter
-	# it goes: choose notation(nCm), exponents, factorial,
-	# modulus, multiplication, addition
-	comma_comp, choos_comp,
-	exp_comp, fact_comp, mod_comp, per_comp, mult_comp, add_comp]
+	add_comp = compile(reg_num + " ?([+-]) ?" + reg_num),
+)
 
 
 def float_to_str(f):
@@ -648,19 +622,19 @@ class CalculatorError(Exception):
 
 class graph(object):
 	'''
-	Cartesian Graphing window class.
+	Base class for all graphs.
 	'''
-
+	
 	def __init__(self,
-		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-		wide = 400, high = 400):
+			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+			wide = 400, high = 400):
 		'''
 		Initialize the graphing window.
 		'''
 
 		self.root = tk.Toplevel()
 
-		self.root.title("Calculator")
+		self.root.title("ReCalc")
 
 		# sets bounds
 		self.xmin = xmin
@@ -677,18 +651,14 @@ class graph(object):
 
 		# create the canvas
 		self.screen = tk.Canvas(self.root,
-		width = self.wide, height = self.high)
+			width = self.wide, height = self.high)
 		self.screen.pack()
 
 		# button that close the window and program immediately
 		self.close = tk.Button(self.root, text = "Close",
-		command = self.root.destroy)
+			command = self.root.destroy)
 		self.close.pack()
-
-		# draws the axes
-		self.axes()
-
-	# draw the axes
+		
 	def axes(self):
 		'''
 		Draw the axis.
@@ -711,6 +681,25 @@ class graph(object):
 		except TclError as e:
 			pass
 
+
+class cart_graph(graph):
+	'''
+	Cartesian Graphing window class.
+	'''
+
+	def __init__(self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		wide = 400, high = 400):
+		'''
+		Initialize the graphing window.
+		'''
+
+		super().__init__(xmin = xmin, ymin = ymin, ymax = ymax,
+			wide = wide, high = high)
+
+		# draws the axes
+		self.axes()
+
 	def draw(self, func, color = "black"):
 		'''
 		Draw a Cartesian function.
@@ -725,7 +714,7 @@ class graph(object):
 			x += self.xrang / density
 			try:
 				# eval the function at x and set that to y
-				y = float(evaluate_function(func, str(x)))
+				y = float(evaluate(func, str(x)))
 
 				# check if the graph goes off the screen
 				if y > self.ymax or y < self.ymin and density > 2000:
@@ -760,132 +749,96 @@ class graph(object):
 			except TclError as e:
 				x = self.xmax + 1
 
-"""
-class graph(object):
-	'''Cartesian Graphing window class.'''
+
+class numpy_graph(graph):
+	'''
+	Cartesian Graphing window class using numpy and PIL.
+	'''
 
 	def __init__(self,
-	xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-	wide = 400, high = 400):  # all the arguments you pass the object
-		'''Initialize the graphing window.'''
-
-		self.root = tk.Toplevel()
-
-		self.root.title("Calculator")
-
-		# sets bounds
-		self.xmin = xmin
-		self.xmax = xmax
-		self.ymin = ymin
-		self.ymax = ymax
-
-		self.xrang = self.xmax - self.xmin
-		self.yrang = self.ymax - self.ymin
-
-		# dimensions of the window
-		self.wide = wide
-		self.high = high
+			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+			wide = 400, high = 400):
+		'''
+		Initialize the graphing window.
+		'''
 		
-		self.data = np.zeros((self.high, self.wide, 3), dtype = np.uint8)
-		# self.data.fill(255)
-
-		# create the canvas
-		self.screen = tk.Canvas(self.root,
-		width = self.wide, height = self.high)
-		self.screen.pack()
+		super().__init__(xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+			wide = 400, high = 400)
+			
+		self.data = np.zeros(
+			(self.high, self.wide, 3),
+			dtype = np.uint8)
+		self.data.fill(255)
+		
+		global pic
 		
 		# create the image
-		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
+		pic = ImageTk.PhotoImage(
+			Image.fromarray(self.data, "RGB"))
 		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = self.pic)
-
-		# button that close the window and program immediately
-		self.close = tk.Button(self.root, text = "Close",
-		command = self.root.destroy)
-		self.close.pack()
+			self.wide / 2, self.high / 2, image = pic)
 
 		# draws the axes
 		self.axes()
 
 	# draw the axes
 	def axes(self):
-		'''Draw the axis.'''
-
-		xrang = self.xmax - self.xmin
-		yrang = self.ymax - self.ymin
+		'''
+		Draw the axis.
+		'''
+		
+		global pic
 
 		# adjusted y coordinate of x-axis
-		b = self.high + (self.ymin * self.high / yrang)
+		b = self.high + (self.ymin * self.high / self.yrang)
 
 		# adjusted x coordinate of y-axis
-		a = -1 * self.xmin * self.wide / xrang
+		a = -1 * self.xmin * self.wide / self.xrang
 		
-		self.data[int(round(b, 0)), :, :] = 0
-		self.data[:, int(round(a, 0)), :] = 0
-		self.data.fill(0)
-		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = self.pic)
-
 		try:
-			# draw x-axis
-			#self.screen.create_line(0, b, self.wide, b, fill = "gray")
+			self.data[int(round(b, 0)), :, :] = 0
+		except IndexError:
+			pass
+		try:
+			self.data[:, int(round(a, 0)), :] = 0
+		except IndexError:
+			pass
 
-			# draw y-axis
-			#self.screen.create_line(a, self.high, a, 0, fill = "gray")
-
+		pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
+		self.screen.create_image(
+			self.wide / 2, self.high / 2, image = pic)
+		
+		try:
 			self.root.update()
-		except TclError as e:
+		except TclError:
 			pass
 
 	def draw(self, func, color = "black"):
-		'''Draw a Cartesian function.'''
-
-		density = 1000
-		x = self.xmin
-
-		while x < self.xmax:
-
-			# move the x coordinate a little
-			x += self.xrang / density
-			try:
-				# eval the function at x and set that to y
-				y = float(evaluate_function(func, str(x)))
-
-				# check if the graph goes off the screen
-				if y > self.ymax or y < self.ymin and density > 2000:
-					denstiy = 2000
-				else:
-					# find the slope at the point using the derivative
-					# function of simplify
-					try:
-						slope = float(find_derivative(func, str(x)))
-					except (ValueError) as e:
-						slope = 10
-
-					# calculate how dense the points need to be
-					# this function is somewhat arbitrary
-					density = int((3000 * math.fabs(slope))
-					/ self.yrang + 500)
-
-				# adjust coordinate for the screen (this is the
-				# hard part)
-				a = (x-self.xmin) * self.wide / self.xrang
-				b = self.high - ((y - self.ymin) * self.high
-				/ self.yrang)
-
-				# draw the point
-				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except (ValueError, TclError) as e:
-				pass
-
-			# update the screen
-			try:
-				self.root.update()
-			except TclError as e:
-				x = self.xmax + 1
+		'''
+		Draw a Cartesian function.
+		'''
+		
+		global pic
+		
+		for i in range(self.data.shape[1] * 2):
+			
+			x = i * self.xrang / (self.wide * 2) + self.xmin
+			y = float(evaluate(func, str(x)))
+			a = (x - self.xmin) * self.wide / self.xrang
+			b = self.high - (y - self.ymin) * self.high / self.yrang
+			
+			if 0 < b and b < self.high:
+				self.data[
+					int(round(b, 0)),
+					int(round(i / 2, 0))
+					] = (0, 0, 0)
 				
-"""
+			pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
+			self.screen.create_image(
+				self.wide / 2, self.high / 2, image = pic)
+			
+			self.root.update()
+
 
 class polar_graph(graph):
 	'''
@@ -923,7 +876,7 @@ class polar_graph(graph):
 			theta += self.theta_rang / density
 			try:
 				# eval the function at theta and set that to r
-				r = float(evaluate_function(func, str(theta)))
+				r = float(evaluate(func, str(theta)))
 
 				# find the slope at the point using find_derivative
 				slope = float(find_derivative(func, str(theta)))
@@ -962,14 +915,14 @@ class polar_graph(graph):
 # List of Functions #
 #####################
 
-def constant_function(constant):
+def constant(constant):
 	'''
 	Evaluate mathematical constants.
 	
-	>>> constant_function("pi")
+	>>> constant("pi")
 	3.141592653589793
 	
-	>>> constant_function("phi")
+	>>> constant("phi")
 	1.618033988749895
 	'''
 
@@ -1017,7 +970,7 @@ def graph_function(func_arg):
 
 		# creates graph object
 		if polar_mode is False:
-			made_graph = graph(
+			made_graph = numpy_graph(
 				xmin = temp_graph_xmin, xmax = temp_graph_xmax,
 				ymin = win_bound["y min"], ymax = win_bound["y max"],
 				wide = graph_w, high = graph_h)
@@ -1105,15 +1058,15 @@ def solve_equations(equation):
 			return(temp_result)
 
 
-def evaluate_function(expression, point, var = "x"):
+def evaluate(expression, point, var = "x"):
 	'''
 	Evaluate the function by substituting var for the number you
 	want to evaluate at.
 	
-	>>> evaluate_function("r^2", 5, var = "r")
+	>>> evaluate("r^2", 5, var = "r")
 	'25.0'
 	
-	>>> evaluate_function("3*b", "2", "b")
+	>>> evaluate("3*b", "2", "b")
 	'6.0'
 	'''
 
@@ -1136,9 +1089,9 @@ def find_derivative(expression, point, var = "x"):
 	x_two = p - der_approx
 
 	# find the change in y value between the two points
-	delta_y = (float(evaluate_function(
+	delta_y = (float(evaluate(
 		expression, str(x_one), var = var))
-		- float(evaluate_function(expression, str(x_two), var = var)))
+		- float(evaluate(expression, str(x_two), var = var)))
 
 	# divide by the length of the interval to find the slope
 	return(delta_y / (2 * der_approx))
@@ -1342,12 +1295,18 @@ def single_argument(func, args):
 	# argument of the inner function
 	# tan(sin(π)) ← the last parenthesis when
 	# evaluating sin
-	return(float_to_str(str(result) + proto_inner[1]))
+	return(result + proto_inner[1])
 
 
-def gamma_function(arg):
+def gamma(arg):
 	'''
 	Use the gamma function.
+	
+	>>> gamma("(4)")
+	'6.0'
+	
+	>>> gamma("(4.6)")
+	'13.381285870932441'
 	'''
 
 	# find the arguments of the function and cut off
@@ -1358,16 +1317,15 @@ def gamma_function(arg):
 	# evaluating the argument
 	inner = float(simplify(proto_inner[0]))
 
-	# doing the calculation
 	result = math.gamma(inner)
 
 	# add back anything that was cut off when finding the
 	# argument of the inner function
 	# sin(gamma(5)) ← the last parenthesis
-	return(str(result) + proto_inner[1])
+	return(float_to_str(result) + proto_inner[1])
 
 
-def factorial_function(arg):
+def factorial(arg):
 	'''
 	Evaluate factorials.
 
@@ -1376,7 +1334,7 @@ def factorial_function(arg):
 	In order of operations factorials come after exponents,
 	but before modulus
 	
-	>>> factorial_function("5")
+	>>> factorial("5")
 	120.0
 	'''
 
@@ -1440,7 +1398,7 @@ def logarithm(log_arg, ln_arg):
 	return(str(result) + proto_inner[1])
 
 
-def modulus_function(arg):
+def mdoulus(arg):
 	'''
 	Find the modulus of the input as a function not an operator.
 	'''
@@ -1516,24 +1474,24 @@ def simplify(s):
 	global degree_mode
 
 	# iterates over all the operations
-	for i in operations:
+	for key, value in regular_expr.items():
 
 		# solution to scientific notation being mistaken
 		# for the constant e
-		if i == const_comp:
+		if key == "const_comp":
 			try:
 				s = float_to_str(s)
 			except (ValueError, TypeError):
 				pass
 
 		# checks for the operation
-		m = i.search(s)
+		m = value.search(s)
 
 		# continues until all instances of an
 		# operation have been dealt with
 		while m is not None:
 
-			if i == command_comp:
+			if key == "command_comp":
 				# non-math commands
 
 				# display history
@@ -1559,24 +1517,24 @@ def simplify(s):
 
 				return(None)
 
-			elif i == const_comp:
+			elif key == "const_comp":
 
-				result = constant_function(m.group(1))
+				result = constant(m.group(1))
 
-			elif i == graph_comp:
+			elif key == "graph_comp":
 
 				graph_function(m.group(1))
 				return(None)
 
-			elif i == alg_comp:
+			elif key == "alg_comp":
 
 				result = solve_equations(m.group(1))
 
-			elif i == eval_comp:
+			elif key == "eval_comp":
 
-				result = evaluate_function(m.group(1), m.group(2))
+				result = evaluate(m.group(1), m.group(2))
 
-			elif i == der_comp:
+			elif key == "der_comp":
 
 				if m.group(3) is not None:
 					result = find_derivative(m.group(1), m.group(2),
@@ -1584,56 +1542,56 @@ def simplify(s):
 				else:
 					result = find_derivative(m.group(1), m.group(2))
 
-			elif i == int_comp:
+			elif key == "int_comp":
 
 				result = integrate_function(m.group(1), m.group(2),
 				m.group(3), m.group(4))
 
-			elif i in (comb_comp, choos_comp):
+			elif key in ("comb_comp", "choos_comp"):
 
-				if i == comb_comp:
+				if key == "comb_comp":
 					result = combinations_and_permutations("func",
 						m.group(1), m.group(2))
-				elif i == choos_comp:
+				elif key == "choos_comp":
 					result = combinations_and_permutations("choose",
 						m.group(2), m.group(1), m.group(3))
 
-			elif i == ave_comp:
+			elif key == "ave_comp":
 
 				result = statistics_functions(m.group(1), m.group(2))
 
-			elif i == trig_comp:
+			elif key == "trig_comp":
 
 				result = single_argument(m.group(1), m.group(2))
 
-			elif i in (gamma_comp, fact_comp):
+			elif key in ("gamma_comp", "fact_comp"):
 
 				# the user inputed the gamma function
-				if i == gamma_comp:
-					result = gamma_function(m.group(1))
+				if key == "gamma_comp":
+					result = gamma(m.group(1))
 
-				elif i == fact_comp:  # the user inputed a factorial
-					result = factorial_function(m.group(1))
+				elif key == "fact_comp":  # the user inputed a factorial
+					result = factorial(m.group(1))
 				
 				else:
 					raise CalculatorError("How could this possibly "
-						"happen? It just tested if i was 'gamma_comp'"
+						"happen? It just tested if key was 'gamma_comp'"
 						" or 'fact_comp'.")
 
-			elif i == log_comp:
+			elif key == "log_comp":
 
 				result = logarithm(m.group(1), m.group(2))
 
-			elif i == abs_comp:
+			elif key == "abs_comp":
 
 				result = abs_value(s)
 
-			elif i == paren_comp:
+			elif key == "paren_comp":
 
 				# recursively evaluates the innermost parentheses
 				result = simplify(m.group(1))
 
-			elif i == comma_comp:
+			elif key == "comma_comp":
 
 				# just concatenates whats on either side
 				# of the parentheses unless its separating
@@ -1641,13 +1599,13 @@ def simplify(s):
 
 				result = float(m.group(1) + m.group(2))
 
-			elif i == exp_comp:
+			elif key == "exp_comp":
 
 				# exponents
 
 				result = float(m.group(1)) ** float(m.group(3))
 
-			elif i in (mod_comp, mod2_comp):
+			elif key in ("mod_comp", "mod2_comp"):
 
 				# modulus written as both mod(x, y) and x % y
 				# where x is the dividend and y is the divisor
@@ -1656,11 +1614,11 @@ def simplify(s):
 				# after exponents and factorials, but before
 				# multiplication and division
 
-				if i == mod2_comp:
+				if key == "mod2_comp":
 
-					result = modulus_function(m.group(1))
+					result = mdoulus(m.group(1))
 
-				elif i == mod_comp:
+				elif key == "mod_comp":
 
 					# the x % y format
 					result = math.fmod(float(m.group(1)),
@@ -1671,13 +1629,13 @@ def simplify(s):
 						"happen? It just tested if i was 'mod2_comp' "
 						"or 'mod_comp'.")
 
-			elif i == per_comp:
+			elif key == "per_comp":
 
 				# percentage signs act just like dividing by 100
 
 				result = "/100"
 
-			elif i == mult_comp:
+			elif key == "mult_comp":
 
 				# multiplication and division
 
@@ -1693,7 +1651,7 @@ def simplify(s):
 					raise CalculatorError("Mult_comp must match '*', "
 						"'//', or '÷'.")
 
-			elif i == add_comp:
+			elif key == "add_comp":
 
 				# addition and subtraction
 
@@ -1711,10 +1669,10 @@ def simplify(s):
 						"'-'.")
 			
 			else:
-				print("function not implemented.", i)
+				print("function not implemented.", key)
 
-			if i not in (command_comp, const_comp,
-			alg_comp, eval_comp, der_comp):
+			if key not in ("command_comp", "const_comp",
+			"alg_comp", "eval_comp", "der_comp"):
 
 				# this is a fix for python returning
 				# answers in scientific notation which since
@@ -1726,9 +1684,9 @@ def simplify(s):
 
 			# replace the text matched by i (the regular expression)
 			# with the result of the mathematical expression
-			s = sub(i, str(result), s, count = 1)
+			s = sub(value, str(result), s, count = 1)
 
-			m = i.search(s)
+			m = value.search(s)
 	try:
 		s = float_to_str(s)
 	except (ValueError, TypeError):

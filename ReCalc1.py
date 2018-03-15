@@ -200,7 +200,6 @@ one_arg_funcs = {
 	"erfc": (math.erfc, "")
 }
 
-
 # regular expressions
 if True:
 	# regex for a number
@@ -659,6 +658,8 @@ class graph(object):
 		'''
 		Initialize the graphing window.
 		'''
+		
+		global pic
 
 		self.root = tk.Toplevel()
 
@@ -685,13 +686,15 @@ class graph(object):
 		self.data = np.zeros(
 			(self.high, self.wide, 3),
 			dtype = np.uint8)
-		self.data.fill(0)
+		self.data.fill(255)
+		
 		
 		# create the image
-		self.pic = ImageTk.PhotoImage(
+		pic = ImageTk.PhotoImage(
 			Image.fromarray(self.data, "RGB"))
 		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = self.pic)
+			self.wide / 2, self.high / 2, image = pic)
+		
 
 		# button that close the window and program immediately
 		self.close = tk.Button(self.root, text = "Close",
@@ -706,199 +709,59 @@ class graph(object):
 		'''
 		Draw the axis.
 		'''
+		
+		global pic
 
 		# adjusted y coordinate of x-axis
 		b = self.high + (self.ymin * self.high / self.yrang)
 
 		# adjusted x coordinate of y-axis
 		a = -1 * self.xmin * self.wide / self.xrang
-
+		
 		try:
-			# draw x-axis
-			self.screen.create_line(0, b, self.wide, b, fill = "gray")
+			self.data[int(round(b, 0)), :, :] = 0
+		except IndexError:
+			pass
+		try:
+			self.data[:, int(round(a, 0)), :] = 0
+		except IndexError:
+			pass
 
-			# draw y-axis
-			self.screen.create_line(a, self.high, a, 0, fill = "gray")
-
+		pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
+		self.screen.create_image(
+			self.wide / 2, self.high / 2, image = pic)
+		
+		try:
 			self.root.update()
-		except TclError as e:
+		except TclError:
 			pass
 
 	def draw(self, func, color = "black"):
 		'''
 		Draw a Cartesian function.
 		'''
-
-		density = 1000
-		x = self.xmin
-
-		while x < self.xmax:
-
-			# move the x coordinate a little
-			x += self.xrang / density
-			try:
-				# eval the function at x and set that to y
-				y = float(evaluate_function(func, str(x)))
-
-				# check if the graph goes off the screen
-				if y > self.ymax or y < self.ymin and density > 2000:
-					denstiy = 2000
-				else:
-					# find the slope at the point using the derivative
-					# function of simplify
-					try:
-						slope = float(find_derivative(func, str(x)))
-					except (ValueError) as e:
-						slope = 10
-
-					# calculate how dense the points need to be
-					# this function is somewhat arbitrary
-					density = int((3000 * math.fabs(slope))
-					/ self.yrang + 500)
-
-				# adjust coordinate for the screen (this is the
-				# hard part)
-				a = (x-self.xmin) * self.wide / self.xrang
-				b = self.high - ((y - self.ymin) * self.high
-				/ self.yrang)
-
-				# draw the point
-				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except (ValueError, TclError) as e:
-				pass
-
-			# update the screen
-			try:
-				self.root.update()
-			except TclError as e:
-				x = self.xmax + 1
-
-"""
-class graph(object):
-	'''Cartesian Graphing window class.'''
-
-	def __init__(self,
-	xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-	wide = 400, high = 400):  # all the arguments you pass the object
-		'''Initialize the graphing window.'''
-
-		self.root = tk.Toplevel()
-
-		self.root.title("Calculator")
-
-		# sets bounds
-		self.xmin = xmin
-		self.xmax = xmax
-		self.ymin = ymin
-		self.ymax = ymax
-
-		self.xrang = self.xmax - self.xmin
-		self.yrang = self.ymax - self.ymin
-
-		# dimensions of the window
-		self.wide = wide
-		self.high = high
-
-		# create the canvas
-		self.screen = tk.Canvas(self.root,
-		width = self.wide, height = self.high)
-		self.screen.pack()
 		
-		self.data = np.zeros((self.high, self.wide, 3), dtype = np.uint8)
-		self.data.fill(255)
+		global pic
 		
-		# create the image
-		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = self.pic)
-
-		# button that close the window and program immediately
-		self.close = tk.Button(self.root, text = "Close",
-		command = self.root.destroy)
-		self.close.pack()
-
-		# draws the axes
-		self.axes()
-
-	# draw the axes
-	def axes(self):
-		'''Draw the axis.'''
-
-		xrang = self.xmax - self.xmin
-		yrang = self.ymax - self.ymin
-
-		# adjusted y coordinate of x-axis
-		b = self.high + (self.ymin * self.high / yrang)
-
-		# adjusted x coordinate of y-axis
-		a = -1 * self.xmin * self.wide / xrang
-		
-		self.data[int(round(b, 0)), :, :] = 0
-		self.data[:, int(round(a, 0)), :] = 0
-		self.data.fill(0)
-		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = self.pic)
-
-		try:
-			# draw x-axis
-			#self.screen.create_line(0, b, self.wide, b, fill = "gray")
-
-			# draw y-axis
-			#self.screen.create_line(a, self.high, a, 0, fill = "gray")
-
-			self.root.update()
-		except TclError as e:
-			pass
-
-	def draw(self, func, color = "black"):
-		'''Draw a Cartesian function.'''
-
-		density = 1000
-		x = self.xmin
-
-		while x < self.xmax:
-
-			# move the x coordinate a little
-			x += self.xrang / density
-			try:
-				# eval the function at x and set that to y
-				y = float(evaluate_function(func, str(x)))
-
-				# check if the graph goes off the screen
-				if y > self.ymax or y < self.ymin and density > 2000:
-					denstiy = 2000
-				else:
-					# find the slope at the point using the derivative
-					# function of simplify
-					try:
-						slope = float(find_derivative(func, str(x)))
-					except (ValueError) as e:
-						slope = 10
-
-					# calculate how dense the points need to be
-					# this function is somewhat arbitrary
-					density = int((3000 * math.fabs(slope))
-					/ self.yrang + 500)
-
-				# adjust coordinate for the screen (this is the
-				# hard part)
-				a = (x-self.xmin) * self.wide / self.xrang
-				b = self.high - ((y - self.ymin) * self.high
-				/ self.yrang)
-
-				# draw the point
-				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except (ValueError, TclError) as e:
-				pass
-
-			# update the screen
-			try:
-				self.root.update()
-			except TclError as e:
-				x = self.xmax + 1
+		for i in range(self.data.shape[1] * 2):
+			
+			x = i * self.xrang / (self.wide * 2) + self.xmin
+			y = float(evaluate_function(func, str(x)))
+			a = (x - self.xmin) * self.wide / self.xrang
+			b = self.high - (y - self.ymin) * self.high / self.yrang
+			
+			if 0 < b and b < self.high:
+				self.data[
+					int(round(b, 0)),
+					int(round(i / 2, 0))
+					] = (0, 0, 0)
 				
-"""
+			pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
+			self.screen.create_image(
+				self.wide / 2, self.high / 2, image = pic)
+			
+			self.root.update()
+
 
 class polar_graph(graph):
 	'''
