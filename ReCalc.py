@@ -49,7 +49,8 @@ try:
 	from _tkinter import TclError
 except ModuleNotFoundError:
 	simplefilter('default', ImportWarning)
-	warn("Tkinter can not be imported. Using command line interface",
+	warn(
+		"Tkinter can not be imported. Using command line interface",
 		category = ImportWarning)
 
 
@@ -136,10 +137,9 @@ der_approx = options["der approx"]  # default = .0001
 hist_len = options["hist len"]
 win_bound = calc_info["window bounds"]
 
-#                 enter up down           enter  up  down
 key_binds = {
-	"nt": (13, 38, 40),
-	"posix": (104, 111, 116)
+	"nt": {13: "enter", 38: "up", 40: "down"},
+	"posix": {104: "enter", 111: "up", 116: "down"},
 }
 
 g_bound_names = (
@@ -218,11 +218,13 @@ regular_expr = OrderedDict(
 
 	# regex for commands
 	# ^$ is for an empty string
-	command_comp = compile("([Hh]istory)|([Qq]uit|[Ee]xit|^$)|"
+	command_comp = compile(
+		"([Hh]istory)|([Qq]uit|[Ee]xit|^$)|"
 		"([Dd]egree [Mm]ode)|([Rr]adian [Mm]ode)"),
 
 	# regex for constants
-	const_comp = compile("(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
+	const_comp = compile(
+		"(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
 		"ans(?:wer)?|tau|τ|phi|φ)"),
 
 	# regex for graphing
@@ -235,11 +237,13 @@ regular_expr = OrderedDict(
 	eval_comp = compile("[Ee]val(?:uate)? (.+) (?:for|at) (.+)"),
 
 	# regex for derivatives (must be at a number)
-	der_comp = compile("[Dd]erivative of (.+) at (.+?)"
+	der_comp = compile(
+		"[Dd]erivative of (.+) at (.+?)"
 		"( with respect to [a-z])?"),
 
 	# regex for integrals (bounds must be numbers)
-	int_comp = compile("(?:[Ii]ntegra(?:te ?|l ?)|∫)(.+)d([a-z])"
+	int_comp = compile(
+		"(?:[Ii]ntegra(?:te ?|l ?)|∫)(.+)d([a-z])"
 		" (?:from )?" + reg_num + " to " + reg_num),
 
 	# regex for combinations and permutations
@@ -247,26 +251,28 @@ regular_expr = OrderedDict(
 	comb_comp = compile("(C|P)(\(.+)"),
 
 	# regex for statistics functions
-	ave_comp = compile("([Aa]verage|[Aa]ve|[Mm]ean|[Mm]edian|[Mm]ode|"
+	ave_comp = compile(
+		"([Aa]verage|[Aa]ve|[Mm]ean|[Mm]edian|[Mm]ode|"
 		"[Mm]ax|[Mm]in|[Ss]tdev)(.+)"),
 
 	# regex for one argument functions
 	# the order does matter because if trig functions come
 	# before hyperbolic functions the "h" is interpreted as
 	# part of the argument for the function
-	trig_comp = compile("("
-	"hacovercosin|hacoversin|havercosin|haversin|"
-	"covercosin|coversin|vercosin|versin|"
-	"exsec|excsc|"
-	"sinh|cosh|tanh|asinh|acosh|atanh|"
-	"arcsinh|arccosh|arctanh|"
-	"sech|csch|coth|asech|acsch|acoth|"
-	"arcsech|arccsch|arccoth|"
-	"sin|cos|tan|sec|csc|cot|"
-	"asin|arcsin|acos|arccos|atan|arctan|"
-	"asec|acsc|acot|arcsec|arccsc|arccot|"
-	"abs|ceil|floor|erf"
-	")(.+)"),
+	trig_comp = compile(
+		"("
+		"hacovercosin|hacoversin|havercosin|haversin|"
+		"covercosin|coversin|vercosin|versin|"
+		"exsec|excsc|"
+		"sinh|cosh|tanh|asinh|acosh|atanh|"
+		"arcsinh|arccosh|arctanh|"
+		"sech|csch|coth|asech|acsch|acoth|"
+		"arcsech|arccsch|arccoth|"
+		"sin|cos|tan|sec|csc|cot|"
+		"asin|arcsin|acos|arccos|atan|arctan|"
+		"asec|acsc|acot|arcsec|arccsc|arccot|"
+		"abs|ceil|floor|erf"
+		")(.+)"),
 
 	# regex for gamma function
 	gamma_comp = compile("(?:[Gg]amma|Γ)(.+)"),
@@ -279,7 +285,7 @@ regular_expr = OrderedDict(
 
 	# regex for detecting absolute value
 	abs_comp = compile("(.*\|.*)"),
-	
+
 	# here is where the order of operations starts to matter
 	# it goes: parentheses, choose notation(nCm), exponents, factorial,
 	# modulus, multiplication, addition
@@ -287,7 +293,7 @@ regular_expr = OrderedDict(
 	# regex for parentheses
 	# [^()] makes it only find the inner most parentheses
 	paren_comp = compile("\(([^()]+)\)"),
-	
+
 	# ignores commas in the middle of numbers
 	# could be problematic if two floats ever
 	# end up next to each other
@@ -333,10 +339,10 @@ def float_to_str(f):
 def check_if_float(x):
 	'''
 	Test if a object can be made a float.
-	
+
 	>>> check_if_float("4.5")
 	True
-	
+
 	>>> check_if_float("this")
 	False
 	'''
@@ -366,12 +372,13 @@ def save_info(
 	'''
 	Save options, history, ans, and win_bound to a file.
 	'''
-	
+
 	if history == []:
 		raise CalculatorError(
 			"The entire history was about to be deleted.")
 
-	calc_info = {"history": history, "ans": ans, "options": options,
+	calc_info = {
+		"history": history, "ans": ans, "options": options,
 		"window bounds": win_bound}
 
 	with open(os.path.join(
@@ -396,7 +403,8 @@ def switch_degree_mode(mode):
 		raise CalculatorError("Can not set degree_mode to '%s'" % mode)
 
 	options["degree mode"] = degree_mode
-	save_info(history = history, ans = ans, options = options,
+	save_info(
+		history = history, ans = ans, options = options,
 		win_bound = win_bound)
 
 
@@ -417,7 +425,8 @@ def switch_polar_mode(mode):
 		raise CalculatorError("Can not set polar_mode to '%s'" % mode)
 
 	options["polar mode"] = polar_mode
-	save_info(history = history, ans = ans, options = options,
+	save_info(
+		history = history, ans = ans, options = options,
 		win_bound = win_bound)
 
 
@@ -436,7 +445,8 @@ def change_hist_len(entry_box, root):
 	if input.isdigit() and int(input) > 0:
 		hist_len = int(input)
 		options["hist len"] = hist_len
-		save_info(history = history, ans = ans, options = options,
+		save_info(
+			history = history, ans = ans, options = options,
 			win_bound = win_bound)
 
 		root.destroy()
@@ -453,9 +463,9 @@ def change_hist_len_win():
 	root = tk.Toplevel()
 
 	# create window text
-	disp = tk.Message(root,
-	text = "Current History print back length: "
-	+ str(hist_len))
+	disp = tk.Message(
+		root,
+		text = "Current History print back length: " + str(hist_len))
 	disp.grid(row = 0, column = 0)
 
 	# create the input box
@@ -463,8 +473,9 @@ def change_hist_len_win():
 	entry_box.grid(row = 1, column = 0)
 
 	# bind enter to setting the input to be the history length
-	root.bind("<Return>",
-	lambda event: change_hist_len(entry_box, root))
+	root.bind(
+		"<Return>",
+		lambda event: change_hist_len(entry_box, root))
 
 	root.mainloop()
 
@@ -484,7 +495,8 @@ def change_der_approx(entry_box, root):
 	if check_if_float(input) and "-" not in input:
 		der_approx = float(input)
 		options["der approx"] = der_approx
-		save_info(history = history, ans = ans, options = options,
+		save_info(
+			history = history, ans = ans, options = options,
 			win_bound = win_bound)
 
 		root.destroy()
@@ -501,8 +513,9 @@ def change_der_approx_win():
 	root = tk.Toplevel()
 
 	# create window text
-	disp = tk.Message(root, text = "Current der approx: "
-	+ str(der_approx))
+	disp = tk.Message(
+		root,
+		text = "Current der approx: " + str(der_approx))
 	disp.grid(row = 0, column = 0)
 
 	# create the input box
@@ -510,8 +523,9 @@ def change_der_approx_win():
 	entry_box.grid(row = 1, column = 0)
 
 	# bind enter to setting the input to be the history length
-	root.bind("<Return>",
-	lambda event: change_der_approx(entry_box, root))
+	root.bind(
+		"<Return>",
+		lambda event: change_der_approx(entry_box, root))
 
 	root.mainloop()
 
@@ -531,7 +545,8 @@ def change_graph_win_set():
 		if check_if_float(g_bound_input[i]):
 			win_bound[i] = float(g_bound_input[i])
 
-	save_info(history = history, ans = ans, options = options,
+	save_info(
+		history = history, ans = ans, options = options,
 		win_bound = win_bound)
 
 	for i in g_bound_names:
@@ -551,8 +566,8 @@ def find_match(s):
 	x = 0
 	if not s.startswith("("):
 		raise CalculatorError(
-			"error '%s' is an invalid input." % s)
-				
+			"Error '%s' is an invalid input, must start with '('" % s)
+
 	for i in range(len(s)):
 
 		# count the parentheses
@@ -573,24 +588,25 @@ def find_match(s):
 
 		elif x < 0:
 			raise CalculatorError(
-				"error '%s' is an invalid input." % s)
+				"Error '%s' is an invalid input. Parentheses do "
+				"not match." % s)
 
 	try:
 		return(an, left)
 	except UnboundLocalError:
-		raise CalculatorError("error '%s' is an invalid input." % s)
+		raise CalculatorError("Error '%s' is an invalid input." % s)
 
 
 def brackets(s):
 	'''
 	Return True if the parentheses match, False otherwise.
-	
+
 	>>> brackets("())")
 	False
-	
+
 	>>> brackets("(()())")
 	True
-	
+
 	>>> brackets("w(h)(a()t)")
 	True
 	'''
@@ -611,13 +627,13 @@ def separate(s):
 	Split up arguments of a function with commas
 	like mod(x, y) or log(x, y) based on where commas that aren't in
 	parentheses.
-	
+
 	>>> separate("5, 6 , (4, 7)")
 	('5', ' 6 ', ' (4, 7)')
 	'''
-	
+
 	terms = s.split(",")
-	
+
 	new_terms = []
 	middle = False
 	term = ""
@@ -643,10 +659,11 @@ class graph(object):
 	'''
 	Base class for all graphs.
 	'''
-	
-	def __init__(self,
-			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-			wide = 400, high = 400):
+
+	def __init__(
+		self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		wide = 400, high = 400):
 		'''
 		Initialize the graphing window.
 		'''
@@ -669,15 +686,17 @@ class graph(object):
 		self.high = high
 
 		# create the canvas
-		self.screen = tk.Canvas(self.root,
+		self.screen = tk.Canvas(
+			self.root,
 			width = self.wide, height = self.high)
 		self.screen.pack()
 
 		# button that close the window and program immediately
-		self.close = tk.Button(self.root, text = "Close",
+		self.close = tk.Button(
+			self.root, text = "Close",
 			command = self.root.destroy)
 		self.close.pack()
-		
+
 	def axes(self):
 		'''
 		Draw the axis.
@@ -706,14 +725,16 @@ class cart_graph(graph):
 	Cartesian Graphing window class.
 	'''
 
-	def __init__(self,
+	def __init__(
+		self,
 		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
 		wide = 400, high = 400):
 		'''
 		Initialize the graphing window.
 		'''
 
-		super().__init__(xmin = xmin, ymin = ymin, ymax = ymax,
+		super().__init__(
+			xmin = xmin, ymin = ymin, ymax = ymax,
 			wide = wide, high = high)
 
 		# draws the axes
@@ -748,14 +769,14 @@ class cart_graph(graph):
 
 					# calculate how dense the points need to be
 					# this function is somewhat arbitrary
-					density = int((3000 * math.fabs(slope))
-					/ self.yrang + 500)
+					density = int(
+						(3000 * math.fabs(slope)) / self.yrang + 500)
 
 				# adjust coordinate for the screen (this is the
 				# hard part)
 				a = (x-self.xmin) * self.wide / self.xrang
-				b = self.high - ((y - self.ymin) * self.high
-				/ self.yrang)
+				b = self.high - (
+					(y - self.ymin) * self.high / self.yrang)
 
 				# draw the point
 				self.screen.create_line(a, b, a + 1, b, fill = color)
@@ -774,23 +795,25 @@ class numpy_graph(graph):
 	Cartesian Graphing window class using numpy and PIL.
 	'''
 
-	def __init__(self,
-			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-			wide = 400, high = 400):
+	def __init__(
+		self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		wide = 400, high = 400):
 		'''
 		Initialize the graphing window.
 		'''
-		
-		super().__init__(xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+
+		super().__init__(
+			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
 			wide = 400, high = 400)
-			
+
 		self.data = np.zeros(
 			(self.high, self.wide, 3),
 			dtype = np.uint8)
 		self.data.fill(255)
-		
+
 		global pic
-		
+
 		# create the image
 		pic = ImageTk.PhotoImage(
 			Image.fromarray(self.data, "RGB"))
@@ -805,7 +828,7 @@ class numpy_graph(graph):
 		'''
 		Draw the axis.
 		'''
-		
+
 		global pic
 
 		# adjusted y coordinate of x-axis
@@ -813,7 +836,7 @@ class numpy_graph(graph):
 
 		# adjusted x coordinate of y-axis
 		a = -1 * self.xmin * self.wide / self.xrang
-		
+
 		try:
 			self.data[int(round(b, 0)), :, :] = 0
 		except IndexError:
@@ -826,7 +849,7 @@ class numpy_graph(graph):
 		pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
 		self.screen.create_image(
 			self.wide / 2, self.high / 2, image = pic)
-		
+
 		try:
 			self.root.update()
 		except TclError:
@@ -836,26 +859,26 @@ class numpy_graph(graph):
 		'''
 		Draw a Cartesian function.
 		'''
-		
+
 		global pic
-		
+
 		for i in range(self.data.shape[1] * 2):
-			
+
 			x = i * self.xrang / (self.wide * 2) + self.xmin
 			y = float(evaluate(func, str(x)))
 			a = (x - self.xmin) * self.wide / self.xrang
 			b = self.high - (y - self.ymin) * self.high / self.yrang
-			
+
 			if 0 < b and b < self.high:
 				self.data[
 					int(round(b, 0)),
 					int(round(i / 2, 0))
 					] = (0, 0, 0)
-				
+
 			pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
 			self.screen.create_image(
 				self.wide / 2, self.high / 2, image = pic)
-			
+
 			self.root.update()
 
 
@@ -864,10 +887,11 @@ class polar_graph(graph):
 	Polar graphing window class.
 	'''
 
-	def __init__(self,
-	xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-	theta_min = 0, theta_max = 10,
-	wide = 400, high = 400):  # all the arguments you pass the object
+	def __init__(
+		self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		theta_min = 0, theta_max = 10,
+		wide = 400, high = 400):
 		'''
 		Initialize polar graphing window.
 		'''
@@ -915,8 +939,8 @@ class polar_graph(graph):
 				# adjust coordinate for the
 				# screen (this is the hard part)
 				a = (x - self.xmin) * self.wide / self.xrang
-				b = self.high - ((y - self.ymin) * self.high
-				/ self.yrang)
+				b = self.high - (
+					(y - self.ymin) * self.high / self.yrang)
 
 				# draw the point
 				self.screen.create_line(a, b, a + 1, b, fill = color)
@@ -937,33 +961,34 @@ class polar_graph(graph):
 def constant(constant):
 	'''
 	Evaluate mathematical constants.
-	
+
 	>>> constant("pi")
 	3.141592653589793
-	
+
 	>>> constant("phi")
 	1.618033988749895
 	'''
 
-	constant_dict = {"pi": math.pi, "π": math.pi, "e": math.e,
-	"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
-	"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2}
+	constant_dict = {
+		"pi": math.pi, "π": math.pi, "e": math.e,
+		"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
+		"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2}
 
 	if constant in constant_dict:
 		return(constant_dict[constant])
 	else:
-		raise CalculatorError("'%s' is not a recognized constant."
-			% constant)
+		return(
+			"ERROR: '%s' is not a recognized constant." % constant)
 
 
 def graph_function(func_arg):
 	'''
 	Graph the given function or functions.
 	'''
-	
+
 	# check for bounds on graph
-	graph_rang_reg = "(.+(?=from))(from "+reg_num+" to "+reg_num+")"
-	graph_rang_comp = compile(graph_rang_reg)
+	graph_rang_comp = compile(
+		"(.+(?=from))(from " + reg_num + " to " + reg_num + ")")
 
 	# looks for x bounds on the graph
 	range_m = graph_rang_comp.search(func_arg)
@@ -1003,18 +1028,16 @@ def graph_function(func_arg):
 
 		# works out how many times it needs to
 		# loop the colors its using
-		color_loops = math.ceil(len(funcs_to_graph)
-		/ len(graph_colors))
+		color_loops = math.ceil(
+			len(funcs_to_graph) / len(graph_colors))
 
 		# passes functions to be graphed and the color to do so with
 		for f, c in zip(funcs_to_graph, graph_colors * color_loops):
 			made_graph.draw(f, color = c)
 
-		return(made_graph)
-
 	# informs the user of reason for failure
 	else:
-		print("Could not graph. Tkinter is not installed")
+		return("ERROR: Could not graph. Tkinter is not installed")
 
 
 def solve_equations(equation):
@@ -1022,21 +1045,19 @@ def solve_equations(equation):
 	Solve equations using sympy. If there is no equals
 	sign it is assumed the expression equals zero. If there is more
 	than one answer it will return a list of the answers.
-	
+
 	>>> solve_equations("x^2 = 4")
 	[-2, 2]
-	
+
 	>>> solve_equations("x-7 = 13")
 	20
 	'''
-	
+
 	# check for equals sign when solving equations
-	eq_sides_reg = "(.+)=(.+)|(.+)"
-	eq_sides_comp = compile(eq_sides_reg)
+	eq_sides_comp = compile("(.+)=(.+)|(.+)")
 
 	# checks for specified variable when solving equations
-	alg_var_reg = "(.+) for ([a-z])"
-	alg_var_comp = compile(alg_var_reg)
+	alg_var_comp = compile("(.+) for ([a-z])")
 
 	# find if there is a specified variable
 	varm = alg_var_comp.search(equation)
@@ -1081,18 +1102,19 @@ def evaluate(expression, point, var = "x"):
 	'''
 	Evaluate the function by substituting var for the number you
 	want to evaluate at.
-	
+
 	>>> evaluate("r^2", 5, var = "r")
 	'25.0'
-	
+
 	>>> evaluate("3*b", "2", "b")
 	'6.0'
 	'''
 
 	# substituting the point for x in the function and evaluating
 	# that recursively
-	return(simplify(sub("(?<![a-z])" + var + "(?![a-z])",
-	str(point), expression)))
+	return(simplify(sub(
+		"(?<![a-z])" + var + "(?![a-z])",
+		str(point), expression)))
 
 
 def find_derivative(expression, point, var = "x"):
@@ -1146,9 +1168,10 @@ def combinations_and_permutations(form, letter, n, m = None):
 	'''
 
 	if form == "choose":  # if written as nCm
-	
+
 		if m is None:
-			raise CalculatorError(
+			return(
+				"ERROR: "
 				"combinations_and_permutations requires a fourth "
 				"argument when using choose notation")
 
@@ -1167,14 +1190,16 @@ def combinations_and_permutations(form, letter, n, m = None):
 		elif letter == "P":
 			pass
 		else:
-			raise CalculatorError("Second argument must be 'C' or 'P'"
-			" for combinations or permutations not '%s'" % letter)
+			return(
+				"ERROR: Second argument must be 'C' or 'P'"
+				" for combinations or permutations not '%s'" % letter)
 
 		return(str(temp_result))
 
 	elif form == "func":  # if written as C(5, 2)
 		if m:
-			raise CalculatorError(
+			return(
+				"ERROR: "
 				"combinations_and_permutations can not take a fourth "
 				"argument when using function notation")
 
@@ -1203,16 +1228,18 @@ def combinations_and_permutations(form, letter, n, m = None):
 		elif letter == "P":
 			pass
 		else:
-			raise CalculatorError("Second argument must be 'C' or 'P'"
-			" for combinations or permutations not '%s'" % letter)
+			return(
+				"ERROR: Second argument must be 'C' or 'P'"
+				" for combinations or permutations not '%s'" % letter)
 
 		# add on anything that was was cut off the end when finding
 		# the arguments
 		# sin(C(5, 2)) ← the last parenthesis
 		return(str(temp_result) + proto_inner[1])
 	else:
-		raise CalculatorError("First argument must be 'choose' or "
-		"'func' not '%s'" % form)
+		return(
+			"ERROR: First argument must be 'choose' or "
+			"'func' not '%s'" % form)
 
 
 def statistics_functions(function, args):
@@ -1250,7 +1277,8 @@ def statistics_functions(function, args):
 	elif function.lower() in ("stdev"):
 		result = stats.stdev(list_ave)
 	else:
-		raise CalculatorError("%s is not a function that is defined in"
+		return(
+			"ERROR: '%s' is not a function that is defined in"
 			" statistics_functions" % function)
 
 	# add on anything that was was cut off the end when finding
@@ -1288,7 +1316,7 @@ def single_argument(func, args):
 	# operation that takes an angle as an argument
 	if degree_mode > 0 and "in" in one_arg_funcs[func][1]:
 		inner = math.pi * inner / 180
-		
+
 	result = one_arg_funcs[func][0](inner)
 
 	# checks if its in degree mode (not because of
@@ -1320,10 +1348,10 @@ def single_argument(func, args):
 def gamma(arg):
 	'''
 	Use the gamma function.
-	
+
 	>>> gamma("(4)")
 	'6.0'
-	
+
 	>>> gamma("(4.6)")
 	'13.381285870932441'
 	'''
@@ -1352,35 +1380,32 @@ def factorial(arg):
 	if written with an "!" will only take numbers as an argument.
 	In order of operations factorials come after exponents,
 	but before modulus
-	
+
 	>>> factorial("5")
 	120.0
 	'''
 
-	# doing the calculation
 	return(math.gamma(float(arg) + 1))
 
 
-def logarithm(log_arg, ln_arg):
+def logarithm(log_arg):
 	'''
 	Solve logarithms.
-	
-	Log must be written with two arguments. Ln only takes one argument
+
+	Can be written log(a, b) or ln(x). Ln only takes one argument
 	and is evaluated separately from log.
 	'''
 
-	# logarithms written as log(x, y) where y
-	# is the base and written as ln(x)
-	if log_arg is not None:  # if written as log(x, y)
+	# find the arguments of the function and cut off
+	# everything else
+	# sin(log(4, 2)) ← the last parenthesis
+	proto_inner = find_match(log_arg)
 
-		# find the arguments of the function and cut off
-		# everything else
-		# sin(log(4, 2)) ← the last parenthesis
-		proto_inner = find_match(log_arg)
+	# separate the arguments based on commas that are not
+	# within more than one set of parentheses
+	log_args = separate(proto_inner[0][1:-1])
 
-		# separate the arguments based on commas that are not
-		# within more than one set of parentheses
-		log_args = separate(proto_inner[0][1:-1])
+	if len(log_args) == 2:  # if written as log(a, b)
 
 		# evaluate the arguments individually into a form
 		# that math.log can accept
@@ -1392,24 +1417,21 @@ def logarithm(log_arg, ln_arg):
 			result = math.log2(argument)
 		elif base == 10:
 			result = math.log10(argument)
+		elif base == math.e:
+			result = math.log(argument)
 		else:
 			result = math.log(argument, base)
-		
+
 		return(str(result) + proto_inner[1])
 
-	elif ln_arg is not None:  # if written as ln(x)
+	elif len(log_args) == 1:  # if written as ln(x)
 
-		# find the argument of the function and cut off
-		# everything else
-		# sin(ln(e)) ← the last parenthesis
-		proto_inner = find_match(ln_arg)
-
-		# perform the logarithm
 		result = math.log(float(simplify(proto_inner[0])))
-	
+
 	else:
-		raise CalculatorError("log_arg or ln_arg must be something "
-			"not None")
+		return(
+			"ERROR: There must be 1 or 2 arguments in the "
+			"input string")
 
 	# add on anything that was was cut off the end when finding
 	# the arguments
@@ -1417,7 +1439,7 @@ def logarithm(log_arg, ln_arg):
 	return(str(result) + proto_inner[1])
 
 
-def mdoulus(arg):
+def modulus(arg):
 	'''
 	Find the modulus of the input as a function not an operator.
 	'''
@@ -1448,7 +1470,14 @@ def mdoulus(arg):
 def abs_value(input):
 	'''
 	Break up a expression based on where pipes are and return the
-	the absolute value of what is in them.
+	the absolute value of what is in them. Only does the first inner
+	most layer, does not necessarily output a single number.
+
+	>>> abs_value("|3-|2-4||")
+	'|3-2.0|'
+
+	>>> abs_value("|1-2|+|3-1|")
+	'1.0+|3-1|'
 	'''
 
 	parts = input.split("|")
@@ -1486,11 +1515,14 @@ def abs_value(input):
 def simplify(s):
 	'''
 	Simplify an expression.
-	
+
 	This is the main body of the program.
 	'''
 
 	global degree_mode
+
+	if str(s).startswith("ERROR:"):
+		return(s)
 
 	# iterates over all the operations
 	for key, value in regular_expr.items():
@@ -1528,11 +1560,12 @@ def simplify(s):
 				# set degree mode off for the session
 				elif m.group(4) is not None:
 					switch_degree_mode(0)
-					
+
 				else:
-					raise CalculatorError("Command must be 'history',"
+					result = (
+						"ERROR: Command must be 'history',"
 						" 'exit', 'quit', 'degree mode', or 'radian "
-						"mode'")
+						"mode'.")
 
 				return(None)
 
@@ -1542,7 +1575,10 @@ def simplify(s):
 
 			elif key == "graph_comp":
 
-				graph_function(m.group(1))
+				graph_out = graph_function(m.group(1))
+				if str(graph_out).startswith("ERROR:"):
+					return(graph_out)
+
 				return(None)
 
 			elif key == "alg_comp":
@@ -1556,24 +1592,31 @@ def simplify(s):
 			elif key == "der_comp":
 
 				if m.group(3) is not None:
-					result = find_derivative(m.group(1), m.group(2),
-					var = m.group(3)[-1])
+					result = find_derivative(
+						m.group(1), m.group(2),
+						var = m.group(3)[-1])
 				else:
 					result = find_derivative(m.group(1), m.group(2))
 
 			elif key == "int_comp":
 
-				result = integrate_function(m.group(1), m.group(2),
-				m.group(3), m.group(4))
+				result = integrate_function(
+					m.group(1), m.group(2),
+					m.group(3), m.group(4))
 
 			elif key in ("comb_comp", "choos_comp"):
 
 				if key == "comb_comp":
-					result = combinations_and_permutations("func",
-						m.group(1), m.group(2))
+					result = combinations_and_permutations(
+						"func",
+						m.group(1),
+						m.group(2))
 				elif key == "choos_comp":
-					result = combinations_and_permutations("choose",
-						m.group(2), m.group(1), m.group(3))
+					result = combinations_and_permutations(
+						"choose",
+						m.group(2),
+						m.group(1),
+						m.group(3))
 
 			elif key == "ave_comp":
 
@@ -1585,21 +1628,21 @@ def simplify(s):
 
 			elif key in ("gamma_comp", "fact_comp"):
 
-				# the user inputed the gamma function
 				if key == "gamma_comp":
 					result = gamma(m.group(1))
 
-				elif key == "fact_comp":  # the user inputed a factorial
+				elif key == "fact_comp":
 					result = factorial(m.group(1))
-				
+
 				else:
-					raise CalculatorError("How could this possibly "
-						"happen? It just tested if key was 'gamma_comp'"
-						" or 'fact_comp'.")
+					result = (
+						"ERROR: How could this possibly "
+						"happen? It just tested if key was "
+						"'gamma_comp' or 'fact_comp'.")
 
 			elif key == "log_comp":
 
-				result = logarithm(m.group(1), m.group(2))
+				result = logarithm(m.group(1) or m.group(2))
 
 			elif key == "abs_comp":
 
@@ -1620,8 +1663,6 @@ def simplify(s):
 
 			elif key == "exp_comp":
 
-				# exponents
-
 				result = float(m.group(1)) ** float(m.group(3))
 
 			elif key in ("mod_comp", "mod2_comp"):
@@ -1635,23 +1676,24 @@ def simplify(s):
 
 				if key == "mod2_comp":
 
-					result = mdoulus(m.group(1))
+					result = modulus(m.group(1))
 
 				elif key == "mod_comp":
 
 					# the x % y format
-					result = math.fmod(float(m.group(1)),
-					float(m.group(2)))
-				
+					result = math.fmod(
+						float(m.group(1)),
+						float(m.group(2)))
+
 				else:
-					raise CalculatorError("How could this possibly "
+					result = (
+						"ERROR: How could this possibly "
 						"happen? It just tested if i was 'mod2_comp' "
 						"or 'mod_comp'.")
 
 			elif key == "per_comp":
 
 				# percentage signs act just like dividing by 100
-
 				result = "/100"
 
 			elif key == "mult_comp":
@@ -1665,9 +1707,10 @@ def simplify(s):
 				elif m.group(2) in ("/", "÷"):
 
 					result = float(m.group(1)) / float(m.group(3))
-					
+
 				else:
-					raise CalculatorError("Mult_comp must match '*', "
+					result = (
+						"ERROR: mult_comp must match '*', "
 						"'//', or '÷'.")
 
 			elif key == "add_comp":
@@ -1676,22 +1719,24 @@ def simplify(s):
 
 				if m.group(2) == "+":
 
-					result = math.fsum((float(m.group(1)),
-					float(m.group(3))))
+					result = math.fsum((
+						float(m.group(1)),
+						float(m.group(3))))
 
 				elif m.group(2) == "-":
 
 					result = float(m.group(1)) - float(m.group(3))
-					
+
 				else:
-					raise CalculatorError("add_comp must match '+' or "
-						"'-'.")
-			
+					result = (
+						"ERROR: add_comp must match '+' or '-'.")
+
 			else:
 				print("function not implemented.", key)
 
-			if key not in ("command_comp", "const_comp",
-			"alg_comp", "eval_comp", "der_comp"):
+			if key not in (
+				"command_comp", "const_comp",
+				"alg_comp", "eval_comp", "der_comp"):
 
 				# this is a fix for python returning
 				# answers in scientific notation which since
@@ -1700,6 +1745,10 @@ def simplify(s):
 					result = float_to_str(result)
 				except (ValueError, TypeError):
 					pass
+
+			if str(result).startswith("ERROR:"):
+				print(result)
+				return(result)
 
 			# replace the text matched by i (the regular expression)
 			# with the result of the mathematical expression
@@ -1730,7 +1779,8 @@ def ask(s = None):
 		history.append(s)
 
 		# save history to file
-		save_info(history = history, ans = ans, options = options,
+		save_info(
+			history = history, ans = ans, options = options,
 			win_bound = win_bound)
 
 	# evaluate the expression
@@ -1745,7 +1795,8 @@ def ask(s = None):
 	print("")
 
 	# save answer to file to be used next session
-	save_info(history = history, ans = ans, options = options,
+	save_info(
+		history = history, ans = ans, options = options,
 		win_bound = win_bound)
 
 
@@ -1761,20 +1812,23 @@ def key_pressed(event):
 	except AttributeError:
 		code = event
 
+	if code in key_binds[os.name]:
+		key = key_binds[os.name][code]
+	else:
+		key = None
 	# print(code)
 
-	# get the user input when enter is pressed
-	if code == key_binds[os.name][0]:  # enter
+	if key == "enter":
 		get_input()
 
 	# go backwards in the history when the up arrow is pressed
-	if code == key_binds[os.name][1]:  # up arrow
+	if key == "up":
 		up_hist += 1
 		input_widget.delete(0, "end")
 		input_widget.insert(0, history[-1 * up_hist])
 
 	# go forwards in the history when the down arrow is pressed
-	if code == key_binds[os.name][2]:  # down arrow
+	if key == "down":
 		if up_hist > 1:
 			up_hist -= 1
 			input_widget.delete(0, "end")
@@ -1782,7 +1836,7 @@ def key_pressed(event):
 
 	# if you are not navigating the history stop keeping
 	# track of where you are
-	if code not in (key_binds[os.name][1], key_binds[os.name][2]):
+	if key not in ("up", "down"):
 		up_hist = 0
 
 
@@ -1816,14 +1870,15 @@ def get_input(s = None):
 			exit()
 		elif os.name == "nt":
 			sys.exit()
-	
+
 	if s is not None:
-		
+
 		# add the user input to the history
 		history.append(s)
 
 		# save history to file
-		save_info(history = history, ans = ans, options = options,
+		save_info(
+			history = history, ans = ans, options = options,
 			win_bound = win_bound)
 
 		out = simplify(s)
@@ -1836,7 +1891,8 @@ def get_input(s = None):
 			mess.set(s + " = " + out)
 
 		# save answer to file to be used next session
-		save_info(history = history, ans = ans, options = options,
+		save_info(
+			history = history, ans = ans, options = options,
 			win_bound = win_bound)
 
 		# clear the input box
@@ -1884,7 +1940,8 @@ def switch_hyperbolic():
 			pass
 
 	for i in range(12):
-		hyperbolic_func_buttons[i].grid(row = i // 3 + 3,
+		hyperbolic_func_buttons[i].grid(
+			row = i // 3 + 3,
 			column = i % 3 + 8)
 
 
@@ -1924,7 +1981,8 @@ def switch_stats():
 
 	# mean median mode
 	for i in range(6):
-		stats_func_buttons[i].grid(row = i // 3 + 3,
+		stats_func_buttons[i].grid(
+			row = i // 3 + 3,
 			column = i % 3 + 8)
 
 
@@ -2023,13 +2081,15 @@ def edit_graph_window():
 		g_bound_string[val] = tk.StringVar()
 		g_bound_string[val].set("%s = %s" % (val, win_bound[val]))
 
-		g_bound_disp[val] = tk.Message(root,
+		g_bound_disp[val] = tk.Message(
+			root,
 			textvariable = g_bound_string[val],
 			width = 100)
 
 		g_bound_disp[val].grid(row = index, column = 0)
 
-		g_bound_entry[val].bind("<Key>",
+		g_bound_entry[val].bind(
+			"<Key>",
 			lambda event, i = index: graph_win_key_press(event, i))
 
 	root.bind("<Return>", lambda a: change_graph_win_set())
@@ -2053,15 +2113,18 @@ def tkask(s = None):
 	root.title("ReCalc")
 
 	if os.name == "nt":
-		root.iconbitmap(default = os.path.join(calc_path,
-		"ReCalc_icon.ico"))
+		root.iconbitmap(default = os.path.join(
+			calc_path,
+			"ReCalc_icon.ico"))
 
 	mess = tk.StringVar()
 	mess.set("Input an expression")
 
 	# output text widget
-	output_mess_widget = tk.Message(root, textvariable = mess,
-	width = 200)
+	output_mess_widget = tk.Message(
+		root,
+		textvariable = mess,
+		width = 200)
 	output_mess_widget.grid(row = 0, column = 0, columnspan = 11)
 
 	# input text widget
@@ -2074,67 +2137,96 @@ def tkask(s = None):
 		",", "∫", "x"]
 
 	# creating of the basic buttons
-	digit_button = list(tk.Button(root, text = str(i),
-	command = lambda k = i: input_widget.insert("end", k),
-	width = 5) for i in button_keys)
+	digit_button = list(tk.Button(
+		root,
+		text = str(i),
+		command = lambda k = i: input_widget.insert("end", k),
+		width = 5) for i in button_keys)
 
 	# equals button
-	equals_button = tk.Button(root, text = "=",
-	command = get_input, width = 5, bg = "light blue")
+	equals_button = tk.Button(
+		root,
+		text = "=",
+		command = get_input,
+		width = 5,
+		bg = "light blue")
 
 	# backspace button
-	back_button = tk.Button(root, text = "delete",
-	command = input_backspace, width = 5)
+	back_button = tk.Button(
+		root,
+		text = "delete",
+		command = input_backspace,
+		width = 5)
 
 	# list of trig functions
-	trig_funcs = ("sin(", "cos(", "tan(", "sec(", "csc(", "cot(",
-	"arcsin(", "arccos(", "arctan(", "arcsec(", "arccsc(", "arccot(")
+	trig_funcs = (
+		"sin(", "cos(", "tan(",
+		"sec(", "csc(", "cot(",
+		"arcsin(", "arccos(", "arctan(",
+		"arcsec(", "arccsc(", "arccot(")
 
 	# creating of trig function buttons
-	trig_func_buttons = list(tk.Button(root, text = i[:-1],
-	command = lambda k = i: input_widget.insert("end", k),
-	width = 5) for i in trig_funcs)
+	trig_func_buttons = list(tk.Button(
+		root,
+		text = i[:-1],
+		command = lambda k = i: input_widget.insert("end", k),
+		width = 5) for i in trig_funcs)
 
 	# list of hyperbolic functions
-	hyperbolic_funcs = ("sinh(", "cosh(", "tanh(", "sech(", "csch(",
-	"coth(", "arcsinh(", "arccosh(", "arctanh(", "arcsech(",
-	"arccsch(", "arccoth(")
+	hyperbolic_funcs = (
+		"sinh(", "cosh(", "tanh(",
+		"sech(", "csch(", "coth(",
+		"arcsinh(", "arccosh(", "arctanh(",
+		"arcsech(", "arccsch(", "arccoth(")
 
 	# creation of hyperbolic function buttons
-	hyperbolic_func_buttons = list(tk.Button(root, text = i[:-1],
-	command = lambda k = i: input_widget.insert("end", k),
-	width = 5) for i in hyperbolic_funcs)
+	hyperbolic_func_buttons = list(tk.Button(
+		root,
+		text = i[:-1],
+		command = lambda k = i: input_widget.insert("end", k),
+		width = 5) for i in hyperbolic_funcs)
 
 	# list of misc fuctions
-	misc_funcs = ("log(", "ln(", "Γ(", "abs(", "ceil(", "floor(",
-	"erf(", "mod(", "C(", "P(")
+	misc_funcs = (
+		"log(", "ln(", "Γ(", "abs(", "ceil(", "floor(",
+		"erf(", "mod(", "C(", "P(")
 
 	# creation of misc function buttons
-	misc_func_buttons = list(tk.Button(root, text = i[:-1],
-	command = lambda k = i: input_widget.insert("end", k),
-	width = 5) for i in misc_funcs)
+	misc_func_buttons = list(tk.Button(
+		root,
+		text = i[:-1],
+		command = lambda k = i: input_widget.insert("end", k),
+		width = 5) for i in misc_funcs)
 
 	# list of stats functions
-	stats_funcs = ("mean(", "median(", "mode(", "stdev(", "max(",
-	"min(")
+	stats_funcs = (
+		"mean(", "median(", "mode(", "stdev(", "max(", "min(")
 
 	# creation of stats buttons
-	stats_func_buttons = list(tk.Button(root, text = i[:-1],
-	command = lambda k = i: input_widget.insert("end", k),
-	width = 5) for i in stats_funcs)
+	stats_func_buttons = list(tk.Button(
+		root,
+		text = i[:-1],
+		command = lambda k = i: input_widget.insert("end", k),
+		width = 5) for i in stats_funcs)
 
 	# more functions button
-	menubar = tk.Menubutton(root, text = "Functions",
-	relief = "raised")
+	menubar = tk.Menubutton(
+		root,
+		text = "Functions",
+		relief = "raised")
 	dropdown = tk.Menu(menubar, tearoff = 0)
-	dropdown.add_command(label = "Trig Functions",
-	command = switch_trig)
-	dropdown.add_command(label = "Hyperbolic Functions",
-	command = switch_hyperbolic)
-	dropdown.add_command(label = "Misc Functions",
-	command = switch_misc)
-	dropdown.add_command(label = "Stats Functions",
-	command = switch_stats)
+	dropdown.add_command(
+		label = "Trig Functions",
+		command = switch_trig)
+	dropdown.add_command(
+		label = "Hyperbolic Functions",
+		command = switch_hyperbolic)
+	dropdown.add_command(
+		label = "Misc Functions",
+		command = switch_misc)
+	dropdown.add_command(
+		label = "Stats Functions",
+		command = switch_stats)
 
 	menubar.config(menu = dropdown)
 
@@ -2142,33 +2234,40 @@ def tkask(s = None):
 	options_menu = tk.Menu(root)
 	list_options = tk.Menu(options_menu, tearoff = 0)
 
-	list_options.add_command(label = "Radian Mode",
-	command = lambda: switch_degree_mode("radian"))
+	list_options.add_command(
+		label = "Radian Mode",
+		command = lambda: switch_degree_mode("radian"))
 
-	list_options.add_command(label = "Degree Mode",
-	command = lambda: switch_degree_mode("degree"))
+	list_options.add_command(
+		label = "Degree Mode",
+		command = lambda: switch_degree_mode("degree"))
 
-	list_options.add_command(label = "Polar Mode",
-	command = lambda: switch_polar_mode("polar"))
+	list_options.add_command(
+		label = "Polar Mode",
+		command = lambda: switch_polar_mode("polar"))
 
-	list_options.add_command(label = "Cartesian Mode",
-	command = lambda: switch_polar_mode("Cartesian"))
+	list_options.add_command(
+		label = "Cartesian Mode",
+		command = lambda: switch_polar_mode("Cartesian"))
 
-	list_options.add_command(label =
-	"Change length of history print back",
-	command = change_hist_len_win)
+	list_options.add_command(
+		label = "Change length of history print back",
+		command = change_hist_len_win)
 
-	list_options.add_command(label = "Change der approx",
-	command = change_der_approx_win)
+	list_options.add_command(
+		label = "Change der approx",
+		command = change_der_approx_win)
 
 	options_menu.add_cascade(label = "Options", menu = list_options)
 
 	# list of other things the calculator can do
 	matrices_plus = tk.Menu(options_menu, tearoff = 0)
-	matrices_plus.add_command(label = "Matrices",
-	command = switch_matrices)
-	matrices_plus.add_command(label = "Window",
-	command = edit_graph_window)
+	matrices_plus.add_command(
+		label = "Matrices",
+		command = switch_matrices)
+	matrices_plus.add_command(
+		label = "Window",
+		command = edit_graph_window)
 	options_menu.add_cascade(label = "Things", menu = matrices_plus)
 
 	root.config(menu = options_menu)

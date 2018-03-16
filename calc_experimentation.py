@@ -2,7 +2,6 @@
 
 
 
-print(locals())
 
 
 
