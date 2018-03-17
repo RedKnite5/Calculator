@@ -139,7 +139,7 @@ win_bound = calc_info["window bounds"]
 
 key_binds = {
 	"nt": {13: "enter", 38: "up", 40: "down"},
-	"posix": {104: "enter", 111: "up", 116: "down"},
+	"posix": {104: "enter", 36: "enter", 111: "up", 116: "down"},
 }
 
 g_bound_names = (
