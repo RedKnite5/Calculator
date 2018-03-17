@@ -26,7 +26,7 @@ class test_history_length_changing(unittest.TestCase):
 		self.root.update()
 		c.change_hist_len(self.entry, self.root)
 		self.assertEqual(c.hist_len, 20)
-		self.assertEqual(c.options[3], 20)
+		self.assertEqual(c.options["hist len"], 20)
 		
 	def test_float_input(self):
 		self.test_change_hist_len()
@@ -40,7 +40,7 @@ class test_history_length_changing(unittest.TestCase):
 		pre_hist_len = c.hist_len
 		c.change_hist_len(self.entry, self.root)
 		self.assertEqual(c.hist_len, pre_hist_len)
-		self.assertEqual(c.options[3], pre_hist_len)
+		self.assertEqual(c.options["hist len"], pre_hist_len)
 		self.root.destroy()
 		
 	def test_other_string(self):
@@ -55,7 +55,7 @@ class test_history_length_changing(unittest.TestCase):
 		pre_hist_len = c.hist_len
 		c.change_hist_len(self.entry, self.root)
 		self.assertEqual(c.hist_len, pre_hist_len)
-		self.assertEqual(c.options[3], pre_hist_len)
+		self.assertEqual(c.options["hist len"], pre_hist_len)
 		self.root.destroy()
 		
 	def test_string_int(self):
@@ -67,7 +67,7 @@ class test_history_length_changing(unittest.TestCase):
 		self.root.update()
 		c.change_hist_len(self.entry, self.root)
 		self.assertEqual(c.hist_len, 50)
-		self.assertEqual(c.options[3], 50)
+		self.assertEqual(c.options["hist len"], 50)
 		
 	def tearDown(self):
 		self.root = tk.Tk()
@@ -94,7 +94,7 @@ class test_change_der_approx(unittest.TestCase):
 		
 		c.change_der_approx(self.entry, self.root)
 		self.assertEqual(c.der_approx, .002)
-		self.assertEqual(c.options[2], .002)
+		self.assertEqual(c.options["der approx"], .002)
 		
 	def test_der_approx_negative(self):
 		self.root = tk.Tk()
@@ -107,7 +107,7 @@ class test_change_der_approx(unittest.TestCase):
 		
 		c.change_der_approx(self.entry, self.root)
 		self.assertEqual(c.der_approx, pre_der_approx)
-		self.assertEqual(c.options[2], pre_der_approx)
+		self.assertEqual(c.options["der approx"], pre_der_approx)
 		self.root.destroy()
 		
 	def test_der_approx_random_string(self):
@@ -121,7 +121,7 @@ class test_change_der_approx(unittest.TestCase):
 
 		c.change_der_approx(self.entry, self.root)
 		self.assertEqual(c.der_approx, pre_der_approx)
-		self.assertEqual(c.options[2], pre_der_approx)
+		self.assertEqual(c.options["der approx"], pre_der_approx)
 		self.root.destroy()
 
 
@@ -129,10 +129,11 @@ class test_change_graph_win_set(unittest.TestCase):
 	pass
 
 
-class test_graph(unittest.TestCase):
+class test_cart_graph(unittest.TestCase):
 	
 	def test_create_graph(self):
-		g = c.graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+		g = c.cart_graph(
+			xmin = -1, xmax = 1, ymin = 2, ymax = 3,
 			wide = 40, high = 50)
 		self.assertEqual(g.xmin, -1)
 		self.assertEqual(g.xmax, 1)
@@ -143,13 +144,15 @@ class test_graph(unittest.TestCase):
 		g.root.destroy()
 	
 	def test_close_while_graphing(self):
-		g = c.graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+		g = c.cart_graph(
+			xmin = -1, xmax = 1, ymin = 2, ymax = 3,
 			wide = 40, high = 50)
 		g.draw("1")
 		g.root.destroy()
 		
 	def test_graph_partial_undefined(self):
-		g = c.graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+		g = c.cart_graph(
+			xmin = -1, xmax = 1, ymin = 2, ymax = 3,
 			wide = 40, high = 50)
 		g.draw("x**.5")
 		g.root.destroy()
@@ -158,7 +161,8 @@ class test_graph(unittest.TestCase):
 class test_polar_graph(unittest.TestCase):
 	
 	def test_create_graph(self):
-		g = c.polar_graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+		g = c.polar_graph(
+			xmin = -1, xmax = 1, ymin = 2, ymax = 3,
 			theta_min = -2, theta_max = 6, wide = 40, high = 50)
 		self.assertEqual(g.xmin, -1)
 		self.assertEqual(g.xmax, 1)
@@ -171,13 +175,15 @@ class test_polar_graph(unittest.TestCase):
 		g.root.destroy()
 	
 	def test_close_while_graphing(self):
-		g = c.polar_graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+		g = c.polar_graph(
+			xmin = -1, xmax = 1, ymin = 2, ymax = 3,
 			theta_min = -.5, theta_max = .5, wide = 40, high = 50)
 		g.draw("1")
 		g.root.destroy()
 		
 	def test_graph_partial_undefined(self):
-		g = c.polar_graph(xmin = -1, xmax = 1, ymin = 2, ymax = 3,
+		g = c.polar_graph(
+			xmin = -1, xmax = 1, ymin = 2, ymax = 3,
 			theta_min = -.5, theta_max = .5, wide = 40, high = 50)
 		g.draw("x**.5")
 		g.root.destroy()

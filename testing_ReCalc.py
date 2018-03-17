@@ -986,6 +986,12 @@ class regex(unittest.TestCase):
 				"Solve (x=3)").group(1),
 			" (x=3)")
 
+	def test_nested_alg_comp(self):
+		self.assertEqual(
+			c.regular_expr["alg_comp"].search(
+				"solve(x=solve(x=4))").group(1),
+			"(x=solve(x=4))")
+
 	def test_eval_comp(self):
 		m = c.regular_expr["eval_comp"].search("eval x at 1")
 		self.assertEqual(m.group(1), "x")
@@ -1003,8 +1009,129 @@ class regex(unittest.TestCase):
 		self.assertEqual(m.group(1), "3*x")
 		self.assertEqual(m.group(2), "11")
 
+	@unittest.expectedFailure
+	def test_nested_eval_comp(self):
+		m = c.regular_expr["eval_comp"].search(
+			"eval x at eval 2*x for 3")
+		self.assertEqual(m.group(1), "x")
+		self.assertEqual(m.group(2), "eval 2*x for 3")
+
 	def test_der_comp(self):
-		pass
+		m = c.regular_expr["der_comp"].search(
+			"derivative of x^2 at 2")
+		self.assertEqual(m.group(1), "x^2")
+		self.assertEqual(m.group(2), "2")
+		
+		m = c.regular_expr["der_comp"].search(
+			"derivative of 3*x at 4")
+		self.assertEqual(m.group(1), "3*x")
+		self.assertEqual(m.group(2), "4")
+
+		m = c.regular_expr["der_comp"].search(
+			"derivative of 6*g at 1 with respect to g")
+		self.assertEqual(m.group(1), "6*g")
+		self.assertEqual(m.group(2), "1")
+		self.assertEqual(m.group(3), " with respect to g")
+
+	@unittest.expectedFailure
+	def test_nested_der_comp(self):
+		m = c.regular_expr["der_comp"].search(
+			"derivative of 6*g at derivative of x^2 at 6 with "
+			"respect to x with respect to g")
+		self.assertEqual(m.group(1), "6*g")
+		self.assertEqual(
+			m.group(2),
+			"derivative of x^2 at 6 with respect to x")
+		self.assertEqual(m.group(3), " with respect to g")
+
+	def test_int_comp(self):
+		m = c.regular_expr["int_comp"].search(
+			"integral 2*x dx 0 to 1")
+		self.assertEqual(m.group(1), "2*x ")
+		self.assertEqual(m.group(2), "x")
+		self.assertEqual(m.group(3), "0")
+		self.assertEqual(m.group(4), "1")
+		
+		m = c.regular_expr["int_comp"].search(
+			"integral 2*x dx from 0 to 1")
+		self.assertEqual(m.group(1), "2*x ")
+		self.assertEqual(m.group(2), "x")
+		self.assertEqual(m.group(3), "0")
+		self.assertEqual(m.group(4), "1")
+		
+		m = c.regular_expr["int_comp"].search(
+			"integrate 2*x dx 0 to 1")
+		self.assertEqual(m.group(1), "2*x ")
+		self.assertEqual(m.group(2), "x")
+		self.assertEqual(m.group(3), "0")
+		self.assertEqual(m.group(4), "1")
+
+		m = c.regular_expr["int_comp"].search(
+			"∫3*x dx 2 to 4")
+		self.assertEqual(m.group(1), "3*x ")
+		self.assertEqual(m.group(2), "x")
+		self.assertEqual(m.group(3), "2")
+		self.assertEqual(m.group(4), "4")
+
+		m = c.regular_expr["int_comp"].search(
+			"∫3*r dr 2 to 4")
+		self.assertEqual(m.group(1), "3*r ")
+		self.assertEqual(m.group(2), "r")
+		self.assertEqual(m.group(3), "2")
+		self.assertEqual(m.group(4), "4")
+
+	@unittest.expectedFailure
+	def test_int_comp_non_number_bounds(self):
+		m = c.regular_expr["int_comp"].search(
+			"integrate 2*x dx 0 to 1+1")
+		self.assertEqual(m.group(1), "2*x ")
+		self.assertEqual(m.group(2), "x")
+		self.assertEqual(m.group(3), "0")
+		self.assertEqual(m.group(4), "1+1")
+
+	def test_comb_comp(self):
+		self.assertRegex("C(5,4)", c.regular_expr["comb_comp"])
+		self.assertRegex("P(5,4)", c.regular_expr["comb_comp"])
+
+	def test_ave_comp(self):
+		re = c.regular_expr["ave_comp"]
+		
+		self.assertRegex("Mean(4,3)", re)
+		self.assertRegex("Median(4,3)", re)
+		self.assertRegex("Mode(4,3)", re)
+		self.assertRegex("mean(4,3)", re)
+		self.assertRegex("median(4,3)", re)
+		self.assertRegex("mode(4,3)", re)
+		self.assertRegex("Max(4,3)", re)
+		self.assertRegex("Min(4,3)", re)
+		self.assertRegex("max(4,3)", re)
+		self.assertRegex("min(4,3)", re)
+		self.assertRegex("Ave(4,3)", re)
+		self.assertRegex("ave(4,3)", re)
+		self.assertRegex("average(4,3)", re)
+		self.assertRegex("Stdev(4,3)", re)
+		self.assertRegex("stdev(4,3)", re)
+		
+		m = c.regular_expr["ave_comp"].search("average(6,4)")
+		self.assertEqual(m.group(1), "average")
+		self.assertEqual(m.group(2), "(6,4)")
+		
+	def test_trig_comp(self):
+		for i in c.one_arg_funcs:
+			with self.subTest(i = i):
+				self.assertRegex(
+					"%s(pi)" % i,
+					c.regular_expr["trig_comp"])
+
+
+
+
+
+
+
+
+
+
 
 
 

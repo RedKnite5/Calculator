@@ -243,7 +243,7 @@ regular_expr = OrderedDict(
 
 	# regex for integrals (bounds must be numbers)
 	int_comp = compile(
-		"(?:[Ii]ntegra(?:te ?|l ?)|∫)(.+)d([a-z])"
+		"(?:[Ii]ntegra(?:te ?|l ?)|∫)(.+) ?d([a-z])"
 		" (?:from )?" + reg_num + " to " + reg_num),
 
 	# regex for combinations and permutations
@@ -734,7 +734,7 @@ class cart_graph(graph):
 		'''
 
 		super().__init__(
-			xmin = xmin, ymin = ymin, ymax = ymax,
+			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
 			wide = wide, high = high)
 
 		# draws the axes
@@ -862,9 +862,9 @@ class numpy_graph(graph):
 
 		global pic
 
-		for i in range(self.data.shape[1] * 2):
+		for i in range(self.data.shape[1]):
 
-			x = i * self.xrang / (self.wide * 2) + self.xmin
+			x = i * self.xrang / self.wide + self.xmin
 			y = float(evaluate(func, str(x)))
 			a = (x - self.xmin) * self.wide / self.xrang
 			b = self.high - (y - self.ymin) * self.high / self.yrang
@@ -872,7 +872,7 @@ class numpy_graph(graph):
 			if 0 < b and b < self.high:
 				self.data[
 					int(round(b, 0)),
-					int(round(i / 2, 0))
+					int(round(i, 0))
 					] = (0, 0, 0)
 
 			pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
@@ -1034,6 +1034,9 @@ def graph_function(func_arg):
 		# passes functions to be graphed and the color to do so with
 		for f, c in zip(funcs_to_graph, graph_colors * color_loops):
 			made_graph.draw(f, color = c)
+
+		# necessary for some of the tests
+		return(made_graph)
 
 	# informs the user of reason for failure
 	else:
