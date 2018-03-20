@@ -14,10 +14,66 @@ import string
 
 import numpy as np
 
+class NonRepeatingList(object):
+	'''
+	A mutable list that doesn't have two of the same element in a row.
+
+	>>> repr(NonRepeatingList(3, 3, 4))
+	'NonRepeatingList(*[3, 4])'
+	'''
+
+	def __init__(self, *args):
+		if len(args) > 0:
+			self.items = [args[0]]
+			for i in args:
+				if i != self.items[-1]:
+					self.items.append(i)
+		else:
+			self.items = []
+
+	def __getitem__(self, index):
+		return(self.items[index])
+
+	def __delitem__(self, index):
+		del self.items[index]
+		if index != 0:
+			if self.items[index] == self.items[index - 1]:
+				del self.items[index]
+
+	def __contains__(self, item):
+		return(item in self.items)
+
+	def __len__(self):
+		return(len(self.items))
+
+	def __repr__(self):
+		return("NonRepeatingList(*" + repr(self.items) + ")")
+
+	def __str__(self):
+		return(str(self.items))
+
+	def __eq__(self, other):
+		if isinstance(other, NonRepeatingList):
+			if self.items == other.items:
+				return(True)
+		return(False)
+
+	def append(self, *args):
+		for item in args:
+			if len(self.items) > 0:
+				if self.items[-1] != item:
+					self.items.append(item)
+			else:
+				self.items.append(item)
+
+	def clear(self):
+		self.items.clear()
+
+
 import ReCalc as c
 
 
-class check_if_float(unittest.TestCase):
+class TestCheckIfFloat(unittest.TestCase):
 	'''
 	Test that the check_if_float function works as expected.
 	'''
@@ -67,7 +123,7 @@ class check_if_float(unittest.TestCase):
 		self.assertFalse(c.check_if_float([2]))
 
 
-class files(unittest.TestCase):
+class Files(unittest.TestCase):
 	'''
 	Check that require files and paths are present and exist.
 	'''
@@ -98,7 +154,7 @@ class files(unittest.TestCase):
 				os.path.join(c.calc_path, "ReCalc_icon.ico")))
 
 
-class switch_degree_mode(unittest.TestCase):
+class SwitchDegreeMode(unittest.TestCase):
 	'''
 	Test the switch_degree_mode function works as expected.
 	'''
@@ -113,22 +169,22 @@ class switch_degree_mode(unittest.TestCase):
 	def test_set_degree_mode(self):
 		c.switch_degree_mode(2)
 		self.assertEqual(c.degree_mode, 2)
-		self.assertEqual(c.options["degree mode"], 2)
+		self.assertEqual(c.calc_info["degree_mode"], 2)
 
 	def test_set_radian_mode(self):
 		c.switch_degree_mode(0)
 		self.assertEqual(c.degree_mode, 0)
-		self.assertEqual(c.options["degree mode"], 0)
+		self.assertEqual(c.calc_info["degree_mode"], 0)
 
 	def test_set_degree_mode_string(self):
 		c.switch_degree_mode("degree")
 		self.assertEqual(c.degree_mode, 2)
-		self.assertEqual(c.options["degree mode"], 2)
+		self.assertEqual(c.calc_info["degree_mode"], 2)
 
 	def test_set_radian_mode_string(self):
 		c.switch_degree_mode("radian")
 		self.assertEqual(c.degree_mode, 0)
-		self.assertEqual(c.options["degree mode"], 0)
+		self.assertEqual(c.calc_info["degree_mode"], 0)
 
 	def test_set_not_option(self):
 		'''
@@ -154,7 +210,7 @@ class switch_degree_mode(unittest.TestCase):
 		c.switch_degree_mode(self.original_degree_mode)
 
 
-class switch_polar_cartesian(unittest.TestCase):
+class SwitchPolarCartesian(unittest.TestCase):
 	'''
 	Test switching between polar and Cartesian graphing modes works.
 	'''
@@ -169,22 +225,22 @@ class switch_polar_cartesian(unittest.TestCase):
 	def test_set_polar(self):
 		c.switch_polar_mode("polar")
 		self.assertEqual(c.polar_mode, True)
-		self.assertEqual(c.options["polar mode"], True)
+		self.assertEqual(c.calc_info["polar_mode"], True)
 
 	def test_set_cartesian(self):
 		c.switch_polar_mode("Cartesian")
 		self.assertEqual(c.polar_mode, False)
-		self.assertEqual(c.options["polar mode"], False)
+		self.assertEqual(c.calc_info["polar_mode"], False)
 
 	def test_set_polar_boolean(self):
 		c.switch_polar_mode(True)
 		self.assertEqual(c.polar_mode, True)
-		self.assertEqual(c.options["polar mode"], True)
+		self.assertEqual(c.calc_info["polar_mode"], True)
 
 	def test_set_cartesian_boolean(self):
 		c.switch_polar_mode(False)
 		self.assertEqual(c.polar_mode, False)
-		self.assertEqual(c.options["polar mode"], False)
+		self.assertEqual(c.calc_info["polar_mode"], False)
 
 	def test_set_not_option(self):
 		with self.assertRaises(c.CalculatorError):
@@ -194,7 +250,7 @@ class switch_polar_cartesian(unittest.TestCase):
 		c.switch_polar_mode(self.original_graphing_mode)
 
 
-class find_match(unittest.TestCase):
+class FindMatch(unittest.TestCase):
 	'''
 	Test the find match function.
 	'''
@@ -216,7 +272,7 @@ class find_match(unittest.TestCase):
 			c.find_match("word)")
 
 
-class brackets_function(unittest.TestCase):
+class BracketsFunction(unittest.TestCase):
 	'''
 	Test the brackets function.
 	'''
@@ -235,7 +291,7 @@ class brackets_function(unittest.TestCase):
 		self.assertFalse(c.brackets("(()words"))
 
 
-class separate(unittest.TestCase):
+class Separate(unittest.TestCase):
 	'''
 	Test that the separate function works as expected.
 	'''
@@ -253,7 +309,7 @@ class separate(unittest.TestCase):
 			("1", " (2, 3, (4, 5), 6)", " 7", " (8)", " (9, 10)"))
 
 
-class constant(unittest.TestCase):
+class Constant(unittest.TestCase):
 	'''
 	Test that the constant function works as exprected.
 	'''
@@ -284,7 +340,7 @@ class constant(unittest.TestCase):
 			"ERROR: 'pie' is not a recognized constant.")
 
 
-class solving_equations(unittest.TestCase):
+class SolvingEquations(unittest.TestCase):
 	'''
 	Test solving equations works.
 	'''
@@ -302,16 +358,16 @@ class solving_equations(unittest.TestCase):
 		self.assertEqual(c.solve_equations("2*t = 4 for t"), 2)
 
 
-class evaluation_function(unittest.TestCase):
+class EvaluationFunction(unittest.TestCase):
 	'''
 	Test the evaluation function.
 	'''
 
 	def test_eval_without_variable(self):
-		self.assertEqual(c.evaluate("x", "5"), "5.0")
+		self.assertEqual(c.evaluate("x", "5"), "5")
 
 	def test_eval_with_variable(self):
-		self.assertEqual(c.evaluate("t", "5", var = "t"), "5.0")
+		self.assertEqual(c.evaluate("t", "5", var = "t"), "5")
 
 	@unittest.expectedFailure
 	def test_double_eval_function(self):
@@ -320,10 +376,10 @@ class evaluation_function(unittest.TestCase):
 		'''
 
 		self.assertEqual(
-			c.evaluate("eval t at x for t", "4"), "4.0")
+			c.evaluate("eval t at x for t", "4"), "4")
 
 
-class find_derivative(unittest.TestCase):
+class FindDerivative(unittest.TestCase):
 	'''
 	Test the find_derivative function.
 	'''
@@ -347,7 +403,7 @@ class find_derivative(unittest.TestCase):
 			6.0)
 
 
-class integrate_function(unittest.TestCase):
+class IntegrateFunction(unittest.TestCase):
 	'''
 	Check that integration works as expected.
 	'''
@@ -383,7 +439,7 @@ class integrate_function(unittest.TestCase):
 			c.integrate_function("2*x", "x", "0", "1+2"), "9.0")
 
 
-class combinations_and_permutations(unittest.TestCase):
+class CombinationsAndPermutations(unittest.TestCase):
 	'''
 	Test that combinations_and_permutations works as expected.
 	'''
@@ -453,7 +509,7 @@ class combinations_and_permutations(unittest.TestCase):
 				" for combinations or permutations not 'R'"))
 
 
-class statistics_functions(unittest.TestCase):
+class StatisticsFunctions(unittest.TestCase):
 	'''
 	Test that statistics_functions works as expected.
 	'''
@@ -472,16 +528,16 @@ class statistics_functions(unittest.TestCase):
 			"12.4")
 		self.assertEqual(
 			c.statistics_functions("median", "(1, 2, 3, 1, 7)"),
-			"2.0")
+			"2")
 		self.assertEqual(
 			c.statistics_functions("mode", "(1, 2, 3, 1, 7)"),
-			"1.0")
+			"1")
 		self.assertEqual(
 			c.statistics_functions("min", "(3, 6, 11, -7, -1, 55)"),
-			"-7.0")
+			"-7")
 		self.assertEqual(
 			c.statistics_functions("max", "(3, 6, 11, -7, -1, 55)"),
-			"55.0")
+			"55")
 		self.assertAlmostEqual(
 			float(c.statistics_functions("stdev", "(3, 4, 4, 6, 8)")),
 			2.0)
@@ -489,7 +545,7 @@ class statistics_functions(unittest.TestCase):
 	def test_nested_stats_functions(self):
 		self.assertEqual(
 			c.statistics_functions("mean", "(1, 2, mean(1, 3, 5))"),
-			"2.0")
+			"2")
 
 	def test_not_defined_functions(self):
 		'''
@@ -503,7 +559,7 @@ class statistics_functions(unittest.TestCase):
 				" statistics_functions"))
 
 
-class single_argument_function(unittest.TestCase):
+class SingleArgumentFunction(unittest.TestCase):
 	'''
 	Test the single_argument function.
 	'''
@@ -642,22 +698,22 @@ class single_argument_function(unittest.TestCase):
 
 		self.assertEqual(
 			c.single_argument("abs", "(-1)"),
-			"1.0")
+			"1")
 		self.assertEqual(
 			c.single_argument("abs", "(3)"),
-			"3.0")
+			"3")
 		self.assertEqual(
 			c.single_argument("ceil", "(.5)"),
-			"1.0")
+			"1")
 		self.assertEqual(
 			c.single_argument("ceil", "(-1.5)"),
-			"-1.0")
+			"-1")
 		self.assertEqual(
 			c.single_argument("floor", "(4.8)"),
-			"4.0")
+			"4")
 		self.assertEqual(
 			c.single_argument("floor", "(-4.8)"),
-			"-5.0")
+			"-5")
 		self.assertAlmostEqual(
 			float(c.single_argument("erf", "(e)")),
 			0.9998790689599)
@@ -700,7 +756,7 @@ class single_argument_function(unittest.TestCase):
 			1.33)
 
 
-class inverse_functions_degree_mode(unittest.TestCase):
+class InverseFunctionsDegreeMode(unittest.TestCase):
 	'''
 	Test inverse hyperbolic and trig function while in degree mode.
 	'''
@@ -767,7 +823,7 @@ class inverse_functions_degree_mode(unittest.TestCase):
 		c.switch_degree_mode(self.mode)
 
 
-class gamma_and_factorial(unittest.TestCase):
+class GammaAndFactorial(unittest.TestCase):
 	'''
 	Test the gamma and factorial functions.
 	'''
@@ -775,8 +831,8 @@ class gamma_and_factorial(unittest.TestCase):
 	def test_gamma(self):
 		for i in np.arange(1.0, 10.0, .5):
 			with self.subTest(i = i):
-				self.assertEqual(
-					c.gamma("(%s)" % i), str(math.gamma(i)))
+				self.assertAlmostEqual(
+					float(c.gamma("(%s)" % i)), math.gamma(i))
 
 	def test_factorial(self):
 		for i in range(10):
@@ -785,7 +841,7 @@ class gamma_and_factorial(unittest.TestCase):
 					c.factorial(str(i)), math.gamma(i + 1))
 
 
-class logarithm(unittest.TestCase):
+class Logarithm(unittest.TestCase):
 	'''
 	Test the logarithm function.
 	'''
@@ -826,7 +882,7 @@ class logarithm(unittest.TestCase):
 		self.assertEqual(c.logarithm("(27, log(8, 2))"), "3.0")
 
 
-class modulus(unittest.TestCase):
+class Modulus(unittest.TestCase):
 	'''
 	Test the modulus function.
 	'''
@@ -845,7 +901,7 @@ class modulus(unittest.TestCase):
 		self.assertEqual(c.modulus("(11, mod(3, 4))"), "2.0")
 
 
-class absolute_value(unittest.TestCase):
+class AbsoluteValue(unittest.TestCase):
 	'''
 	Test the absolute_value function.
 	'''
@@ -880,8 +936,40 @@ class absolute_value(unittest.TestCase):
 	def test_two_separate_abs_values(self):
 		self.assertEqual(c.abs_value("|3-2|+|-1*3|"), "1.0+|-1*3|")
 
+	def test_unmatched_pipes(self):
+		self.assertEqual(
+			c.abs_value("|1"),
+			("ERROR: There must be an even number of pipes in an "
+			"absolute value expression."))
 
-class regex(unittest.TestCase):
+
+class Comma(unittest.TestCase):
+	'''
+	Test the comma function.
+	'''
+
+	def test_remove_commas(self):
+		self.assertEqual(c.comma("456", "345"), "456345")
+		self.assertEqual(c.comma("6", "345"), "6345")
+		self.assertEqual(c.comma("21", "345.3333"), "21345.3333")
+		self.assertEqual(c.comma("45", "345."), "45345.")
+
+	def test_returns_error_string_if_wrong(self):
+		self.assertEqual(
+			c.comma("21", "32"),
+			"ERROR: Commas used inappropriately.")
+		self.assertEqual(
+			c.comma("21", "3234"),
+			"ERROR: Commas used inappropriately.")
+		self.assertEqual(
+			c.comma("21", "32.123"),
+			"ERROR: Commas used inappropriately.")
+		self.assertEqual(
+			c.comma("21", ""),
+			"ERROR: Commas used inappropriately.")
+
+
+class Regex(unittest.TestCase):
 	'''
 	Test that the regular expression match the correct strings in the
 	correct way.
@@ -934,6 +1022,11 @@ class regex(unittest.TestCase):
 		self.assertRegex("", c.regular_expr["command_comp"])
 
 	def test_const_comp(self):
+		'''
+		Test that all the constants get matched by the regular
+		expression.
+		'''
+
 		self.assertRegex("pi", c.regular_expr["const_comp"])
 		self.assertRegex("π", c.regular_expr["const_comp"])
 		self.assertRegex("e", c.regular_expr["const_comp"])
@@ -1095,7 +1188,7 @@ class regex(unittest.TestCase):
 
 	def test_ave_comp(self):
 		re = c.regular_expr["ave_comp"]
-		
+
 		self.assertRegex("Mean(4,3)", re)
 		self.assertRegex("Median(4,3)", re)
 		self.assertRegex("Mode(4,3)", re)
@@ -1111,27 +1204,300 @@ class regex(unittest.TestCase):
 		self.assertRegex("average(4,3)", re)
 		self.assertRegex("Stdev(4,3)", re)
 		self.assertRegex("stdev(4,3)", re)
-		
+
 		m = c.regular_expr["ave_comp"].search("average(6,4)")
 		self.assertEqual(m.group(1), "average")
 		self.assertEqual(m.group(2), "(6,4)")
-		
+
 	def test_trig_comp(self):
+		'''
+		Test that all the single argument function get matched.
+		'''
+
 		for i in c.one_arg_funcs:
 			with self.subTest(i = i):
 				self.assertRegex(
 					"%s(pi)" % i,
 					c.regular_expr["trig_comp"])
 
+	def test_gamma_comp(self):
+		'''
+		Test the gamma function regular expression.
+		'''
+
+		self.assertRegex("gamma(3)", c.regular_expr["gamma_comp"])
+		self.assertRegex("Gamma(4)", c.regular_expr["gamma_comp"])
+		self.assertRegex("Γ(3)", c.regular_expr["gamma_comp"])
+
+	def test_log_comp(self):
+		'''
+		Test the logarithm regular expression.
+		'''
+
+		self.assertRegex("Log(4,2)", c.regular_expr["log_comp"])
+		self.assertRegex("log(4,2)", c.regular_expr["log_comp"])
+		self.assertRegex("Ln(2)", c.regular_expr["log_comp"])
+		self.assertRegex("ln(4)", c.regular_expr["log_comp"])
+
+	def test_mod2_comp(self):
+		'''
+		Test the mod function regular expression.
+		'''
+
+		self.assertRegex("mod(5,2)", c.regular_expr["mod2_comp"])
+		self.assertRegex("Mod(5,2)", c.regular_expr["mod2_comp"])
+		self.assertRegex("Mod(5,mod(8,6))", c.regular_expr["mod2_comp"])
+
+	def test_abs_comp(self):
+		'''
+		Test the absolute value regular expression.
+		'''
+
+		self.assertRegex("|-1|", c.regular_expr["abs_comp"])
+		self.assertRegex("|-1", c.regular_expr["abs_comp"])
+
+	def test_paren_comp(self):
+		'''
+		Test the parentheses regular expression.
+		'''
+
+		self.assertRegex("(5+6)", c.regular_expr["paren_comp"])
+		self.assertEqual(
+			c.regular_expr["paren_comp"].search("(1+(2-1))").group(1),
+			"2-1")
+
+	def test_comma_comp(self):
+		'''
+		Test comma_comp.
+		'''
+
+		self.assertRegex("5,211", c.regular_expr["comma_comp"])
+		self.assertNotRegex("5, 6", c.regular_expr["comma_comp"])
+
+	def test_choose_comp(self):
+		'''
+		Test choose notation regular expression.
+		'''
+
+		self.assertRegex("5C3", c.regular_expr["choose_comp"])
+		self.assertRegex("5P3", c.regular_expr["choose_comp"])
+		self.assertRegex("5.4C3.1", c.regular_expr["choose_comp"])
+		self.assertRegex("5.9P1.3", c.regular_expr["choose_comp"])
+
+	def test_exp_comp(self):
+		'''
+		Test the exponents regular expression.
+		'''
+
+		self.assertRegex("2^3", c.regular_expr["exp_comp"])
+		self.assertRegex("2**3", c.regular_expr["exp_comp"])
+		self.assertRegex("2^3.1", c.regular_expr["exp_comp"])
+		self.assertRegex("2**3.4", c.regular_expr["exp_comp"])
+		self.assertRegex("2 ^ 3", c.regular_expr["exp_comp"])
+		self.assertRegex("2 ** 3", c.regular_expr["exp_comp"])
+		self.assertRegex("2 ^ 3.1", c.regular_expr["exp_comp"])
+		self.assertRegex("2 ** 3.4", c.regular_expr["exp_comp"])
+
+	def test_fact_comp(self):
+		'''
+		Test factorial regular expression.
+		'''
+
+		self.assertRegex("4!", c.regular_expr["fact_comp"])
+		self.assertRegex(".7!", c.regular_expr["fact_comp"])
+		self.assertRegex("4.2!", c.regular_expr["fact_comp"])
+		self.assertRegex("-4.2!", c.regular_expr["fact_comp"])
+
+	def test_mod_comp(self):
+		'''
+		Test the modulo operator regular expression.
+		'''
+
+		self.assertRegex("7 % 2", c.regular_expr["mod_comp"])
+		
+		m = c.regular_expr["mod_comp"].search("11%2")
+		self.assertEqual(m.group(1), "11")
+		self.assertEqual(m.group(2), "2")
+
+	def test_per_comp(self):
+		'''
+		Test the percent regular expression.
+		'''
+
+		self.assertRegex("11%", c.regular_expr["per_comp"])
+
+	def test_mult_comp(self):
+		'''
+		Test the multiplication and division regular expression.
+		'''
+
+		m = c.regular_expr["mult_comp"].search("11*2")
+		self.assertEqual(m.group(1), "11")
+		self.assertEqual(m.group(2), "*")
+		self.assertEqual(m.group(3), "2")
+
+		m = c.regular_expr["mult_comp"].search("11/2")
+		self.assertEqual(m.group(1), "11")
+		self.assertEqual(m.group(2), "/")
+		self.assertEqual(m.group(3), "2")
+
+		m = c.regular_expr["mult_comp"].search("10÷3")
+		self.assertEqual(m.group(1), "10")
+		self.assertEqual(m.group(2), "÷")
+		self.assertEqual(m.group(3), "3")
+
+	def test_add_comp(self):
+		'''
+		Test addition and subtraction regular expression.
+		'''
+
+		m = c.regular_expr["add_comp"].search("5-4")
+		self.assertEqual(m.group(1), "5")
+		self.assertEqual(m.group(2), "-")
+		self.assertEqual(m.group(3), "4")
+
+		m = c.regular_expr["add_comp"].search("1+3")
+		self.assertEqual(m.group(1), "1")
+		self.assertEqual(m.group(2), "+")
+		self.assertEqual(m.group(3), "3")
 
 
+class TestNonRepeatingLists(unittest.TestCase):
+	'''
+	Test that the NonRepeatingList class works as expected.
+	'''
+
+	def test_instantiate(self):
+		nonlist = c.NonRepeatingList(1, 1, 2, 1)
+		self.assertIsInstance(nonlist, c.NonRepeatingList)
+
+	def test_str(self):
+		nonlist = c.NonRepeatingList(1, 1, 2, 1)
+		self.assertEqual(str(nonlist), "[1, 2, 1]")
+
+	def test_indexing(self):
+		nonlist = c.NonRepeatingList(1, 1, 2, 1)
+		self.assertEqual(nonlist[0], 1)
+		self.assertEqual(nonlist[-2], 2)
+		self.assertEqual(nonlist[:2], [1, 2])
+
+	def test_in(self):
+		nonlist = c.NonRepeatingList(1, 1, 2, 1)
+		self.assertIn(2, nonlist)
+
+	def test_len(self):
+		nonlist = c.NonRepeatingList(1, 1, 2, 1)
+		self.assertEqual(len(nonlist), 3)
+
+	def test_del(self):
+		nonlist = c.NonRepeatingList(1, 1, 2, 1)
+		del nonlist[1]
+		self.assertEqual(len(nonlist), 1)
+
+	def test_append(self):
+		nonlist = c.NonRepeatingList(1)
+		nonlist.append(4, 5, 5, 6)
+		self.assertEqual(len(nonlist), 4)
+
+	def test_clear(self):
+		nonlist = c.NonRepeatingList(1, 1, 2, 1)
+		nonlist.clear()
+		self.assertEqual(nonlist, c.NonRepeatingList())
 
 
+class SimplifyMonoFunction(unittest.TestCase):
+	'''
+	Test the simplify function.
+	'''
 
+	def test_adding(self):
+		self.assertEqual(c.simplify("1+1"), "2")
+		self.assertEqual(c.simplify("1+6"), "7")
+		self.assertEqual(c.simplify("2.9+3"), "5.9")
+		self.assertEqual(c.simplify("2.9+3.6 + 1 + 4.11"), "11.61")
 
+	def test_subtracting(self):
+		self.assertEqual(c.simplify("1-1"), "0")
+		self.assertEqual(c.simplify("21-4"), "17")
+		self.assertEqual(c.simplify("2-4"), "-2")
+		self.assertEqual(c.simplify("2.5-3"), "-0.5")
+		self.assertEqual(c.simplify("7-3-7"), "-3")
 
+	def test_multipling(self):
+		self.assertEqual(c.simplify("54.8 * 1 -1"), "53.8")
+		self.assertEqual(c.simplify("54.8 * -2"), "-109.6")
+		self.assertEqual(c.simplify("54.8 * -2"), "-109.6")
+		self.assertEqual(c.simplify("2.5 * 2.5"), "6.25")
+		self.assertEqual(c.simplify("2 - 2 * 4 * 9 + 5"), "-65")
+		self.assertEqual(c.simplify("2(1+1)"), "4")
+		self.assertEqual(c.simplify("6(5-2)"), "18")
+		self.assertAlmostEqual(
+			float(c.simplify("2pi")),
+			math.tau)
 
+	def test_dividing(self):
+		self.assertEqual(c.simplify("1 / 1"), "1")
+		self.assertEqual(c.simplify("1 / 4 + 2"), "2.25")
+		self.assertEqual(c.simplify("27 ÷3"), "9")
+		self.assertEqual(c.simplify("1 + 27 /-6"), "-3.5")
+		self.assertEqual(c.simplify("27 ÷-6 / .25"), "-18")
 
+	def test_percentages(self):
+		self.assertEqual(c.simplify("15%"), "0.15")
+		self.assertEqual(c.simplify("136%"), "1.36")
+		self.assertEqual(c.simplify(".6%"), "0.006")
+		self.assertEqual(c.simplify("4*5%"), "0.2")
+
+	def test_modulo(self):
+		self.assertEqual(c.simplify("8%7 + 1"), "2")
+		self.assertEqual(c.simplify("9%7"), "2")
+		self.assertEqual(c.simplify("9%4"), "1")
+		self.assertEqual(c.simplify("11%3 - 4"), "-2")
+		self.assertAlmostEqual(
+			float(c.simplify("8.9%1")),
+			0.9)
+		self.assertAlmostEqual(
+			float(c.simplify("3*8.2%5%2")),
+			3.6)
+
+	def test_factorial(self):
+		self.assertEqual(c.simplify("5!"), "120")
+		self.assertEqual(c.simplify("3!"), "6")
+		self.assertEqual(c.simplify("3!!"), "720")
+		self.assertAlmostEqual(
+			float(c.simplify("4.5!")),
+			52.3427777846)
+
+	def test_exponents(self):
+		self.assertEqual(c.simplify("5^2"), "25")
+		self.assertEqual(c.simplify("3^3"), "27")
+		self.assertEqual(c.simplify("9^1.5"), "27")
+		self.assertEqual(c.simplify("4^.5"), "2")
+		self.assertEqual(c.simplify("4**2.5"), "32")
+		self.assertEqual(c.simplify("1**41"), "1")
+
+	def test_choose_notation(self):
+		self.assertEqual(c.simplify("5C2"), "10")
+		self.assertEqual(c.simplify("5C3"), "10")
+		self.assertEqual(c.simplify("5P2"), "20")
+		self.assertEqual(c.simplify("(2+3)C2"), "10")
+		self.assertAlmostEqual(
+			float(c.simplify("4.3 P 1.2")),
+			5.589326932606859)
+
+	def test_comma_comp(self):
+		self.assertEqual(c.simplify("1,433,123"), "1433123")
+		self.assertEqual(c.simplify("1,433,123.6"), "1433123.6")
+		self.assertEqual(
+			c.simplify("2,3445.6"),
+			"ERROR: Commas used inappropriately.")
+
+	def test_parrentheses(self):
+		self.assertEqual(c.simplify("(1-(3+4(3-2)-2))*-4+2"), "18")
+		self.assertEqual(c.simplify("(((5*3)))"), "15")
+
+	def test_absolute_value(self):
+		pass
 
 
 

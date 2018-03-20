@@ -6,21 +6,27 @@ setup(
     name = "ReCalc",
     version = "0.1",
     packages = find_packages(),
-	scripts = ["ReCalc.py", "ReCalc_testing.py",
-		"ReCalc_tkinter_testing.py"]
+	scripts = [
+		"ReCalc.py", "ReCalc_testing.py",
+		"ReCalc_tkinter_testing.py"
+	]
 	
 	classifiers = [
-	"Programming Language :: Python :: 3.6",
-	"Environment :: X11 Applications :: Gnome",
-	"License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-	"Natural Language :: English",
-	"Operating System :: Microsoft :: Windows :: Windows 10",
-	"Operating System :: POSIX :: Linux",
-	"Programming Language :: Python :: 3 :: Only",
-	"Programming Language :: Python :: Implementation :: CPython",
-	"Topic :: Scientific/Engineering :: Mathematics"
+		"Programming Language :: Python :: 3.6",
+		"Environment :: X11 Applications :: Gnome",
+		"License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+		"Natural Language :: English",
+		"Operating System :: Microsoft :: Windows :: Windows 10",
+		"Operating System :: POSIX :: Linux",
+		"Programming Language :: Python :: 3 :: Only",
+		"Programming Language :: Python :: Implementation :: CPython",
+		"Topic :: Scientific/Engineering :: Mathematics"
 	],
-	install_requires = ["sympy>=1.1.1", "tkinter>=8.6"],
+	install_requires = [
+		"sympy>=1.1.1",
+		"tkinter>=8.6",
+		"PIL>=4.3"
+	],
 	
 	package_data = {
 	"": ["*.ico", "*.txt", "*.py"]

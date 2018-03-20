@@ -24,9 +24,9 @@ remembers every input it is given.
 
 
 #  Windows:
-#  C:\Users\Max\Documents\Python\Calculator\ReCalc.py
+#  C:\Users\Max\Documents\Python\ReCalc\ReCalc.py
 #  Bash:
-#  C:/Users/Max/Documents/Python/Calculator/ReCalc.py
+#  C:/Users/Max/Documents/Python/ReCalc/ReCalc.py
 
 import math
 import statistics as stats
@@ -36,7 +36,6 @@ import os
 import numpy as np
 from PIL import Image
 from PIL import ImageTk
-from collections import OrderedDict
 from warnings import warn, simplefilter
 from pickle import load, dump
 from re import compile, sub
@@ -46,6 +45,7 @@ from sympy.solvers import solve
 
 try:
 	import tkinter as tk
+	from tkinter import filedialog
 	from _tkinter import TclError
 except ModuleNotFoundError:
 	simplefilter('default', ImportWarning)
@@ -70,9 +70,13 @@ except ModuleNotFoundError:
 20) graph closes only when user dictates
 28) improve tkinter interface
 29) cut off trailing zeros
+30) two expressions adjacent means multiplication
 31) polar graphs
 33) show request
 37) other weird trig functions
+40) doc strings for all of the tests that need them
+43) save graphs
+44) on fedora only one enter key is bound in the GUI
 '''
 
 '''  To Do
@@ -91,20 +95,19 @@ except ModuleNotFoundError:
 25) summation notation
 26) big pi notation
 27) series
-30) two expressions adjacent means multiplication
 32) 3d graphs
 34) make icon of tkinter window when run on Fedora
 35) make compatible with other operating systems
 36) fix subtraction problem
 38) setup and wheel files
 39) make tests for all parts of the program
-40) doc strings for all of the tests that need them
 41) user defined functions
 42) user defined variables
-43) save graphs
-44) on fedora only one enter key is bound in the GUI
 45) parametric functions
-46)
+46) log errors
+47) don't stop the program when there is an error
+48) error when you close a polar graphing window early
+49)
 '''
 
 
@@ -118,24 +121,21 @@ up_hist = 0
 ctx = Context()
 
 # changeable variables
-use_gui = True
+use_gui = False
 graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
 ctx.prec = 17
 
-# multi session variables
-calc_path = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(calc_path, "ReCalc_info.txt"), "rb") as file:
-	calc_info = load(file)
-history = calc_info["history"]
-ans = calc_info["ans"]
-options = calc_info["options"]
-degree_mode = options["degree mode"]  # in degree mode 0 = off 2 = on
-polar_mode = options["polar mode"]
-der_approx = options["der approx"]  # default = .0001
-hist_len = options["hist len"]
-win_bound = calc_info["window bounds"]
+color_dict = {
+	"black": (0, 0, 0),
+	"red": (255, 0, 0),
+	"green": (0, 128, 0),
+	"blue": (0, 0, 255),
+	"orange": (255, 165, 0),
+	"purple": (128, 0, 128),
+	"magenta": (255, 0, 255),
+}
 
 key_binds = {
 	"nt": {13: "enter", 38: "up", 40: "down"},
@@ -214,7 +214,7 @@ one_arg_funcs = {
 reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
 
 # regular expressions
-regular_expr = OrderedDict(
+regular_expr = dict(
 
 	# regex for commands
 	# ^$ is for an empty string
@@ -222,10 +222,16 @@ regular_expr = OrderedDict(
 		"([Hh]istory)|([Qq]uit|[Ee]xit|^$)|"
 		"([Dd]egree [Mm]ode)|([Rr]adian [Mm]ode)"),
 
+	implicet_mult_pre_const_comp = compile(
+		"([.0-9])(?=e|pi|π|tau|τ|phi|φ)"),
+
 	# regex for constants
 	const_comp = compile(
 		"(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
 		"ans(?:wer)?|tau|τ|phi|φ)"),
+
+	implicet_mult_comp = compile(
+		"([.0-9])(?=[(x])"),
 
 	# regex for graphing
 	graph_comp = compile("[Gg]raph (.+)"),
@@ -278,7 +284,7 @@ regular_expr = OrderedDict(
 	gamma_comp = compile("(?:[Gg]amma|Γ)(.+)"),
 
 	# regex for logarithms
-	log_comp = compile("[Ll]og(.+)|ln(.+)"),
+	log_comp = compile("[Ll]og(.+)|[Ll]n(.+)"),
 
 	# regex for modulus
 	mod2_comp = compile("[Mm]od(.+)"),
@@ -301,7 +307,7 @@ regular_expr = OrderedDict(
 
 	# regex for choose notation (not recursive)
 	# in the form of "nCm" or "nPm"
-	choos_comp = compile(reg_num + "(C|P)" + reg_num),
+	choose_comp = compile(reg_num + " ?(C|P) ?" + reg_num),
 
 	# regex for exponents (not recursive)
 	exp_comp = compile(reg_num + " ?(\*\*|\^) ?" + reg_num),
@@ -323,6 +329,356 @@ regular_expr = OrderedDict(
 )
 
 
+class CalculatorError(Exception):
+	pass
+
+
+class NonRepeatingList(object):
+	'''
+	A mutable list that doesn't have two of the same element in a row.
+	
+	>>> repr(NonRepeatingList(3, 3, 4))
+	'NonRepeatingList(*[3, 4])'
+	'''
+
+	def __init__(self, *args):
+		if len(args) > 0:
+			self.items = [args[0]]
+			for i in args:
+				if i != self.items[-1]:
+					self.items.append(i)
+		else:
+			self.items = []
+
+	def __getitem__(self, index):
+		return(self.items[index])
+
+	def __delitem__(self, index):
+		del self.items[index]
+		if index != 0:
+			if self.items[index] == self.items[index - 1]:
+				del self.items[index]
+
+	def __contains__(self, item):
+		return(item in self.items)
+
+	def __len__(self):
+		return(len(self.items))
+
+	def __repr__(self):
+		return("NonRepeatingList(*" + repr(self.items) + ")")
+
+	def __str__(self):
+		return(str(self.items))
+
+	def __eq__(self, other):
+		if isinstance(other, NonRepeatingList):
+			if self.items == other.items:
+				return(True)
+		return(False)
+
+	def append(self, *args):
+		for item in args:
+			if len(self.items) > 0:
+				if self.items[-1] != item:
+					self.items.append(item)
+			else:
+				self.items.append(item)
+
+	def clear(self):
+		self.items.clear()
+
+
+class Graph(object):
+	'''
+	Base class for all graphs.
+	'''
+
+	def __init__(
+		self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		wide = 400, high = 400):
+		'''
+		Initialize the graphing window.
+		'''
+
+		self.root = tk.Toplevel()
+
+		self.root.title("ReCalc")
+
+		# sets bounds
+		self.xmin = xmin
+		self.xmax = xmax
+		self.ymin = ymin
+		self.ymax = ymax
+
+		self.xrang = self.xmax - self.xmin
+		self.yrang = self.ymax - self.ymin
+
+		# dimensions of the window
+		self.wide = wide
+		self.high = high
+
+		# create the canvas
+		self.screen = tk.Canvas(
+			self.root,
+			width = self.wide, height = self.high)
+		self.screen.pack()
+		
+		self.options = tk.Menu(self.root)
+		self.file_options = tk.Menu(self.options, tearoff = 0)
+		
+		self.file_options.add_command(
+			label = "Save",
+			command = self.save_image)
+		self.file_options.add_command(
+			label = "Exit",
+			command = self.root.destroy)
+		
+		self.options.add_cascade(
+			label = "File",
+			menu = self.file_options)
+		
+		self.root.config(menu = self.options)
+		
+
+	def axes(self):
+		'''
+		Draw the axis.
+		'''
+
+		# adjusted y coordinate of x-axis
+		b = self.high + (self.ymin * self.high / self.yrang)
+
+		# adjusted x coordinate of y-axis
+		a = -1 * self.xmin * self.wide / self.xrang
+
+		try:
+			# draw x-axis
+			self.screen.create_line(0, b, self.wide, b, fill = "gray")
+
+			# draw y-axis
+			self.screen.create_line(a, self.high, a, 0, fill = "gray")
+
+			self.root.update()
+		except TclError as e:
+			pass
+
+	def save_image(self):
+		'''
+		Save the image to a file.
+		'''
+
+		fout = filedialog.asksaveasfile()
+		self.image.save(fout)
+		print("Saved")
+
+
+class NumpyGraph(Graph):
+	'''
+	Cartesian Graphing window class using numpy and PIL.
+	'''
+
+	def __init__(
+		self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		wide = 400, high = 400):
+		'''
+		Initialize the graphing window.
+		'''
+
+		super().__init__(
+			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+			wide = 400, high = 400)
+
+		self.data = np.zeros(
+			(self.high, self.wide, 3),
+			dtype = np.uint8)
+		self.data.fill(255)
+
+		global pic
+
+		# create the image
+		pic = ImageTk.PhotoImage(
+			Image.fromarray(self.data, "RGB"))
+		self.screen.create_image(
+			self.wide / 2, self.high / 2, image = pic)
+
+		# draws the axes
+		self.axes()
+
+	# draw the axes
+	def axes(self):
+		'''
+		Draw the axis.
+		'''
+
+		global pic
+
+		# adjusted y coordinate of x-axis
+		b = self.high + (self.ymin * self.high / self.yrang)
+
+		# adjusted x coordinate of y-axis
+		a = -1 * self.xmin * self.wide / self.xrang
+
+		try:
+			self.data[int(round(b, 0)), :, :] = 0
+		except IndexError:
+			pass
+		try:
+			self.data[:, int(round(a, 0)), :] = 0
+		except IndexError:
+			pass
+
+		pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
+		self.screen.create_image(
+			self.wide / 2, self.high / 2, image = pic)
+
+		try:
+			self.root.update()
+		except TclError:
+			pass
+
+	def draw(self, func, color = "black"):
+		'''
+		Draw a Cartesian function.
+		'''
+
+		global pic
+
+		pixel_color = color_dict[color]
+
+		for i in range(self.data.shape[1]):
+
+			x = i * self.xrang / self.wide + self.xmin
+			y = float(evaluate(func, str(x)))
+			a = int(round((x - self.xmin) * self.wide / self.xrang, 0))
+			b = int(round(
+				self.high - (y - self.ymin) * self.high / self.yrang,
+				0))
+
+			if 0 < b and b < self.high:
+				self.data[b, i] = pixel_color
+
+			self.image = Image.fromarray(self.data, "RGB")
+			pic = ImageTk.PhotoImage(self.image)
+			self.screen.create_image(
+				self.wide / 2, self.high / 2, image = pic)
+
+			self.root.update()
+
+
+class NumpyPolarGraph(NumpyGraph):
+	'''
+	A polar graph using PIL and Numpy.
+	'''
+
+	def __init__(
+		self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		theta_min = 0, theta_max = 10,
+		wide = 400, high = 400):
+		
+		super().__init__(
+			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+			wide = 400, high = 400)
+
+		self.theta_min = theta_min
+		self.theta_max = theta_max
+
+		self.theta_rang = self.theta_max - self.theta_min
+
+	def draw(self, func, color = "black"):
+		'''
+		Draw a polar function with numpy.
+		'''
+
+		global pic
+
+		density = 1000
+		theta = self.theta_min
+		
+		pixel_color = color_dict[color]
+
+		while theta < self.theta_max:
+
+			# move theta a little
+			theta += self.theta_rang / density
+			try:
+				# eval the function at theta and set that to r
+				r = float(evaluate(func, str(theta)))
+
+				# find the slope at the point using find_derivative
+				slope = float(find_derivative(func, str(theta)))
+
+				x = r * math.cos(theta)
+				y = r * math.sin(theta)
+
+				# calculate how dense the points need to be
+				# this function is somewhat arbitrary
+				density = int((400 * math.fabs(slope)) + 500)
+
+				# check if the graph goes off the screen
+				if y > self.ymax or y < self.ymin or \
+					x > self.xmax or x < self.xmin:
+					denstiy = 2000
+
+				# adjust coordinate for the
+				# screen (this is the hard part)
+				a = int(round(
+					(x - self.xmin) * self.wide / self.xrang,
+					0))
+				b = int(round(
+						self.high - (
+							(y - self.ymin) * self.high / self.yrang),
+						0))
+
+				# draw the point
+				if 0 < b and b < self.high and 0 < a and a < self.wide:
+					self.data[b, a] = pixel_color
+				self.image = Image.fromarray(self.data, "RGB")
+				pic = ImageTk.PhotoImage(self.image)
+				self.screen.create_image(
+					self.wide / 2, self.high / 2, image = pic)
+
+			except (ValueError, TclError) as e:
+				pass
+
+			# update the screen
+			try:
+				self.root.update()
+			except TclError as e:
+				theta = self.theta_max + 1
+
+
+# multi session variables
+try:
+	calc_path = os.path.abspath(os.path.dirname(__file__))
+	with open(
+		os.path.join(calc_path, "ReCalc_info.txt"),
+		"rb") as file:
+		calc_info = load(file)
+	history = calc_info["history"]
+	ans = calc_info["ans"]
+	# in degree mode 0 = off 2 = on
+	degree_mode = calc_info["degree_mode"]
+	polar_mode = calc_info["polar_mode"]
+	der_approx = calc_info["der_approx"]
+	hist_len = calc_info["hist_len"]
+	win_bound = calc_info["window_bounds"]
+except:
+	raise CalculatorError("ERROR: Loading settings failed.")
+
+	'''
+	history = NonRepeatingList()
+	ans = 0
+	degree_mode = 0
+	polar_mode = False
+	der_approx = .0001
+	hist_len = 100
+	'''
+
+
 def float_to_str(f):
 	'''
 	Convert the given float to a string,
@@ -333,7 +689,11 @@ def float_to_str(f):
 	'''
 
 	d1 = ctx.create_decimal(repr(float(f)))
-	return format(d1, 'f')
+	string = format(d1, 'f')
+	if string[-2:] == ".0":
+		return string[:-2]
+	return string
+	
 
 
 def check_if_float(x):
@@ -354,38 +714,22 @@ def check_if_float(x):
 		return(False)
 
 
-def save_info(
-		history = [],
-		ans = 0,
-		options = {
-			"degree mode": 0,
-			"polar mode": False,
-			"der approx": 0.0001,
-			"hist len": 100
-		},
-		win_bound = {
-			'x min': -10.0, 'x max': 10.0,
-			'y min': -10.0, 'y max': 10.0,
-			'theta min': 0.0, 'theta max': 10.0
-		}
-	):
+def save_info(**kwargs):
 	'''
-	Save options, history, ans, and win_bound to a file.
+	Save settings to a file.
 	'''
 
-	if history == []:
-		raise CalculatorError(
-			"The entire history was about to be deleted.")
+	if len(history) < 100:
+		raise CalculatorError("The history was about to be deleted.")
 
-	calc_info = {
-		"history": history, "ans": ans, "options": options,
-		"window bounds": win_bound}
+	calc_info.update(kwargs)
 
 	with open(os.path.join(
-		calc_path, "ReCalc_info.txt"), "wb") as file:
+		calc_path,
+		"ReCalc_info.txt"), "wb") as file:
 		dump(calc_info, file)
 
-
+	
 def switch_degree_mode(mode):
 	'''
 	Switch between degree mode and radian mode.
@@ -402,10 +746,7 @@ def switch_degree_mode(mode):
 	else:
 		raise CalculatorError("Can not set degree_mode to '%s'" % mode)
 
-	options["degree mode"] = degree_mode
-	save_info(
-		history = history, ans = ans, options = options,
-		win_bound = win_bound)
+	save_info(degree_mode = degree_mode)
 
 
 def switch_polar_mode(mode):
@@ -424,10 +765,7 @@ def switch_polar_mode(mode):
 	else:
 		raise CalculatorError("Can not set polar_mode to '%s'" % mode)
 
-	options["polar mode"] = polar_mode
-	save_info(
-		history = history, ans = ans, options = options,
-		win_bound = win_bound)
+	save_info(polar_mode = polar_mode)
 
 
 def change_hist_len(entry_box, root):
@@ -444,10 +782,7 @@ def change_hist_len(entry_box, root):
 	# history print back length save and close the window
 	if input.isdigit() and int(input) > 0:
 		hist_len = int(input)
-		options["hist len"] = hist_len
-		save_info(
-			history = history, ans = ans, options = options,
-			win_bound = win_bound)
+		save_info(hist_len = hist_len)
 
 		root.destroy()
 	else:
@@ -494,10 +829,7 @@ def change_der_approx(entry_box, root):
 	# der_approx value save and close the window
 	if check_if_float(input) and "-" not in input:
 		der_approx = float(input)
-		options["der approx"] = der_approx
-		save_info(
-			history = history, ans = ans, options = options,
-			win_bound = win_bound)
+		save_info(der_approx = der_approx)
 
 		root.destroy()
 	else:
@@ -545,9 +877,7 @@ def change_graph_win_set():
 		if check_if_float(g_bound_input[i]):
 			win_bound[i] = float(g_bound_input[i])
 
-	save_info(
-		history = history, ans = ans, options = options,
-		win_bound = win_bound)
+	save_info(win_bound = win_bound)
 
 	for i in g_bound_names:
 		g_bound_string[i].set("%s = %s" % (i, win_bound[i]))
@@ -651,309 +981,6 @@ def separate(s):
 	return(tuple(new_terms))
 
 
-class CalculatorError(Exception):
-	pass
-
-
-class graph(object):
-	'''
-	Base class for all graphs.
-	'''
-
-	def __init__(
-		self,
-		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-		wide = 400, high = 400):
-		'''
-		Initialize the graphing window.
-		'''
-
-		self.root = tk.Toplevel()
-
-		self.root.title("ReCalc")
-
-		# sets bounds
-		self.xmin = xmin
-		self.xmax = xmax
-		self.ymin = ymin
-		self.ymax = ymax
-
-		self.xrang = self.xmax - self.xmin
-		self.yrang = self.ymax - self.ymin
-
-		# dimensions of the window
-		self.wide = wide
-		self.high = high
-
-		# create the canvas
-		self.screen = tk.Canvas(
-			self.root,
-			width = self.wide, height = self.high)
-		self.screen.pack()
-
-		# button that close the window and program immediately
-		self.close = tk.Button(
-			self.root, text = "Close",
-			command = self.root.destroy)
-		self.close.pack()
-
-	def axes(self):
-		'''
-		Draw the axis.
-		'''
-
-		# adjusted y coordinate of x-axis
-		b = self.high + (self.ymin * self.high / self.yrang)
-
-		# adjusted x coordinate of y-axis
-		a = -1 * self.xmin * self.wide / self.xrang
-
-		try:
-			# draw x-axis
-			self.screen.create_line(0, b, self.wide, b, fill = "gray")
-
-			# draw y-axis
-			self.screen.create_line(a, self.high, a, 0, fill = "gray")
-
-			self.root.update()
-		except TclError as e:
-			pass
-
-
-class cart_graph(graph):
-	'''
-	Cartesian Graphing window class.
-	'''
-
-	def __init__(
-		self,
-		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-		wide = 400, high = 400):
-		'''
-		Initialize the graphing window.
-		'''
-
-		super().__init__(
-			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
-			wide = wide, high = high)
-
-		# draws the axes
-		self.axes()
-
-	def draw(self, func, color = "black"):
-		'''
-		Draw a Cartesian function.
-		'''
-
-		density = 1000
-		x = self.xmin
-
-		while x < self.xmax:
-
-			# move the x coordinate a little
-			x += self.xrang / density
-			try:
-				# eval the function at x and set that to y
-				y = float(evaluate(func, str(x)))
-
-				# check if the graph goes off the screen
-				if y > self.ymax or y < self.ymin and density > 2000:
-					denstiy = 2000
-				else:
-					# find the slope at the point using the derivative
-					# function of simplify
-					try:
-						slope = float(find_derivative(func, str(x)))
-					except (ValueError) as e:
-						slope = 10
-
-					# calculate how dense the points need to be
-					# this function is somewhat arbitrary
-					density = int(
-						(3000 * math.fabs(slope)) / self.yrang + 500)
-
-				# adjust coordinate for the screen (this is the
-				# hard part)
-				a = (x-self.xmin) * self.wide / self.xrang
-				b = self.high - (
-					(y - self.ymin) * self.high / self.yrang)
-
-				# draw the point
-				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except (ValueError, TclError) as e:
-				pass
-
-			# update the screen
-			try:
-				self.root.update()
-			except TclError as e:
-				x = self.xmax + 1
-
-
-class numpy_graph(graph):
-	'''
-	Cartesian Graphing window class using numpy and PIL.
-	'''
-
-	def __init__(
-		self,
-		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-		wide = 400, high = 400):
-		'''
-		Initialize the graphing window.
-		'''
-
-		super().__init__(
-			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-			wide = 400, high = 400)
-
-		self.data = np.zeros(
-			(self.high, self.wide, 3),
-			dtype = np.uint8)
-		self.data.fill(255)
-
-		global pic
-
-		# create the image
-		pic = ImageTk.PhotoImage(
-			Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = pic)
-
-		# draws the axes
-		self.axes()
-
-	# draw the axes
-	def axes(self):
-		'''
-		Draw the axis.
-		'''
-
-		global pic
-
-		# adjusted y coordinate of x-axis
-		b = self.high + (self.ymin * self.high / self.yrang)
-
-		# adjusted x coordinate of y-axis
-		a = -1 * self.xmin * self.wide / self.xrang
-
-		try:
-			self.data[int(round(b, 0)), :, :] = 0
-		except IndexError:
-			pass
-		try:
-			self.data[:, int(round(a, 0)), :] = 0
-		except IndexError:
-			pass
-
-		pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = pic)
-
-		try:
-			self.root.update()
-		except TclError:
-			pass
-
-	def draw(self, func, color = "black"):
-		'''
-		Draw a Cartesian function.
-		'''
-
-		global pic
-
-		for i in range(self.data.shape[1]):
-
-			x = i * self.xrang / self.wide + self.xmin
-			y = float(evaluate(func, str(x)))
-			a = (x - self.xmin) * self.wide / self.xrang
-			b = self.high - (y - self.ymin) * self.high / self.yrang
-
-			if 0 < b and b < self.high:
-				self.data[
-					int(round(b, 0)),
-					int(round(i, 0))
-					] = (0, 0, 0)
-
-			pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
-			self.screen.create_image(
-				self.wide / 2, self.high / 2, image = pic)
-
-			self.root.update()
-
-
-class polar_graph(graph):
-	'''
-	Polar graphing window class.
-	'''
-
-	def __init__(
-		self,
-		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-		theta_min = 0, theta_max = 10,
-		wide = 400, high = 400):
-		'''
-		Initialize polar graphing window.
-		'''
-
-		super(polar_graph, self).__init__(
-			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
-			wide = wide, high = high)
-
-		self.theta_min = theta_min
-		self.theta_max = theta_max
-
-		self.theta_rang = self.theta_max - self.theta_min
-
-	def draw(self, func, color = "black"):
-		'''
-		Draw a polar function.
-		'''
-
-		density = 1000
-		theta = self.theta_min
-
-		while theta < self.theta_max:
-
-			# move theta a little
-			theta += self.theta_rang / density
-			try:
-				# eval the function at theta and set that to r
-				r = float(evaluate(func, str(theta)))
-
-				# find the slope at the point using find_derivative
-				slope = float(find_derivative(func, str(theta)))
-
-				x = r * math.cos(theta)
-				y = r * math.sin(theta)
-
-				# calculate how dense the points need to be
-				# this function is somewhat arbitrary
-				density = int((400 * math.fabs(slope)) + 500)
-
-				# check if the graph goes off the screen
-				if y > self.ymax or y < self.ymin or \
-					x > self.xmax or x < self.xmin:
-					denstiy = 2000
-
-				# adjust coordinate for the
-				# screen (this is the hard part)
-				a = (x - self.xmin) * self.wide / self.xrang
-				b = self.high - (
-					(y - self.ymin) * self.high / self.yrang)
-
-				# draw the point
-				self.screen.create_line(a, b, a + 1, b, fill = color)
-			except (ValueError, TclError) as e:
-				pass
-
-			# update the screen
-			try:
-				self.root.update()
-			except TclError as e:
-				theta = self.theta_max + 1
-
-
 #####################
 # List of Functions #
 #####################
@@ -1014,12 +1041,12 @@ def graph_function(func_arg):
 
 		# creates graph object
 		if polar_mode is False:
-			made_graph = numpy_graph(
+			made_graph = NumpyGraph(
 				xmin = temp_graph_xmin, xmax = temp_graph_xmax,
 				ymin = win_bound["y min"], ymax = win_bound["y max"],
 				wide = graph_w, high = graph_h)
 		else:
-			made_graph = polar_graph(
+			made_graph = NumpyPolarGraph(
 				xmin = temp_graph_xmin, xmax = temp_graph_xmax,
 				ymin = win_bound["y min"], ymax = win_bound["y max"],
 				theta_min = win_bound["theta min"],
@@ -1107,10 +1134,10 @@ def evaluate(expression, point, var = "x"):
 	want to evaluate at.
 
 	>>> evaluate("r^2", 5, var = "r")
-	'25.0'
+	'25'
 
 	>>> evaluate("3*b", "2", "b")
-	'6.0'
+	'6'
 	'''
 
 	# substituting the point for x in the function and evaluating
@@ -1353,7 +1380,7 @@ def gamma(arg):
 	Use the gamma function.
 
 	>>> gamma("(4)")
-	'6.0'
+	'6'
 
 	>>> gamma("(4.6)")
 	'13.381285870932441'
@@ -1484,6 +1511,11 @@ def abs_value(input):
 	'''
 
 	parts = input.split("|")
+	
+	if len(parts) % 2 == 0:
+		return(
+			"ERROR: There must be an even number of pipes in an "
+			"absolute value expression.")
 
 	for i in range(len(parts)):
 		if parts[i].startswith(("+", "*", "^", "/")) or\
@@ -1512,6 +1544,26 @@ def abs_value(input):
 			result = "|".join(iter_last + [result] + iter_next)
 
 			return(result)
+
+
+def comma(left, right):
+	'''
+	Concatenate numbers separated by commas.
+	'''
+
+	if "." not in right:
+		if left.isdigit() and len(right) == 3 and\
+			right.isdigit():
+			return(left + right)
+		else:
+			return("ERROR: Commas used inappropriately.")
+	else:
+		parts = right.split(".")
+		if left.isdigit() and len(parts[0]) == 3 and\
+			(parts[1].isdigit() or parts[1] == ""):
+			return(left + right)
+		else:
+			return("ERROR: Commas used inappropriately.")
 
 
 # main func
@@ -1572,9 +1624,17 @@ def simplify(s):
 
 				return(None)
 
+			elif key == "implicet_mult_pre_const_comp":
+
+				result = m.group(1) + "*"
+
 			elif key == "const_comp":
 
 				result = constant(m.group(1))
+
+			elif key == "implicet_mult_comp":
+
+				result = m.group(1) + "*"
 
 			elif key == "graph_comp":
 
@@ -1607,14 +1667,14 @@ def simplify(s):
 					m.group(1), m.group(2),
 					m.group(3), m.group(4))
 
-			elif key in ("comb_comp", "choos_comp"):
+			elif key in ("comb_comp", "choose_comp"):
 
 				if key == "comb_comp":
 					result = combinations_and_permutations(
 						"func",
 						m.group(1),
 						m.group(2))
-				elif key == "choos_comp":
+				elif key == "choose_comp":
 					result = combinations_and_permutations(
 						"choose",
 						m.group(2),
@@ -1662,7 +1722,7 @@ def simplify(s):
 				# of the parentheses unless its separating
 				# arguments of a function
 
-				result = float(m.group(1) + m.group(2))
+				result = comma(m.group(1), m.group(2))
 
 			elif key == "exp_comp":
 
@@ -1735,7 +1795,7 @@ def simplify(s):
 						"ERROR: add_comp must match '+' or '-'.")
 
 			else:
-				print("function not implemented.", key)
+				return("ERROR: Function: '%s' not implemented." % key)
 
 			if key not in (
 				"command_comp", "const_comp",
@@ -1750,7 +1810,7 @@ def simplify(s):
 					pass
 
 			if str(result).startswith("ERROR:"):
-				print(result)
+				# print(result)
 				return(result)
 
 			# replace the text matched by i (the regular expression)
@@ -1782,9 +1842,7 @@ def ask(s = None):
 		history.append(s)
 
 		# save history to file
-		save_info(
-			history = history, ans = ans, options = options,
-			win_bound = win_bound)
+		save_info(history = history)
 
 	# evaluate the expression
 	out = simplify(s)
@@ -1798,9 +1856,7 @@ def ask(s = None):
 	print("")
 
 	# save answer to file to be used next session
-	save_info(
-		history = history, ans = ans, options = options,
-		win_bound = win_bound)
+	save_info(ans = ans)
 
 
 def key_pressed(event):
@@ -1880,9 +1936,7 @@ def get_input(s = None):
 		history.append(s)
 
 		# save history to file
-		save_info(
-			history = history, ans = ans, options = options,
-			win_bound = win_bound)
+		save_info(history = history)
 
 		out = simplify(s)
 
@@ -1894,9 +1948,7 @@ def get_input(s = None):
 			mess.set(s + " = " + out)
 
 		# save answer to file to be used next session
-		save_info(
-			history = history, ans = ans, options = options,
-			win_bound = win_bound)
+		save_info(ans = ans)
 
 		# clear the input box
 		input_widget.delete(0, "end")
@@ -2057,11 +2109,12 @@ def graph_win_key_press(event, index):
 	except AttributeError:
 		code = event
 
-	if code == key_binds[os.name][1] and index > 0:
-		g_bound_entry[g_bound_names[index - 1]].focus()
-	if code == key_binds[os.name][2] and\
-		index < len(g_bound_names) - 1:
-		g_bound_entry[g_bound_names[index + 1]].focus()
+	if code in key_binds[os.name]:
+		if key_binds[os.name][code] == "up" and index > 0:
+			g_bound_entry[g_bound_names[index - 1]].focus()
+		elif key_binds[os.name][code] == "down" and\
+			index < len(g_bound_names) - 1:
+			g_bound_entry[g_bound_names[index + 1]].focus()
 
 
 def edit_graph_window():
