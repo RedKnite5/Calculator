@@ -1486,6 +1486,11 @@ class SimplifyMonoFunction(unittest.TestCase):
 			5.589326932606859)
 
 	def test_comma_comp(self):
+		'''
+		Test that commas still work when called from inside
+		simplify.
+		'''
+
 		self.assertEqual(c.simplify("1,433,123"), "1433123")
 		self.assertEqual(c.simplify("1,433,123.6"), "1433123.6")
 		self.assertEqual(
