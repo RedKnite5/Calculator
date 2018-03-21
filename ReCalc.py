@@ -1829,7 +1829,7 @@ def simplify(s):
 def ask(s = None):
 	'''
 	Ask the user what expression they want to simplify
-	and do pre and post processing.
+	and do pre and post processing when using the console.
 	'''
 
 	global ans
