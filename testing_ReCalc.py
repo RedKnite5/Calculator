@@ -484,16 +484,12 @@ class CombinationsAndPermutations(unittest.TestCase):
 			"10.0")
 
 	def test_choose_notation_needs_four_arguments(self):
-		self.assertEqual(
-			c.combinations_and_permutations("choose", "C", "(5,2)"),
-			("ERROR: combinations_and_permutations requires a fourth "
-				"argument when using choose notation"))
+		with self.assertRaises(c.CalculatorError):
+			c.combinations_and_permutations("choose", "C", "(5,2)")
 
 	def test_function_notation_needs_only_three_arguments(self):
-		self.assertEqual(
-			c.combinations_and_permutations("func", "C", "5", m = "2"),
-			("ERROR: combinations_and_permutations can not take a "
-				"fourth argument when using function notation"))
+		with self.assertRaises(c.CalculatorError):
+			c.combinations_and_permutations("func", "C", "5", m = "2")
 
 	def test_raises_errors_for_not_c_or_p_choose_notaion(self):
 		with self.assertRaises(c.CalculatorError):
@@ -930,10 +926,8 @@ class AbsoluteValue(unittest.TestCase):
 		self.assertEqual(c.abs_value("|3-2|+|-1*3|"), "1.0+|-1*3|")
 
 	def test_unmatched_pipes(self):
-		self.assertEqual(
-			c.abs_value("|1"),
-			("ERROR: There must be an even number of pipes in an "
-			"absolute value expression."))
+		with self.assertRaises(c.CalculatorError):
+			c.abs_value("|1")
 
 
 class Comma(unittest.TestCase):

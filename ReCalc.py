@@ -35,8 +35,6 @@ import os
 import logging
 import atexit
 
-import numpy as np
-from PIL import Image
 from warnings import warn, simplefilter
 from pickle import load, dump
 from re import compile, sub
@@ -71,6 +69,26 @@ except ModuleNotFoundError:
 	simplefilter('default', ImportWarning)
 	warn(
 		"Tkinter can not be imported. Using command line interface",
+		category = ImportWarning)
+
+# import numpy if installed
+try:
+	import numpy as np
+except ModuleNotFoundError:
+	logging.warning("Numpy could not be imported.")
+	simplefilter('default', ImportWarning)
+	warn(
+		"Numpy can not be imported. Can not graph",
+		category = ImportWarning)
+
+# import Pillow if installed
+try:
+	from PIL import Image
+except ModuleNotFoundError:
+	logging.warning("Pillow could not be imported.")
+	simplefilter('default', ImportWarning)
+	warn(
+		"Pillow can not be imported. Can not graph",
 		category = ImportWarning)
 
 

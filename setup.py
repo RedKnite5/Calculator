@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "ReCalc",
-    version = "0.1.9",
+    version = "0.1.10",
     packages = find_packages(),
 	scripts = [
 		"ReCalc.py",
@@ -39,8 +39,6 @@ setup(
 	
 	author = "Max Friedman",
 	author_email = "mr.awesome10000@gmail.com",
-	# desciption = "This is a basic graphing calculator.",
-	# licencse = "GPLv3",
 	keywords = ["Calculator"]
 )
 
