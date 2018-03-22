@@ -32,22 +32,42 @@ import math
 import statistics as stats
 import sys
 import os
+import logging
+import atexit
 
 import numpy as np
 from PIL import Image
-from PIL import ImageTk
 from warnings import warn, simplefilter
 from pickle import load, dump
 from re import compile, sub
 from decimal import Context
-from sympy import symbols, integrate, sympify
-from sympy.solvers import solve
 
+logging.basicConfig(
+	format = '%(levelname)s:%(message)s',
+	filename = "log_file.log",
+	level = logging.INFO)
+logging.info("Program is starting.")
+
+# import sympy if installed
+try:
+	from sympy import symbols, integrate, sympify
+	from sympy.solvers import solve
+except ModuleNotFoundError:
+	logging.warning("Sympy could not be imported.")
+	simplefilter('default', ImportWarning)
+	warn(
+		("Sympy can not be imported. Solving equations and definite "
+		"integrals will not be available."),
+		category = ImportWarning)
+
+# import tkinter if installed
 try:
 	import tkinter as tk
 	from tkinter import filedialog
 	from _tkinter import TclError
+	from PIL import ImageTk
 except ModuleNotFoundError:
+	logging.warning("Tkinter could not be imported.")
 	simplefilter('default', ImportWarning)
 	warn(
 		"Tkinter can not be imported. Using command line interface",
@@ -66,6 +86,7 @@ except ModuleNotFoundError:
 15) multi argument functions cant have commas in the second argument
 16) absolute value with pipes
 17) use division sign
+18) set y bounds on graphs
 19) pickle degree mode
 20) graph closes only when user dictates
 28) improve tkinter interface
@@ -77,6 +98,8 @@ except ModuleNotFoundError:
 40) doc strings for all of the tests that need them
 43) save graphs
 44) on fedora only one enter key is bound in the GUI
+46) log errors
+47) don't stop the program when there is an error
 '''
 
 '''  To Do
@@ -87,7 +110,6 @@ except ModuleNotFoundError:
 11) improper integrals
 13) integrals can have non-number bounds
 14) derivatives non-number arguments
-18) set y bounds on graphs
 21) matrices
 22) unit conversions
 23) indefinite integrals
@@ -104,10 +126,9 @@ except ModuleNotFoundError:
 41) user defined functions
 42) user defined variables
 45) parametric functions
-46) log errors
-47) don't stop the program when there is an error
 48) error when you close a polar graphing window early
-49)
+49) don't let the user pass ln(x) multiple arguments
+50)
 '''
 
 
@@ -117,11 +138,13 @@ if os.name == "nt":
 elif os.name == "posix":
 	user_path = os.environ["HOME"]
 
+logging.info("operating system: %s", os.name)
+
 up_hist = 0
 ctx = Context()
 
 # changeable variables
-use_gui = False
+use_gui = True
 graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
@@ -667,7 +690,7 @@ try:
 	hist_len = calc_info["hist_len"]
 	win_bound = calc_info["window_bounds"]
 except:
-	raise CalculatorError("ERROR: Loading settings failed.")
+	raise CalculatorError("Loading settings failed.")
 
 	'''
 	history = NonRepeatingList()
@@ -677,6 +700,12 @@ except:
 	der_approx = .0001
 	hist_len = 100
 	'''
+
+
+def log_end():
+	logging.info("Program is ending.")
+
+atexit.register(log_end)
 
 
 def float_to_str(f):
@@ -694,7 +723,6 @@ def float_to_str(f):
 		return string[:-2]
 	return string
 	
-
 
 def check_if_float(x):
 	'''
@@ -918,13 +946,14 @@ def find_match(s):
 
 		elif x < 0:
 			raise CalculatorError(
-				"Error '%s' is an invalid input. Parentheses do "
+				"'%s' is an invalid input. Parentheses do "
 				"not match." % s)
 
 	try:
 		return(an, left)
 	except UnboundLocalError:
-		raise CalculatorError("Error '%s' is an invalid input." % s)
+		raise CalculatorError(
+			"'%s' is an invalid input to find_match." % s)
 
 
 def brackets(s):
@@ -1004,8 +1033,8 @@ def constant(constant):
 	if constant in constant_dict:
 		return(constant_dict[constant])
 	else:
-		return(
-			"ERROR: '%s' is not a recognized constant." % constant)
+		raise CalculatorError(
+			"'%s' is not a recognized constant." % constant)
 
 
 def graph_function(func_arg):
@@ -1067,7 +1096,8 @@ def graph_function(func_arg):
 
 	# informs the user of reason for failure
 	else:
-		return("ERROR: Could not graph. Tkinter is not installed")
+		raise CalculatorError(
+			"Could not graph. Tkinter is not installed")
 
 
 def solve_equations(equation):
@@ -1083,49 +1113,57 @@ def solve_equations(equation):
 	20
 	'''
 
-	# check for equals sign when solving equations
-	eq_sides_comp = compile("(.+)=(.+)|(.+)")
+	if "sympy" in sys.modules:
+		# check for equals sign when solving equations
+		eq_sides_comp = compile("(.+)=(.+)|(.+)")
 
-	# checks for specified variable when solving equations
-	alg_var_comp = compile("(.+) for ([a-z])")
+		# checks for specified variable when solving equations
+		alg_var_comp = compile("(.+) for ([a-z])")
 
-	# find if there is a specified variable
-	varm = alg_var_comp.search(equation)
+		# find if there is a specified variable
+		varm = alg_var_comp.search(equation)
 
-	# find the variable its solving for. defaults to "x"
-	if varm is None:
-		x = symbols("x")
-		eq = equation
-	else:
-		# used to be symbols(varm.group(2)[-1]) don't know why
-		# may have been important
-		x = symbols(varm.group(2))
-		eq = varm.group(1)
-
-	# if there is an equals sign solve for zero and use sympy
-	# to solve it
-	em = eq_sides_comp.search(eq)
-	if em.group(3) is None:
-		sym_zero = sympify(em.group(1) + "-(" + em.group(2) + ")")
-		temp_result = solve(sym_zero, x)
-
-		# if there is only one result make it the result
-		# otherwise return the list
-		if len(temp_result) == 1:
-			return(temp_result[0])
+		# find the variable its solving for. defaults to "x"
+		if varm is None:
+			x = symbols("x")
+			eq = equation
 		else:
-			return(temp_result)
+			# used to be symbols(varm.group(2)[-1]) don't know why
+			# may have been important
+			x = symbols(varm.group(2))
+			eq = varm.group(1)
 
-	# if there isn't an equals sign use sympy to solve
-	else:
-		temp_result = solve(em.group(3), x)
+		# if there is an equals sign solve for zero and use sympy
+		# to solve it
+		em = eq_sides_comp.search(eq)
+		if em.group(3) is None:
+			try:
+				sym_zero = sympify(
+					em.group(1) + "-(" + em.group(2) + ")")
+				temp_result = solve(sym_zero, x)
+			except (NotImplementedError, TypeError) as e:
+				raise CalculatorError(str(e))
 
-		# if there is only one result make it the result
-		# otherwise return the list
-		if len(temp_result) == 1:
-			return(temp_result[0])
+			# if there is only one result make it the result
+			# otherwise return the list
+			if len(temp_result) == 1:
+				return(temp_result[0])
+			else:
+				return(temp_result)
+
+		# if there isn't an equals sign use sympy to solve
 		else:
-			return(temp_result)
+			temp_result = solve(em.group(3), x)
+
+			# if there is only one result make it the result
+			# otherwise return the list
+			if len(temp_result) == 1:
+				return(temp_result[0])
+			else:
+				return(temp_result)
+	else:
+		raise CalculatorError(
+			"Could not solve. Sympy not installed.")
 
 
 def evaluate(expression, point, var = "x"):
@@ -1177,7 +1215,10 @@ def integrate_function(expression, var, a, b):
 	# The bounds must be numbers not expressions
 	# The integral must have a "dx" or whatever variable you are using
 	# using sympy to integrate
-	return(str(float(integrate(expression, (var, a, b)))))
+	if "sympy" in sys.modules:
+		return(float_to_str(integrate(expression, (var, a, b))))
+	raise CalculatorError(
+		"Could not integrate sympy is not installed.")
 
 
 def combinations_and_permutations(form, letter, n, m = None):
@@ -1200,8 +1241,7 @@ def combinations_and_permutations(form, letter, n, m = None):
 	if form == "choose":  # if written as nCm
 
 		if m is None:
-			return(
-				"ERROR: "
+			raise CalculatorError(
 				"combinations_and_permutations requires a fourth "
 				"argument when using choose notation")
 
@@ -1220,16 +1260,15 @@ def combinations_and_permutations(form, letter, n, m = None):
 		elif letter == "P":
 			pass
 		else:
-			return(
-				"ERROR: Second argument must be 'C' or 'P'"
+			raise CalculatorError(
+				"Second argument must be 'C' or 'P'"
 				" for combinations or permutations not '%s'" % letter)
 
 		return(str(temp_result))
 
 	elif form == "func":  # if written as C(5, 2)
 		if m:
-			return(
-				"ERROR: "
+			raise CalculatorError(
 				"combinations_and_permutations can not take a fourth "
 				"argument when using function notation")
 
@@ -1243,6 +1282,10 @@ def combinations_and_permutations(form, letter, n, m = None):
 
 		# separate the arguments
 		comb_args = separate(x)
+		if len(comb_args) != 2:
+			raise CalculatorError(
+				"combinations_and_permutations takes exactly "
+				"two arguments %s were provided." % len(comb_args))
 
 		# evaluate each of the arguments separately
 		inner_n = float(simplify(comb_args[0]))
@@ -1258,8 +1301,8 @@ def combinations_and_permutations(form, letter, n, m = None):
 		elif letter == "P":
 			pass
 		else:
-			return(
-				"ERROR: Second argument must be 'C' or 'P'"
+			raise CalculatorError(
+				"Second argument must be 'C' or 'P'"
 				" for combinations or permutations not '%s'" % letter)
 
 		# add on anything that was was cut off the end when finding
@@ -1267,8 +1310,8 @@ def combinations_and_permutations(form, letter, n, m = None):
 		# sin(C(5, 2)) ← the last parenthesis
 		return(str(temp_result) + proto_inner[1])
 	else:
-		return(
-			"ERROR: First argument must be 'choose' or "
+		raise CalculatorError(
+			"First argument must be 'choose' or "
 			"'func' not '%s'" % form)
 
 
@@ -1289,8 +1332,11 @@ def statistics_functions(function, args):
 	# within more than one set of parentheses
 	ave_args = separate(proto_inner[0][1:-1])
 
-	# evaluate all the arguments
-	list_ave = list(map((lambda x: float(simplify(x))), ave_args))
+	try:
+		# evaluate all the arguments
+		list_ave = list(map((lambda x: float(simplify(x))), ave_args))
+	except ValueError as e:
+		raise CalculatorError(str(e))
 
 	# perform the different functions
 	if function.lower() in ("ave", "average", "mean"):
@@ -1307,8 +1353,8 @@ def statistics_functions(function, args):
 	elif function.lower() in ("stdev"):
 		result = stats.stdev(list_ave)
 	else:
-		return(
-			"ERROR: '%s' is not a function that is defined in"
+		raise CalculatorError(
+			"'%s' is not a function that is defined in"
 			" statistics_functions" % function)
 
 	# add on anything that was was cut off the end when finding
@@ -1328,7 +1374,8 @@ def single_argument(func, args):
 	# everything else
 	# tan(sin(π)) ← the last parenthesis when
 	# evaluating sin
-	proto_inner = list(find_match(args))
+	proto_inner = find_match(args)
+	proto_inner = list(proto_inner)
 
 	# looks for the degree symbol in the argument
 	# if the program finds it degree mode is set to true
@@ -1340,7 +1387,12 @@ def single_argument(func, args):
 
 	# evaluate the argument into a form that math.log
 	# can accept
-	inner = float(simplify(proto_inner[0]))
+	pre_inner = simplify(proto_inner[0])
+	try:
+		inner = float(pre_inner)
+	except ValueError as e:
+		raise CalculatorError(str(e))
+	
 
 	# check if in degree mode and if its doing an
 	# operation that takes an angle as an argument
@@ -1392,7 +1444,11 @@ def gamma(arg):
 	proto_inner = find_match(arg)
 
 	# evaluating the argument
-	inner = float(simplify(proto_inner[0]))
+	pre_inner = simplify(proto_inner[0])
+	try:
+		inner = float(pre_inner)
+	except ValueError as e:
+		raise CalculatorError(str(e))
 
 	result = math.gamma(inner)
 
@@ -1459,8 +1515,8 @@ def logarithm(log_arg):
 		result = math.log(float(simplify(proto_inner[0])))
 
 	else:
-		return(
-			"ERROR: There must be 1 or 2 arguments in the "
+		raise CalculatorError(
+			"There must be 1 or 2 arguments in the "
 			"input string")
 
 	# add on anything that was was cut off the end when finding
@@ -1482,6 +1538,11 @@ def modulus(arg):
 	# separate the arguments based on commas that are not
 	# within more than one set of parentheses
 	mod_args = separate(proto_inner[0][1:-1])
+
+	if len(mod_args) != 2:
+		raise CalculatorError(
+			"mod takes exactly two arguments %s were"
+			" given." % len(mod_args))
 
 	# evaluate the arguments individually into a form that fmod
 	# can accept
@@ -1513,8 +1574,8 @@ def abs_value(input):
 	parts = input.split("|")
 	
 	if len(parts) % 2 == 0:
-		return(
-			"ERROR: There must be an even number of pipes in an "
+		raise CalculatorError(
+			"There must be an even number of pipes in an "
 			"absolute value expression.")
 
 	for i in range(len(parts)):
@@ -1556,14 +1617,16 @@ def comma(left, right):
 			right.isdigit():
 			return(left + right)
 		else:
-			return("ERROR: Commas used inappropriately.")
+			raise CalculatorError(
+				"Commas used inappropriately.")
 	else:
 		parts = right.split(".")
 		if left.isdigit() and len(parts[0]) == 3 and\
 			(parts[1].isdigit() or parts[1] == ""):
 			return(left + right)
 		else:
-			return("ERROR: Commas used inappropriately.")
+			raise CalculatorError(
+				"Commas used inappropriately.")
 
 
 # main func
@@ -1575,9 +1638,6 @@ def simplify(s):
 	'''
 
 	global degree_mode
-
-	if str(s).startswith("ERROR:"):
-		return(s)
 
 	# iterates over all the operations
 	for key, value in regular_expr.items():
@@ -1617,8 +1677,8 @@ def simplify(s):
 					switch_degree_mode(0)
 
 				else:
-					result = (
-						"ERROR: Command must be 'history',"
+					raise CalculatorError(
+						"Command must be 'history',"
 						" 'exit', 'quit', 'degree mode', or 'radian "
 						"mode'.")
 
@@ -1639,9 +1699,6 @@ def simplify(s):
 			elif key == "graph_comp":
 
 				graph_out = graph_function(m.group(1))
-				if str(graph_out).startswith("ERROR:"):
-					return(graph_out)
-
 				return(None)
 
 			elif key == "alg_comp":
@@ -1698,8 +1755,8 @@ def simplify(s):
 					result = factorial(m.group(1))
 
 				else:
-					result = (
-						"ERROR: How could this possibly "
+					raise CalculatorError(
+						"How could this possibly "
 						"happen? It just tested if key was "
 						"'gamma_comp' or 'fact_comp'.")
 
@@ -1749,8 +1806,8 @@ def simplify(s):
 						float(m.group(2)))
 
 				else:
-					result = (
-						"ERROR: How could this possibly "
+					raise CalculatorError(
+						"How could this possibly "
 						"happen? It just tested if i was 'mod2_comp' "
 						"or 'mod_comp'.")
 
@@ -1772,8 +1829,8 @@ def simplify(s):
 					result = float(m.group(1)) / float(m.group(3))
 
 				else:
-					result = (
-						"ERROR: mult_comp must match '*', "
+					raise CalculatorError(
+						"mult_comp must match '*', "
 						"'//', or '÷'.")
 
 			elif key == "add_comp":
@@ -1791,11 +1848,12 @@ def simplify(s):
 					result = float(m.group(1)) - float(m.group(3))
 
 				else:
-					result = (
-						"ERROR: add_comp must match '+' or '-'.")
+					raise CalculatorError(
+						"add_comp must match '+' or '-'.")
 
 			else:
-				return("ERROR: Function: '%s' not implemented." % key)
+				raise CalculatorError(
+					"Function: '%s' not implemented." % key)
 
 			if key not in (
 				"command_comp", "const_comp",
@@ -1808,10 +1866,6 @@ def simplify(s):
 					result = float_to_str(result)
 				except (ValueError, TypeError):
 					pass
-
-			if str(result).startswith("ERROR:"):
-				# print(result)
-				return(result)
 
 			# replace the text matched by i (the regular expression)
 			# with the result of the mathematical expression
@@ -1844,19 +1898,24 @@ def ask(s = None):
 		# save history to file
 		save_info(history = history)
 
-	# evaluate the expression
-	out = simplify(s)
+	try:
+		# evaluate the expression
+		out = simplify(s)
+	except CalculatorError as e:
+		print(s, " failed: ", e)
+		logging.error(s + " failed: " + str(e))
 
-	# save output to be used by the user
-	ans = out
+	else:
+		# save output to be used by the user
+		ans = out
 
-	# display the output
-	if out is not None:
-		print(s + " = " + out)
-	print("")
+		# display the output
+		if out is not None:
+			print(s + " = " + out)
+		print("")
 
-	# save answer to file to be used next session
-	save_info(ans = ans)
+		# save answer to file to be used next session
+		save_info(ans = ans)
 
 
 def key_pressed(event):
@@ -1938,17 +1997,21 @@ def get_input(s = None):
 		# save history to file
 		save_info(history = history)
 
-		out = simplify(s)
+		try:
+			out = simplify(s)
+		except CalculatorError as e:
+			mess.set(s + " failed: " + str(e))
+			logging.error(s + " failed: " + str(e))
+		else:
+			# save output to be used by the user
+			ans = out
 
-		# save output to be used by the user
-		ans = out
+			# display the output
+			if out is not None:
+				mess.set(s + " = " + out)
 
-		# display the output
-		if out is not None:
-			mess.set(s + " = " + out)
-
-		# save answer to file to be used next session
-		save_info(ans = ans)
+			# save answer to file to be used next session
+			save_info(ans = ans)
 
 		# clear the input box
 		input_widget.delete(0, "end")

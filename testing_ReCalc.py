@@ -335,9 +335,8 @@ class Constant(unittest.TestCase):
 		it gets passed an unknown constant.
 		'''
 
-		self.assertEqual(
-			c.constant("pie"),
-			"ERROR: 'pie' is not a recognized constant.")
+		with self.assertRaises(c.CalculatorError):
+			c.constant("pie")
 
 
 class SolvingEquations(unittest.TestCase):
@@ -409,7 +408,7 @@ class IntegrateFunction(unittest.TestCase):
 	'''
 
 	def test_basic_integral(self):
-		self.assertEqual(c.integrate_function("2*x", "x", "0", "3"), "9.0")
+		self.assertEqual(c.integrate_function("2*x", "x", "0", "3"), "9")
 
 	def test_other_variables(self):
 		'''
@@ -423,11 +422,11 @@ class IntegrateFunction(unittest.TestCase):
 			with self.subTest(i = i):
 				self.assertEqual(
 					c.integrate_function("2*%s" % i, i, "0", "3"),
-					"9.0",
+					"9",
 					msg = "Integrating with respect to %s failed" % i)
 
 			self.assertEqual(
-				c.integrate_function("2*A", "A", "0", "3"), "9.0")
+				c.integrate_function("2*A", "A", "0", "3"), "9")
 
 	def test_integrate_at_expression(self):
 		'''
@@ -436,7 +435,7 @@ class IntegrateFunction(unittest.TestCase):
 		'''
 
 		self.assertEqual(
-			c.integrate_function("2*x", "x", "0", "1+2"), "9.0")
+			c.integrate_function("2*x", "x", "0", "1+2"), "9")
 
 
 class CombinationsAndPermutations(unittest.TestCase):
@@ -496,17 +495,13 @@ class CombinationsAndPermutations(unittest.TestCase):
 			("ERROR: combinations_and_permutations can not take a "
 				"fourth argument when using function notation"))
 
-	def test_raises_value_errors_for_not_c_or_p_choose_notaion(self):
-		self.assertEqual(
-			c.combinations_and_permutations("choose", "R", "5", "2"),
-			("ERROR: Second argument must be 'C' or 'P'"
-				" for combinations or permutations not 'R'"))
+	def test_raises_errors_for_not_c_or_p_choose_notaion(self):
+		with self.assertRaises(c.CalculatorError):
+			c.combinations_and_permutations("choose", "R", "5", "2")
 
-	def test_raises_value_errors_for_not_c_or_p_func_notaion(self):
-		self.assertEqual(
-			c.combinations_and_permutations("func", "R", "(5, 2)"),
-			("ERROR: Second argument must be 'C' or 'P'"
-				" for combinations or permutations not 'R'"))
+	def test_raises_errors_for_not_c_or_p_func_notaion(self):
+		with self.assertRaises(c.CalculatorError):
+			c.combinations_and_permutations("func", "R", "(5, 2)")
 
 
 class StatisticsFunctions(unittest.TestCase):
@@ -553,10 +548,8 @@ class StatisticsFunctions(unittest.TestCase):
 		when you pass it an undefined function.
 		'''
 
-		self.assertEqual(
-			c.statistics_functions("sin", "(pi)"),
-			("ERROR: 'sin' is not a function that is defined in"
-				" statistics_functions"))
+		with self.assertRaises(c.CalculatorError):
+			c.statistics_functions("sin", "(pi)")
 
 
 class SingleArgumentFunction(unittest.TestCase):
@@ -955,18 +948,14 @@ class Comma(unittest.TestCase):
 		self.assertEqual(c.comma("45", "345."), "45345.")
 
 	def test_returns_error_string_if_wrong(self):
-		self.assertEqual(
-			c.comma("21", "32"),
-			"ERROR: Commas used inappropriately.")
-		self.assertEqual(
-			c.comma("21", "3234"),
-			"ERROR: Commas used inappropriately.")
-		self.assertEqual(
-			c.comma("21", "32.123"),
-			"ERROR: Commas used inappropriately.")
-		self.assertEqual(
-			c.comma("21", ""),
-			"ERROR: Commas used inappropriately.")
+		with self.assertRaises(c.CalculatorError):
+			c.comma("21", "32")
+		with self.assertRaises(c.CalculatorError):
+			c.comma("21", "3234")
+		with self.assertRaises(c.CalculatorError):
+			c.comma("21", "32.123")
+		with self.assertRaises(c.CalculatorError):
+			c.comma("21", "")
 
 
 class Regex(unittest.TestCase):
@@ -1492,19 +1481,49 @@ class SimplifyMonoFunction(unittest.TestCase):
 
 		self.assertEqual(c.simplify("1,433,123"), "1433123")
 		self.assertEqual(c.simplify("1,433,123.6"), "1433123.6")
-		self.assertEqual(
-			c.simplify("2,3445.6"),
-			"ERROR: Commas used inappropriately.")
+
+	def test_comma_raises_error(self):
+		with self.assertRaises(c.CalculatorError):
+			c.simplify("2,3445.6")
 
 	def test_parrentheses(self):
 		self.assertEqual(c.simplify("(1-(3+4(3-2)-2))*-4+2"), "18")
 		self.assertEqual(c.simplify("(((5*3)))"), "15")
 
 	def test_absolute_value(self):
+		self.assertEqual(c.simplify("|3-5|"), "2")
+		self.assertEqual(c.simplify("|1-|3-5||"), "1")
+		self.assertEqual(c.simplify("-|3-5|"), "-2")
+		self.assertEqual(c.simplify("||6||"), "6")
+		self.assertEqual(c.simplify("|-2*|6-|4+3|*2|+2|"), "14")
+
+	def test_mod2(self):
+		self.assertEqual(c.simplify("Mod(5,3)"), "2")
+		self.assertEqual(c.simplify("mod(8,6)"), "2")
+		self.assertEqual(c.simplify("mod(9,4)"), "1")
+		self.assertEqual(c.simplify("mod(16,2)"), "0")
+		self.assertAlmostEqual(float(c.simplify("mod(11.3,1)")), 0.3)
+		self.assertEqual(c.simplify("mod(9*4,4)"), "0")
+		self.assertEqual(c.simplify("mod(Mod(11,8),2)"), "1")
+		self.assertEqual(c.simplify("mod(16.5,12**0)"), "0.5")
+
+	def test_logarithm(self):
+		self.assertEqual(c.simplify("Log(9,3)-1"), "1")
+		self.assertEqual(c.simplify("log(27,9)"), "1.5")
+		self.assertEqual(c.simplify("Log(1000,10)"), "3")
+		self.assertEqual(c.simplify("Log(64,2)"), "6")
+		self.assertEqual(c.simplify("Log(e^3,e)"), "3")
+		self.assertEqual(c.simplify("ln(e)"), "1")
+		self.assertEqual(c.simplify("Ln(e)"), "1")
+
+	def test_gamma(self):
+		self.assertEqual(c.simplify("gamma(6)"), "120")
+		self.assertEqual(c.simplify("Γ(6)"), "120")
+		self.assertEqual(c.simplify("Gamma(5)*.5"), "12")
+		self.assertEqual(c.simplify("2^(Gamma(5)/8)"), "8")
+
+	def test_single_argument_functions(self):
 		pass
-
-
-
 
 
 
