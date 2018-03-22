@@ -1523,7 +1523,15 @@ class SimplifyMonoFunction(unittest.TestCase):
 		self.assertEqual(c.simplify("2^(Gamma(5)/8)"), "8")
 
 	def test_single_argument_functions(self):
-		pass
+		self.assertAlmostEqual(
+			float(c.simplify("sin(pi/2)")),
+			1)
+		self.assertAlmostEqual(
+			float(c.simplify("cos(sin(pi))-2")),
+			-1)
+		self.assertAlmostEqual(
+			float(c.simplify("4**floor(cos(6))")),
+			1)
 
 
 
