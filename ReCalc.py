@@ -132,12 +132,6 @@ except ModuleNotFoundError:
 '''
 
 
-# os handling
-if os.name == "nt":
-	user_path = os.environ["USERPROFILE"]
-elif os.name == "posix":
-	user_path = os.environ["HOME"]
-
 logging.info("operating system: %s", os.name)
 
 up_hist = 0
@@ -689,17 +683,23 @@ try:
 	der_approx = calc_info["der_approx"]
 	hist_len = calc_info["hist_len"]
 	win_bound = calc_info["window_bounds"]
-except:
-	raise CalculatorError("Loading settings failed.")
+except Exception as e:
+	logging.warn("Loading settings failed. %s", str(e))
 
-	'''
 	history = NonRepeatingList()
 	ans = 0
 	degree_mode = 0
 	polar_mode = False
 	der_approx = .0001
 	hist_len = 100
-	'''
+	win_bound = {
+		"x min": -5,
+		"x max": 5,
+		"y min": -5,
+		"y max": 5,
+		"theta min": 0,
+		"theta max": 10,
+	}
 
 
 def log_end():
@@ -746,9 +746,6 @@ def save_info(**kwargs):
 	'''
 	Save settings to a file.
 	'''
-
-	if len(history) < 100:
-		raise CalculatorError("The history was about to be deleted.")
 
 	calc_info.update(kwargs)
 
@@ -1941,9 +1938,10 @@ def key_pressed(event):
 
 	# go backwards in the history when the up arrow is pressed
 	if key == "up":
-		up_hist += 1
-		input_widget.delete(0, "end")
-		input_widget.insert(0, history[-1 * up_hist])
+		if up_hist < len(history):
+			up_hist += 1
+			input_widget.delete(0, "end")
+			input_widget.insert(0, history[-1 * up_hist])
 
 	# go forwards in the history when the down arrow is pressed
 	if key == "down":

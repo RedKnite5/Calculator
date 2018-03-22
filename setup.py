@@ -1,14 +1,17 @@
 #   setup.py
 
+import os
+import pickle
 from setuptools import setup, find_packages
 
 setup(
     name = "ReCalc",
-    version = "0.1.1",
+    version = "0.1.8",
     packages = find_packages(),
 	scripts = [
-		"ReCalc.py", "ReCalc_testing.py",
-		"ReCalc_tkinter_testing.py"
+		"ReCalc.py",
+		"testing_ReCalc.py",
+		"testing_ReCalc_tkinter.py"
 	],
 	
 	classifiers = [
@@ -36,12 +39,86 @@ setup(
 	
 	author = "Max Friedman",
 	author_email = "mr.awesome10000@gmail.com",
-	desciption = "This is a basic graphing calculator.",
-	licencse = "GPLv3",
+	# desciption = "This is a basic graphing calculator.",
+	# licencse = "GPLv3",
 	keywords = ["Calculator"]
 )
 
+class NonRepeatingList(object):
+	'''
+	A mutable list that doesn't have two of the same element in a row.
+	
+	>>> repr(NonRepeatingList(3, 3, 4))
+	'NonRepeatingList(*[3, 4])'
+	'''
 
+	def __init__(self, *args):
+		if len(args) > 0:
+			self.items = [args[0]]
+			for i in args:
+				if i != self.items[-1]:
+					self.items.append(i)
+		else:
+			self.items = []
 
+	def __getitem__(self, index):
+		return(self.items[index])
+
+	def __delitem__(self, index):
+		del self.items[index]
+		if index != 0:
+			if self.items[index] == self.items[index - 1]:
+				del self.items[index]
+
+	def __contains__(self, item):
+		return(item in self.items)
+
+	def __len__(self):
+		return(len(self.items))
+
+	def __repr__(self):
+		return("NonRepeatingList(*" + repr(self.items) + ")")
+
+	def __str__(self):
+		return(str(self.items))
+
+	def __eq__(self, other):
+		if isinstance(other, NonRepeatingList):
+			if self.items == other.items:
+				return(True)
+		return(False)
+
+	def append(self, *args):
+		for item in args:
+			if len(self.items) > 0:
+				if self.items[-1] != item:
+					self.items.append(item)
+			else:
+				self.items.append(item)
+
+	def clear(self):
+		self.items.clear()
+
+calc_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(calc_path, "log_file.log"), "w+"):
+	pass
+with open(os.path.join(calc_path, "ReCalc_info.txt"), "wb+") as file:
+	calc_info = {}
+	calc_info["history"] = NonRepeatingList()
+	calc_info["ans"] = 0
+	calc_info["degree_mode"] = 0
+	calc_info["polar_mode"] = False
+	calc_info["der_approx"] = .0001
+	calc_info["hist_len"] = 100
+	calc_info["window_bounds"] = {
+		"x min": -5,
+		"x max": 5,
+		"y min": -5,
+		"y max": 5,
+		"theta min": 0,
+		"theta max": 10,
+	}
+
+	pickle.dump(calc_info, file)
 
 
