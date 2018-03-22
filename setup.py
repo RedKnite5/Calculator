@@ -9,7 +9,7 @@ setup(
 	scripts = [
 		"ReCalc.py", "ReCalc_testing.py",
 		"ReCalc_tkinter_testing.py"
-	]
+	],
 	
 	classifiers = [
 		"Programming Language :: Python :: 3.6",
