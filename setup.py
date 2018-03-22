@@ -24,7 +24,6 @@ setup(
 	],
 	install_requires = [
 		"sympy>=1.1.1",
-		"tkinter>=8.6",
 		"PIL>=4.3"
 	],
 	
