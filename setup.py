@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "ReCalc",
-    version = "0.1",
+    version = "0.1.1",
     packages = find_packages(),
 	scripts = [
 		"ReCalc.py", "ReCalc_testing.py",
@@ -24,7 +24,7 @@ setup(
 	],
 	install_requires = [
 		"sympy>=1.1.1",
-		"PIL>=4.3"
+		"pillow>=5.0.0"
 	],
 	
 	package_data = {
