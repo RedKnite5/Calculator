@@ -55,7 +55,7 @@ except ModuleNotFoundError:
 	simplefilter('default', ImportWarning)
 	warn(
 		("Sympy can not be imported. Solving equations and definite "
-		"integrals will not be available."),
+			"integrals will not be available."),
 		category = ImportWarning)
 
 # import tkinter if installed
@@ -180,7 +180,7 @@ key_binds = {
 g_bound_names = (
 	"x min", "x max",
 	"y min", "y max",
-	"theta min", "theta max"
+	"theta min", "theta max",
 )
 
 one_arg_funcs = {
@@ -242,7 +242,7 @@ one_arg_funcs = {
 	"ceil": (math.ceil, ""),
 	"floor": (math.floor, ""),
 	"erf": (math.erf, ""),
-	"erfc": (math.erfc, "")
+	"erfc": (math.erfc, ""),
 }
 
 # regex for a number
@@ -371,7 +371,7 @@ class CalculatorError(Exception):
 class NonRepeatingList(object):
 	'''
 	A mutable list that doesn't have two of the same element in a row.
-	
+
 	>>> repr(NonRepeatingList(3, 3, 4))
 	'NonRepeatingList(*[3, 4])'
 	'''
@@ -459,23 +459,22 @@ class Graph(object):
 			self.root,
 			width = self.wide, height = self.high)
 		self.screen.pack()
-		
+
 		self.options = tk.Menu(self.root)
 		self.file_options = tk.Menu(self.options, tearoff = 0)
-		
+
 		self.file_options.add_command(
 			label = "Save",
 			command = self.save_image)
 		self.file_options.add_command(
 			label = "Exit",
 			command = self.root.destroy)
-		
+
 		self.options.add_cascade(
 			label = "File",
 			menu = self.file_options)
-		
+
 		self.root.config(menu = self.options)
-		
 
 	def axes(self):
 		'''
@@ -613,7 +612,7 @@ class NumpyPolarGraph(NumpyGraph):
 		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
 		theta_min = 0, theta_max = 10,
 		wide = 400, high = 400):
-		
+
 		super().__init__(
 			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
 			wide = 400, high = 400)
@@ -632,7 +631,7 @@ class NumpyPolarGraph(NumpyGraph):
 
 		density = 1000
 		theta = self.theta_min
-		
+
 		pixel_color = color_dict[color]
 
 		while theta < self.theta_max:
@@ -721,6 +720,10 @@ except Exception as e:
 
 
 def log_end():
+	'''
+	Log that the program is ending right before it ends.
+	'''
+
 	logging.info("Program is ending.")
 
 atexit.register(log_end)
@@ -740,7 +743,7 @@ def float_to_str(f):
 	if string[-2:] == ".0":
 		return string[:-2]
 	return string
-	
+
 
 def check_if_float(x):
 	'''
@@ -772,7 +775,7 @@ def save_info(**kwargs):
 		"ReCalc_info.txt"), "wb") as file:
 		dump(calc_info, file)
 
-	
+
 def switch_degree_mode(mode):
 	'''
 	Switch between degree mode and radian mode.
@@ -1055,6 +1058,14 @@ def constant(constant):
 def graph_function(func_arg):
 	'''
 	Graph the given function or functions.
+
+	Call NumpyGraph or NumpyPolarGraph to graph given functions.
+	Split into multiple function based on the location of the word and
+	graph each of them separately iterating over a list to determine
+	the color the the function is. It will repeat if you try and graph
+	more functions than there are colors. If the statement ends with
+	'from [number1] to [number2]' it will show the graph with x min as
+	number1 and x max as number2.
 	'''
 
 	# check for bounds on graph
@@ -1067,7 +1078,7 @@ def graph_function(func_arg):
 		func_arg = range_m
 
 	# checks to see if tkinter is installed to graph things at all
-	if "tkinter" in sys.modules:
+	if set(("tkinter", "numpy", "PIL")).issubset(sys.modules):
 
 		# finds multiple functions to graph
 		if range_m is None:
@@ -1112,11 +1123,13 @@ def graph_function(func_arg):
 	# informs the user of reason for failure
 	else:
 		raise CalculatorError(
-			"Could not graph. Tkinter is not installed")
+			"Could not graph. Tkinter, Numpy, or PIL is not installed")
 
 
 def solve_equations(equation):
 	'''
+	Solve equations
+
 	Solve equations using sympy. If there is no equals
 	sign it is assumed the expression equals zero. If there is more
 	than one answer it will return a list of the answers.
@@ -1202,9 +1215,11 @@ def evaluate(expression, point, var = "x"):
 
 def find_derivative(expression, point, var = "x"):
 	'''
+	Calculate the derivate of the function at the given point
+
 	Calculate the derivative by evaluating the slope
 	between two points on either side of the point you are
-	finding the derivative of.
+	finding the derivative of with respect to var.
 	'''
 
 	# find the point on either side of the desired point
@@ -1224,12 +1239,13 @@ def find_derivative(expression, point, var = "x"):
 def integrate_function(expression, var, a, b):
 	'''
 	Integrate with sympy.
+
+	Integrals must be in a form that sympy can integrate.
+	The bounds must be numbers not expressions.
+	The integral must have a differential at the end of the function
+	but before the bounds.
 	'''
 
-	# Integrals must be in a form that sympy can integrate
-	# The bounds must be numbers not expressions
-	# The integral must have a "dx" or whatever variable you are using
-	# using sympy to integrate
 	if "sympy" in sys.modules:
 		return(float_to_str(integrate(expression, (var, a, b))))
 	raise CalculatorError(
@@ -1407,7 +1423,6 @@ def single_argument(func, args):
 		inner = float(pre_inner)
 	except ValueError as e:
 		raise CalculatorError(str(e))
-	
 
 	# check if in degree mode and if its doing an
 	# operation that takes an angle as an argument
@@ -1543,6 +1558,12 @@ def logarithm(log_arg):
 def modulus(arg):
 	'''
 	Find the modulus of the input as a function not an operator.
+
+	>>> modulus("(8, 4)")
+	'0.0'
+
+	>>> modulus("(7, 4)")
+	'3.0'
 	'''
 
 	# find the arguments of the function and cut off
@@ -1587,7 +1608,7 @@ def abs_value(input):
 	'''
 
 	parts = input.split("|")
-	
+
 	if len(parts) % 2 == 0:
 		raise CalculatorError(
 			"There must be an even number of pipes in an "
@@ -1625,6 +1646,13 @@ def abs_value(input):
 def comma(left, right):
 	'''
 	Concatenate numbers separated by commas.
+
+	Will raise CalculatorError if commas are not separating the
+	integer portion of the number every three digits starting at the
+	decimal point.
+
+	>>> comma("3", "111.2")
+	'3111.2'
 	'''
 
 	if "." not in right:
@@ -1650,6 +1678,9 @@ def simplify(s):
 	Simplify an expression.
 
 	This is the main body of the program.
+
+	>>> simplify("5--2")
+	'7'
 	'''
 
 	global degree_mode
@@ -1714,7 +1745,7 @@ def simplify(s):
 			elif key == "graph_comp":
 
 				graph_out = graph_function(m.group(1))
-				return(None)
+				return("Done")
 
 			elif key == "alg_comp":
 
@@ -1936,6 +1967,8 @@ def ask(s = None):
 def key_pressed(event):
 	'''
 	Handle keys pressed in the GUI.
+
+	Used keys are the up arrow, down arrow, and the enter key.
 	'''
 
 	global up_hist
@@ -2036,6 +2069,9 @@ def get_input(s = None):
 def switch_trig():
 	'''
 	Put the trig function buttons on the GUI.
+
+	Remove the hyperbolic, miscellaneous, and statistics function
+	buttons then use grid to place the trig function buttons.
 	'''
 
 	# remove the buttons for the hyperbolic functions, misc functions,
@@ -2058,6 +2094,9 @@ def switch_trig():
 def switch_hyperbolic():
 	'''
 	Put the hyperbolic function buttons in the GUI.
+
+	Remove the trig, miscellaneous, and statistics function buttons
+	if present then use grid to place the hyperbolic function buttons.
 	'''
 
 	# remove the buttons for the trig functions, misc functions,
@@ -2082,6 +2121,9 @@ def switch_hyperbolic():
 def switch_misc():
 	'''
 	Put the miscellaneous function buttons on the GUI.
+
+	Remove the trig, hyperbolic, and statistics buttons if they
+	are present then use grid place the miscellaneous function buttons.
 	'''
 
 	# remove the buttons for the trig functions, hyperbolic functions,
@@ -2101,6 +2143,9 @@ def switch_misc():
 def switch_stats():
 	'''
 	Put the statistics function buttons in the GUI.
+
+	Remove the trig, hyperbolic, and misc function buttons if
+	present then use grid to place the statistics function buttons.
 	'''
 
 	# remove the buttons for the trig functions, misc functions,
@@ -2123,6 +2168,12 @@ def switch_stats():
 def format_default_screen(menubar):
 	'''
 	Put the buttons in place on the GUI.
+
+	Use grid to place the buttons for the digits 0-10, a decimal point,
+	plus, minus, multiply, divide, exponents, factorial, pi, e,
+	parentheses, absolute value pipes, comma, integral, x, the enter
+	key, backspace, and the menu to switch between function sets. Then
+	call switch_trig() to place the trig function buttons.
 	'''
 
 	# 7 8 9
@@ -2170,7 +2221,7 @@ def format_default_screen(menubar):
 
 def switch_matrices():
 	'''
-	Create window for dealing with matrices.
+	Create window for dealing with matrices. NotImplemented.
 	'''
 
 	pass
@@ -2179,6 +2230,11 @@ def switch_matrices():
 def graph_win_key_press(event, index):
 	'''
 	Deal with key presses while editing the graph window.
+
+	The up arrow will move the cursor to the box above unless
+	it is already in the top box. The down arrow will move the
+	cursor into the box below it unless it is already in the
+	bottom box.
 	'''
 
 	global g_bound_entry
@@ -2235,6 +2291,10 @@ def edit_graph_window():
 def tkask(s = None):
 	'''
 	Make a GUI for the program.
+
+	Create instances of all the buttons that may be needed and
+	call format_default_screen() to place the digits and other
+	buttons that don't change.
 	'''
 
 	global input_widget, mess
@@ -2410,7 +2470,7 @@ def tkask(s = None):
 	format_default_screen(menubar)
 
 	root.bind("<Key>", key_pressed)
-	
+
 	get_input(s = s)
 
 	root.mainloop()

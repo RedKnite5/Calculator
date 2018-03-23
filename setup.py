@@ -6,13 +6,13 @@ from setuptools import setup, find_packages
 
 setup(
     name = "ReCalc",
-    version = "0.1.10",
+    version = "0.1.11",
     packages = find_packages(),
-	scripts = [
-		"ReCalc.py",
-		"testing_ReCalc.py",
-		"testing_ReCalc_tkinter.py"
-	],
+	# scripts = [
+		# "ReCalc.py",
+		# "testing_ReCalc.py",
+		# "testing_ReCalc_tkinter.py"
+	# ],
 	
 	classifiers = [
 		"Programming Language :: Python :: 3.6",
