@@ -20,6 +20,19 @@ It has a GUI made with tkinter that it will default to using if tkinter
 is installed. It defines graphing and polar graphing classes. It
 remembers every input it is given.
 
+
+Usage:
+	ReCalc [-vc] [EXPRESSION ...]
+	ReCalc [EXPRESSION ...]
+	ReCalc [-vc]
+
+Arguments:
+	EXPRESSION    optional expression to start with
+
+Options:
+	-v, --verbose      verbose logging
+	-c, --commandline  use the command line interface
+
 '''
 
 
@@ -164,6 +177,16 @@ except ModuleNotFoundError:
 		"Pillow can not be imported. Can not graph",
 		category = ImportWarning)
 
+# import docopt if installed
+try:
+	from docopt import docopt
+except ModuleNotFoundError:
+	logger.warning("Docopt could not be imported.")
+	simplefilter("default", ImportWarning)
+	warn(
+		"Docopt could not be imported command line arguments may not "
+		"work.",
+		category = ImportWarning)
 
 logger.info("operating system: %s", os.name)
 
@@ -2561,21 +2584,29 @@ def main():
 	the GUI.
 	'''
 
-	# default startup
-	if len(sys.argv) == 1:
-		if "tkinter" in sys.modules and use_gui:
-			tkask()
-		else:
-			while True:
-				ask()
+	global logger, use_gui
 
-	else:  # handling command line arguments and startup
-		if "tkinter" in sys.modules and use_gui:
-			tkask(" ".join(sys.argv[1:]))
-		else:
-			ask(" ".join(sys.argv[1:]))
-			while True:
-				ask()
+	if "docopt" in sys.modules:
+		args = docopt(__doc__)
+		
+		if args["-c"]:
+			use_gui = False
+		if args["-v"]:
+			logger.setLevel(logging.DEBUG)
+		start_exp = " ".join(args["EXPRESSION"])
+
+		if start_exp == "":
+			start_exp = None
+	else:
+		start_exp = None
+
+	# default startup
+	if "tkinter" in sys.modules and use_gui:
+		tkask(start_exp)
+	else:
+		ask(start_exp)
+		while True:
+			ask()
 
 
 if __name__ == "__main__":
