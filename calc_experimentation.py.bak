@@ -1,0 +1,7 @@
+# calc_experimentation.py
+
+
+import re
+
+
+r = compile("hello", flags = re.I)

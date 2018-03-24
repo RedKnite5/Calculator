@@ -1404,9 +1404,6 @@ class SimplifyMonoFunction(unittest.TestCase):
 		self.original_degree_mode = c.degree_mode
 		c.switch_degree_mode(0)
 
-	def tearDown(self):
-		c.switch_degree_mode(self.original_degree_mode)
-
 	def test_adding(self):
 		self.assertEqual(c.simplify("1+1"), "2")
 		self.assertEqual(c.simplify("1+6"), "7")

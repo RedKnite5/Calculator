@@ -253,8 +253,7 @@ one_arg_funcs = {
 
 list_functions = (
 	*one_arg_funcs.keys(), "mod", "gamma", "Γ", "log", "ln", "average",
-	"ave", "mean", "median", "mode", "max", "min", "stdev",
-)
+	"ave", "mean", "median", "mode", "max", "min", "stdev",)
 
 def compile_ignore_case(pattern):
 	return(re.compile(pattern, flags = re.I))
