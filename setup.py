@@ -42,12 +42,13 @@ setup(
 	keywords = ["Calculator"]
 )
 
+
 class NonRepeatingList(object):
 	'''
 	A mutable list that doesn't have two of the same element in a row.
-	
+
 	>>> repr(NonRepeatingList(3, 3, 4))
-	'NonRepeatingList(*[3, 4])'
+	'NonRepeatingList(3, 4)'
 	'''
 
 	def __init__(self, *args):
@@ -75,7 +76,7 @@ class NonRepeatingList(object):
 		return(len(self.items))
 
 	def __repr__(self):
-		return("NonRepeatingList(*" + repr(self.items) + ")")
+		return("NonRepeatingList(" + repr(self.items)[1:-1] + ")")
 
 	def __str__(self):
 		return(str(self.items))

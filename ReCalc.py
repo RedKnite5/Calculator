@@ -23,75 +23,6 @@ remembers every input it is given.
 '''
 
 
-#  Windows:
-#  C:\Users\Max\Documents\Python\ReCalc\ReCalc.py
-#  Bash:
-#  C:/Users/Max/Documents/Python/ReCalc/ReCalc.py
-
-import math
-import statistics as stats
-import sys
-import os
-import logging
-import atexit
-import re
-
-from warnings import warn, simplefilter
-from pickle import load, dump
-from decimal import Context
-
-logging.basicConfig(
-	format = '%(levelname)s:%(message)s',
-	filename = "log_file.log",
-	level = logging.INFO)
-logging.info("Program is starting.")
-
-# import sympy if installed
-try:
-	from sympy import symbols, integrate, sympify
-	from sympy.solvers import solve
-except ModuleNotFoundError:
-	logging.warning("Sympy could not be imported.")
-	simplefilter('default', ImportWarning)
-	warn(
-		("Sympy can not be imported. Solving equations and definite "
-			"integrals will not be available."),
-		category = ImportWarning)
-
-# import tkinter if installed
-try:
-	import tkinter as tk
-	from tkinter import filedialog
-	from _tkinter import TclError
-	from PIL import ImageTk
-except ModuleNotFoundError:
-	logging.warning("Tkinter could not be imported.")
-	simplefilter('default', ImportWarning)
-	warn(
-		"Tkinter can not be imported. Using command line interface",
-		category = ImportWarning)
-
-# import numpy if installed
-try:
-	import numpy as np
-except ModuleNotFoundError:
-	logging.warning("Numpy could not be imported.")
-	simplefilter('default', ImportWarning)
-	warn(
-		"Numpy can not be imported. Can not graph",
-		category = ImportWarning)
-
-# import Pillow if installed
-try:
-	from PIL import Image
-except ModuleNotFoundError:
-	logging.warning("Pillow could not be imported.")
-	simplefilter('default', ImportWarning)
-	warn(
-		"Pillow can not be imported. Can not graph",
-		category = ImportWarning)
-
-
 '''  Completed
 2) Make average functions deal with non-number arguments
 3) Stdev
@@ -147,11 +78,94 @@ except ModuleNotFoundError:
 48) error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
 50) move gamma into one_arg_funcs
-51)
+51) make the delete button delete all of multi-letter fuctions other
+buttons put there
+52)
 '''
 
 
-logging.info("operating system: %s", os.name)
+#  Windows:
+#  C:\Users\Max\Documents\Python\ReCalc\ReCalc.py
+#  Bash:
+#  C:/Users/Max/Documents/Python/ReCalc/ReCalc.py
+
+import math
+import statistics as stats
+import sys
+import os
+import logging
+import atexit
+import re
+
+from warnings import warn, simplefilter
+from pickle import load, dump
+from decimal import Context
+
+logger = logging.getLogger("ReCalc_logger")
+logger.setLevel(logging.DEBUG)
+
+fh = logging.FileHandler("log_file.log", encoding = "UTF-8")
+if "-v" in sys.argv:
+	fh.setLevel(logging.DEBUG)
+else:
+	fh.setLevel(logging.INFO)
+
+formatter = logging.Formatter(
+	"{levelname:<8s}: {message:s}",
+	style = "{")
+fh.setFormatter(formatter)
+
+logger.addHandler(fh)
+
+logger.info("Program is starting.")
+
+# import sympy if installed
+try:
+	from sympy import symbols, integrate, sympify
+	from sympy.solvers import solve
+except ModuleNotFoundError:
+	logger.warning("Sympy could not be imported.")
+	simplefilter("default", ImportWarning)
+	warn(
+		("Sympy can not be imported. Solving equations and definite "
+			"integrals will not be available."),
+		category = ImportWarning)
+
+# import tkinter if installed
+try:
+	import tkinter as tk
+	from tkinter import filedialog
+	from _tkinter import TclError
+	from PIL import ImageTk
+except ModuleNotFoundError:
+	logger.warning("Tkinter could not be imported.")
+	simplefilter("default", ImportWarning)
+	warn(
+		"Tkinter can not be imported. Using command line interface",
+		category = ImportWarning)
+
+# import numpy if installed
+try:
+	import numpy as np
+except ModuleNotFoundError:
+	logger.warning("Numpy could not be imported.")
+	simplefilter("default", ImportWarning)
+	warn(
+		"Numpy can not be imported. Can not graph",
+		category = ImportWarning)
+
+# import Pillow if installed
+try:
+	from PIL import Image
+except ModuleNotFoundError:
+	logger.warning("Pillow could not be imported.")
+	simplefilter("default", ImportWarning)
+	warn(
+		"Pillow can not be imported. Can not graph",
+		category = ImportWarning)
+
+
+logger.info("operating system: %s", os.name)
 
 up_hist = 0
 ctx = Context()
@@ -257,6 +271,10 @@ list_functions = (
 )
 
 def compile_ignore_case(pattern):
+	'''
+	Call re.compile with the IGNORECASE flag.
+	'''
+
 	return(re.compile(pattern, flags = re.I))
 
 # regex for a number
@@ -375,7 +393,7 @@ class NonRepeatingList(object):
 	A mutable list that doesn't have two of the same element in a row.
 
 	>>> repr(NonRepeatingList(3, 3, 4))
-	'NonRepeatingList(*[3, 4])'
+	'NonRepeatingList(3, 4)'
 	'''
 
 	def __init__(self, *args):
@@ -391,19 +409,28 @@ class NonRepeatingList(object):
 		return(self.items[index])
 
 	def __delitem__(self, index):
+		'''
+		Delete the item in the given index. If that puts two equal
+		items adjacent delete the for recent one.
+		'''
+
 		del self.items[index]
 		if index != 0:
 			if self.items[index] == self.items[index - 1]:
 				del self.items[index]
 
 	def __contains__(self, item):
+		'''
+		Check if an item is in the NonRepeatingList.
+		'''
+
 		return(item in self.items)
 
 	def __len__(self):
 		return(len(self.items))
 
 	def __repr__(self):
-		return("NonRepeatingList(*" + repr(self.items) + ")")
+		return("NonRepeatingList(" + repr(self.items)[1:-1] + ")")
 
 	def __str__(self):
 		return(str(self.items))
@@ -415,6 +442,11 @@ class NonRepeatingList(object):
 		return(False)
 
 	def append(self, *args):
+		'''
+		Add all arguments to the list if one is not the equal to the
+		previous item.
+		'''
+
 		for item in args:
 			if len(self.items) > 0:
 				if self.items[-1] != item:
@@ -423,6 +455,10 @@ class NonRepeatingList(object):
 				self.items.append(item)
 
 	def clear(self):
+		'''
+		Delete all items in the list.
+		'''
+
 		self.items.clear()
 
 
@@ -703,7 +739,7 @@ try:
 	hist_len = calc_info["hist_len"]
 	win_bound = calc_info["window_bounds"]
 except Exception as e:
-	logging.warn("Loading settings failed. %s", str(e))
+	logger.warning("Loading settings failed. %s", str(e))
 
 	history = NonRepeatingList()
 	ans = 0
@@ -726,7 +762,7 @@ def log_end():
 	Log that the program is ending right before it ends.
 	'''
 
-	logging.info("Program is ending.")
+	logger.info("Program is ending.")
 
 atexit.register(log_end)
 
@@ -741,7 +777,7 @@ def float_to_str(f):
 	'''
 
 	d1 = ctx.create_decimal(repr(float(f)))
-	string = format(d1, 'f')
+	string = format(d1, "f")
 	if string[-2:] == ".0":
 		return string[:-2]
 	return string
@@ -819,6 +855,8 @@ def switch_polar_mode(mode):
 def change_hist_len(entry_box, root):
 	'''
 	Change the length of the history print back.
+
+	Will only accept integers greater than zero as valid lengths.
 	'''
 
 	global hist_len
@@ -1050,6 +1088,12 @@ def constant(constant):
 		"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
 		"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2}
 
+	logger.debug(
+		"constant has recieved '{constant}' and "
+		"outputs '{num}'".format(
+			constant = constant,
+			num = constant_dict[constant]))
+
 	if constant in constant_dict:
 		return(constant_dict[constant])
 	else:
@@ -1077,6 +1121,10 @@ def graph_function(func_arg):
 	# looks for x bounds on the graph
 	range_m = re.search(graph_rang_comp, func_arg)
 	if range_m is not None:
+		logger.debug(
+			"graph_function has detected the range: '{bound}' in "
+			"'{arg}'".format(bound = range_m.groups(), arg = func_arg))
+
 		func_arg = range_m
 
 	# checks to see if tkinter is installed to graph things at all
@@ -1095,6 +1143,12 @@ def graph_function(func_arg):
 		else:
 			temp_graph_xmin = float(func_arg.group(3))
 			temp_graph_xmax = float(func_arg.group(4))
+
+		logger.debug(
+			"graphing: {funcs}, from: {min}, to: {max}".format(
+				funcs = funcs_to_graph,
+				min = temp_graph_xmin,
+				max = temp_graph_xmax))
 
 		# creates graph object
 		if polar_mode is False:
@@ -1691,6 +1745,10 @@ def simplify(s):
 
 	global degree_mode
 
+	original = s
+
+	logger.debug("simplify is starting with the value '%s'" % s)
+
 	# iterates over all the operations
 	for key, value in regular_expr.items():
 
@@ -1708,6 +1766,10 @@ def simplify(s):
 		# continues until all instances of an
 		# operation have been dealt with
 		while m is not None:
+
+			logger.debug(
+				"'{match}' was matched by '{key}' in '{s}'".format(
+					match = m.groups(), key = key, s = s))
 
 			if key == "command_comp":
 				# non-math commands
@@ -1928,11 +1990,11 @@ def simplify(s):
 
 			# replace the text matched by i (the regular expression)
 			# with the result of the mathematical expression
-			s = re.sub(
-				value,
-				str(result),
-				s,
-				count = 1)
+			s = re.sub(value, str(result), s, count = 1)
+			logger.debug(
+				"'{result}' has has been substituted into "
+				"'{original}' resulting in '{new}'".format(
+					result = result, original = original, new = s))
 
 			m = re.search(value, s)
 	try:
@@ -1966,7 +2028,7 @@ def ask(s = None):
 		out = simplify(s)
 	except CalculatorError as e:
 		print(s, " failed: ", e)
-		logging.error(s + " failed: " + str(e))
+		logger.error(s + " failed: " + str(e))
 
 	else:
 		# save output to be used by the user
@@ -2067,7 +2129,7 @@ def get_input(s = None):
 			out = simplify(s)
 		except CalculatorError as e:
 			mess.set(s + " failed: " + str(e))
-			logging.error(s + " failed: " + str(e))
+			logger.error(s + " failed: " + str(e))
 		else:
 			# save output to be used by the user
 			ans = out

@@ -14,12 +14,13 @@ import string
 
 import numpy as np
 
+
 class NonRepeatingList(object):
 	'''
 	A mutable list that doesn't have two of the same element in a row.
 
 	>>> repr(NonRepeatingList(3, 3, 4))
-	'NonRepeatingList(*[3, 4])'
+	'NonRepeatingList(3, 4)'
 	'''
 
 	def __init__(self, *args):
@@ -47,7 +48,7 @@ class NonRepeatingList(object):
 		return(len(self.items))
 
 	def __repr__(self):
-		return("NonRepeatingList(*" + repr(self.items) + ")")
+		return("NonRepeatingList(" + repr(self.items)[1:-1] + ")")
 
 	def __str__(self):
 		return(str(self.items))
@@ -1393,6 +1394,10 @@ class TestNonRepeatingLists(unittest.TestCase):
 		nonlist = c.NonRepeatingList(1, 1, 2, 1)
 		nonlist.clear()
 		self.assertEqual(nonlist, c.NonRepeatingList())
+
+	def test_repr(self):
+		nonlist = c.NonRepeatingList(1, 1, 2, 1)
+		self.assertEqual(eval("c." + repr(nonlist)), nonlist)
 
 
 class SimplifyMonoFunction(unittest.TestCase):
