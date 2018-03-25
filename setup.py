@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "ReCalc",
-    version = "0.1.11",
+    version = "0.1.12",
     packages = find_packages(),
 	# scripts = [
 		# "ReCalc.py",
@@ -27,7 +27,9 @@ setup(
 	],
 	install_requires = [
 		"sympy>=1.1.1",
-		"pillow>=5.0.0"
+		"pillow>=5.0.0",
+		"docopt>=0.6.2",
+		"numpy>=1.14.2",
 	],
 	
 	package_data = {

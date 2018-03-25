@@ -6,25 +6,16 @@ License: GPLv3
 Title: ReCalc
 
 This is a graphing calculator written in python 3.6.
-It can do:
-addition, subtraction, multiplication, division, exponents,
-logarithms, trig functions, inverse trig functions, hyperbolic
-functions, inverse hyperbolic functions, the ceiling function,
-the floor function, the gauss error function, modulus, absolute value,
-factorials, the gamma function, combinations, permutations, max, min,
-mean, median, mode, sample standard deviation, definite integrals,
-derivatives at a point, evaluating a function at a point, graphing
-functions in Cartesian and polar, and solving equations.
 
 It has a GUI made with tkinter that it will default to using if tkinter
 is installed. It defines graphing and polar graphing classes. It
 remembers every input it is given.
 
-
 Usage:
 	ReCalc [-vc] [EXPRESSION ...]
 	ReCalc [EXPRESSION ...]
 	ReCalc [-vc]
+	ReCalc [--verbose --commandline]
 
 Arguments:
 	EXPRESSION    optional expression to start with
@@ -33,6 +24,99 @@ Options:
 	-v, --verbose      verbose logging
 	-c, --commandline  use the command line interface
 
+It can do:
+
+Addition:
+>>> simplify("4 + 9")
+'13'
+
+Subtraction:
+>>> simplify("8-11")
+'-3'
+
+Multiplication:
+>>> simplify("9*.5")
+'4.5'
+
+Division:
+>>> simplify("9/3")
+'3'
+
+Exponents:
+>>> simplify("4^2.5")
+'32'
+
+Logarithms:
+>>> simplify("log(16, 2)")
+'4'
+
+Trig Functions:
+>>> simplify("sin(pi/2)")
+'1'
+
+Inverse Trig Functions:
+>>> simplify("arcsin(0)")
+'0'
+
+Hyperbolic Functions:
+>>> simplify("")
+
+
+Inverse Hyperbolic Functions:
+>>> simplify("")
+
+
+Ceiling Function:
+>>> simplify("ceil(5.3)")
+'6'
+
+Floor Function:
+>>> simplify("floor(11.9)")
+'11'
+
+Gauss Error Function:
+>>> simplify("")
+
+
+Modulus:
+>>> simplify("13 % 5")
+'3'
+
+Absolute Value:
+>>> simplify("|8-10|")
+'2'
+
+Factorials:
+>>> simplify("5!")
+'120'
+
+Gamma Function:
+>>> simplify("gamma(5)")
+'24'
+
+Combinations:
+>>> simplify("5C3")
+'10'
+
+Permutations:
+>>> simplify("5P2")
+'20'
+
+Max:
+>>> simplify("max(3, 4, 5, 2, -4)")
+'5'
+
+Min:
+>>> simplify("min(4, 5, 12, -3, 4.5)")
+'-3'
+
+Mean:
+>>> simplify("mean(5, 6, 12, 7)")
+'7.5'
+
+median, mode, sample standard deviation, definite integrals,
+derivatives at a point, evaluating a function at a point, graphing
+functions in Cartesian and polar, and solving equations.
 '''
 
 
@@ -107,9 +191,9 @@ import statistics as stats
 import sys
 import os
 import logging
-import atexit
 import re
 
+from atexit import register
 from warnings import warn, simplefilter
 from pickle import load, dump
 from decimal import Context
@@ -198,6 +282,10 @@ use_gui = True
 graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
+illegal_chrs = (
+	"@", "#", "$", "&", "{", "}", "\"", "'", "\\", ";", ":", "<", ">",
+	"?", "~", "`",)
+	
 ctx.prec = 17
 
 color_dict = {
@@ -223,9 +311,9 @@ g_bound_names = (
 
 one_arg_funcs = {
 
-	# the order does matter because if trig functions come
-	# before hyperbolic functions the "h" is interpreted as
-	# part of the argument for the function.
+	# the order of which functions come first matters because if trig
+	# functions come before hyperbolic functions the "h" is
+	# interpreted as part of the argument for the function.
 
 	#   name                 function                angles
 	"hacovercosin": (lambda x: .5 + math.sin(x) / 2, "in"),
@@ -787,7 +875,24 @@ def log_end():
 
 	logger.info("Program is ending.")
 
-atexit.register(log_end)
+register(log_end)
+
+def look_for_incorrect_operators(s):
+	'''
+	Check if the input is obviously not a valid expression.
+	'''
+
+	no_space = "".join(s.split())
+	if any(ch in s for ch in illegal_chrs):
+		return("Illegal Character")
+	if re.search("[/^%]*[/^%]", no_space):
+		return(False)
+	if re.search("[/^*%]/[/^*%]", no_space):
+		return(False)
+	if re.search("[/^%*]^[/^*%]", no_space):
+		return(False)
+	if re.search("[/^%,*],[/^*,%]", no_space):
+		return(False)
 
 
 def float_to_str(f):
@@ -837,9 +942,24 @@ def save_info(**kwargs):
 		dump(calc_info, file)
 
 
+def delete_history():
+	'''
+	Delete the list of previous inputs.
+	'''
+
+	global up_hist
+
+	up_hist = 0
+	history.clear()
+	save_info(history = history)
+
+
 def switch_degree_mode(mode):
 	'''
 	Switch between degree mode and radian mode.
+
+	Accept 'degree', 'radian', 0, 2, True, or False.
+	Otherwise raise CalculatorError.
 	'''
 
 	global degree_mode
@@ -850,6 +970,10 @@ def switch_degree_mode(mode):
 		degree_mode = 0
 	elif mode in (0, 2):
 		degree_mode = mode
+	elif mode is True:
+		degree_mode = 2
+	elif mode is False:
+		degree_mode = 0
 	else:
 		raise CalculatorError("Can not set degree_mode to '%s'" % mode)
 
@@ -859,6 +983,9 @@ def switch_degree_mode(mode):
 def switch_polar_mode(mode):
 	'''
 	Switch between polar and Cartesian graphing.
+
+	Only accept 'polar', 'Cartesian', True, and False as inputs.
+	Otherwise raise CalculatorError.
 	'''
 
 	global polar_mode
@@ -879,7 +1006,7 @@ def change_hist_len(entry_box, root):
 	'''
 	Change the length of the history print back.
 
-	Will only accept integers greater than zero as valid lengths.
+	Only accept integers greater than zero as valid lengths.
 	'''
 
 	global hist_len
@@ -1112,10 +1239,8 @@ def constant(constant):
 		"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2}
 
 	logger.debug(
-		"constant has recieved '{constant}' and "
-		"outputs '{num}'".format(
-			constant = constant,
-			num = constant_dict[constant]))
+		"constant has recieved '{constant}'".format(
+			constant = constant))
 
 	if constant in constant_dict:
 		return(constant_dict[constant])
@@ -2395,7 +2520,7 @@ def tkask(s = None):
 	Make a GUI for the program.
 
 	Create instances of all the buttons that may be needed and
-	call format_default_screen() to place the digits and other
+	call format_default_screen to place the digits and other
 	buttons that don't change.
 	'''
 
@@ -2555,6 +2680,10 @@ def tkask(s = None):
 		label = "Change der approx",
 		command = change_der_approx_win)
 
+	list_options.add_command(
+		label = "Delete history",
+		command = delete_history)
+
 	options_menu.add_cascade(label = "Options", menu = list_options)
 
 	# list of other things the calculator can do
@@ -2589,9 +2718,9 @@ def main():
 	if "docopt" in sys.modules:
 		args = docopt(__doc__)
 		
-		if args["-c"]:
+		if args["-c"] or args["--commandline"]:
 			use_gui = False
-		if args["-v"]:
+		if args["-v"] or args["--verbose"]:
 			logger.setLevel(logging.DEBUG)
 		start_exp = " ".join(args["EXPRESSION"])
 
