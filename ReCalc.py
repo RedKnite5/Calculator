@@ -172,7 +172,7 @@ functions in Cartesian and polar, and solving equations.
 41) user defined functions
 42) user defined variables
 45) parametric functions
-48) error when you close a polar graphing window early
+48) fix error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
 50) move gamma into one_arg_funcs
 51) make the delete button delete all of multi-letter fuctions other
@@ -285,7 +285,7 @@ graph_colors = ("black", "red", "blue", "green", "orange", "purple")
 illegal_chrs = (
 	"@", "#", "$", "&", "{", "}", "\"", "'", "\\", ";", ":", "<", ">",
 	"?", "~", "`",)
-	
+
 ctx.prec = 17
 
 color_dict = {
@@ -374,6 +374,8 @@ one_arg_funcs = {
 	"floor": (math.floor, ""),
 	"erf": (math.erf, ""),
 	"erfc": (math.erfc, ""),
+	"gamma": (math.gamma, ""),
+	"Γ": (math.gamma, ""),
 }
 
 list_functions = (
@@ -671,8 +673,8 @@ class NumpyGraph(Graph):
 		'''
 
 		super().__init__(
-			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-			wide = 400, high = 400)
+			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+			wide = wide, high = high)
 
 		self.data = np.zeros(
 			(self.high, self.wide, 3),
@@ -763,8 +765,8 @@ class NumpyPolarGraph(NumpyGraph):
 		wide = 400, high = 400):
 
 		super().__init__(
-			xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-			wide = 400, high = 400)
+			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+			wide = wide, high = high)
 
 		self.theta_min = theta_min
 		self.theta_max = theta_max
@@ -2534,7 +2536,8 @@ def tkask(s = None):
 
 	root.title("ReCalc")
 
-	if os.name == "nt":
+	if os.name == "nt" and os.path.isfile(
+		os.path.join(calc_path, "ReCalc_icon.ico")):
 		root.iconbitmap(default = os.path.join(
 			calc_path,
 			"ReCalc_icon.ico"))
@@ -2717,7 +2720,7 @@ def main():
 
 	if "docopt" in sys.modules:
 		args = docopt(__doc__)
-		
+
 		if args["-c"] or args["--commandline"]:
 			use_gui = False
 		if args["-v"] or args["--verbose"]:
