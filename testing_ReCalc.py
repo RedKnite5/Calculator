@@ -825,12 +825,6 @@ class GammaAndFactorial(unittest.TestCase):
 	Test the gamma and factorial functions.
 	'''
 
-	def test_gamma(self):
-		for i in np.arange(1.0, 10.0, .5):
-			with self.subTest(i = i):
-				self.assertAlmostEqual(
-					float(c.gamma("(%s)" % i)), math.gamma(i))
-
 	def test_factorial(self):
 		for i in range(10):
 			with self.subTest(i = i):
@@ -1211,15 +1205,6 @@ class Regex(unittest.TestCase):
 					"%s(pi)" % i,
 					c.regular_expr["trig_comp"])
 
-	def test_gamma_comp(self):
-		'''
-		Test the gamma function regular expression.
-		'''
-
-		self.assertRegex("gamma(3)", c.regular_expr["gamma_comp"])
-		self.assertRegex("Gamma(4)", c.regular_expr["gamma_comp"])
-		self.assertRegex("Γ(3)", c.regular_expr["gamma_comp"])
-
 	def test_log_comp(self):
 		'''
 		Test the logarithm regular expression.
@@ -1530,10 +1515,18 @@ class SimplifyMonoFunction(unittest.TestCase):
 		self.assertEqual(c.simplify("Ln(e)"), "1")
 
 	def test_gamma(self):
+		'''
+		Test gamma function separatly from one_arg_funcs.
+		'''
+
 		self.assertEqual(c.simplify("gamma(6)"), "120")
 		self.assertEqual(c.simplify("Γ(6)"), "120")
 		self.assertEqual(c.simplify("Gamma(5)*.5"), "12")
 		self.assertEqual(c.simplify("2^(Gamma(5)/8)"), "8")
+		for i in np.arange(1.0, 10.0, .5):
+			with self.subTest(i = i):
+				self.assertAlmostEqual(
+					float(c.simplify("gamma(%s)" % i)), math.gamma(i))
 
 	def test_single_argument_functions(self):
 		self.assertAlmostEqual(
@@ -1545,7 +1538,6 @@ class SimplifyMonoFunction(unittest.TestCase):
 		self.assertAlmostEqual(
 			float(c.simplify("4**floor(cos(6))")),
 			1)
-
 
 
 
