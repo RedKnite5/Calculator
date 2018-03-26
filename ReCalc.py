@@ -60,11 +60,11 @@ Inverse Trig Functions:
 
 Hyperbolic Functions:
 >>> simplify("")
-
+''
 
 Inverse Hyperbolic Functions:
 >>> simplify("")
-
+''
 
 Ceiling Function:
 >>> simplify("ceil(5.3)")
@@ -76,7 +76,7 @@ Floor Function:
 
 Gauss Error Function:
 >>> simplify("")
-
+''
 
 Modulus:
 >>> simplify("13 % 5")

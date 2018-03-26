@@ -1,4 +1,12 @@
-#   setup.py
+'''
+The setup file for ReCalc
+
+run:  python setup.py sdist upload -r pypi
+
+setup.py
+
+'''
+
 
 import os
 import pickle
@@ -13,7 +21,7 @@ setup(
 		# "testing_ReCalc.py",
 		# "testing_ReCalc_tkinter.py"
 	# ],
-	
+
 	classifiers = [
 		"Programming Language :: Python :: 3.6",
 		"Environment :: X11 Applications :: Gnome",
@@ -31,14 +39,14 @@ setup(
 		"docopt>=0.6.2",
 		"numpy>=1.14.2",
 	],
-	
+
 	package_data = {
 	"": ["*.ico", "*.txt", "*.py"]
 	},
 	zip_safe = False,
-	
+
 	url = "https://github.com/RedKnite5/ReCalc.git",
-	
+
 	author = "Max Friedman",
 	author_email = "mr.awesome10000@gmail.com",
 	keywords = ["Calculator"]
