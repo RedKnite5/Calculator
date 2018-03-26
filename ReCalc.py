@@ -59,11 +59,11 @@ Inverse Trig Functions:
 '0'
 
 Hyperbolic Functions:
->>> simplify("")
+#>>> simplify("")
 ''
 
 Inverse Hyperbolic Functions:
->>> simplify("")
+#>>> simplify("")
 ''
 
 Ceiling Function:
@@ -75,7 +75,7 @@ Floor Function:
 '11'
 
 Gauss Error Function:
->>> simplify("")
+#>>> simplify("")
 ''
 
 Modulus:
@@ -146,6 +146,7 @@ functions in Cartesian and polar, and solving equations.
 44) on fedora only one enter key is bound in the GUI
 46) log errors
 47) don't stop the program when there is an error
+50) move gamma into one_arg_funcs
 '''
 
 '''  To Do
@@ -174,7 +175,6 @@ functions in Cartesian and polar, and solving equations.
 45) parametric functions
 48) fix error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
-50) move gamma into one_arg_funcs
 51) make the delete button delete all of multi-letter fuctions other
 buttons put there
 52)
@@ -379,7 +379,7 @@ one_arg_funcs = {
 }
 
 list_functions = (
-	*one_arg_funcs.keys(), "mod", "gamma", "Γ", "log", "ln", "average",
+	*one_arg_funcs.keys(), "mod", "log", "ln", "average",
 	"ave", "mean", "median", "mode", "max", "min", "stdev",
 )
 
@@ -446,9 +446,6 @@ regular_expr = dict(
 	# regex for one argument functions
 	trig_comp = compile_ignore_case(
 		"(" + "|".join(one_arg_funcs.keys()) + ")(.+)"),
-
-	# regex for gamma function
-	gamma_comp = compile_ignore_case("(?:gamma|Γ)(.+)"),
 
 	# regex for logarithms
 	log_comp = compile_ignore_case("log(.+)|ln(.+)"),
@@ -878,6 +875,15 @@ def log_end():
 	logger.info("Program is ending.")
 
 register(log_end)
+
+
+def check_if_ascii(s):
+	try:
+		s.encode("ascii")
+		return(True)
+	except UnicodeEncodeError:
+		return(False)
+
 
 def look_for_incorrect_operators(s):
 	'''
@@ -1606,6 +1612,9 @@ def single_argument(func, args):
 	'''
 
 	global degree_mode
+	
+	if check_if_ascii(func):
+		func = func.lower()
 
 	# find the arguments of the function and cut off
 	# everything else
@@ -1665,37 +1674,6 @@ def single_argument(func, args):
 	# tan(sin(π)) ← the last parenthesis when
 	# evaluating sin
 	return(result + proto_inner[1])
-
-
-def gamma(arg):
-	'''
-	Use the gamma function.
-
-	>>> gamma("(4)")
-	'6'
-
-	>>> gamma("(4.6)")
-	'13.381285870932441'
-	'''
-
-	# find the arguments of the function and cut off
-	# everything else
-	# sin(gamma(5)) ← the last parenthesis
-	proto_inner = find_match(arg)
-
-	# evaluating the argument
-	pre_inner = simplify(proto_inner[0])
-	try:
-		inner = float(pre_inner)
-	except ValueError as e:
-		raise CalculatorError(str(e))
-
-	result = math.gamma(inner)
-
-	# add back anything that was cut off when finding the
-	# argument of the inner function
-	# sin(gamma(5)) ← the last parenthesis
-	return(float_to_str(result) + proto_inner[1])
 
 
 def factorial(arg):
@@ -2017,19 +1995,9 @@ def simplify(s):
 
 				result = single_argument(m.group(1), m.group(2))
 
-			elif key in ("gamma_comp", "fact_comp"):
+			elif key == "fact_comp":
 
-				if key == "gamma_comp":
-					result = gamma(m.group(1))
-
-				elif key == "fact_comp":
-					result = factorial(m.group(1))
-
-				else:
-					raise CalculatorError(
-						"How could this possibly "
-						"happen? It just tested if key was "
-						"'gamma_comp' or 'fact_comp'.")
+				result = factorial(m.group(1))
 
 			elif key == "log_comp":
 
