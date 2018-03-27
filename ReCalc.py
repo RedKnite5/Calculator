@@ -144,6 +144,7 @@ functions in Cartesian and polar, and solving equations.
 40) doc strings for all of the tests that need them
 43) save graphs
 44) on fedora only one enter key is bound in the GUI
+45) parametric functions
 46) log errors
 47) don't stop the program when there is an error
 50) move gamma into one_arg_funcs
@@ -173,7 +174,6 @@ functions in Cartesian and polar, and solving equations.
 39) make tests for all parts of the program
 41) user defined functions
 42) user defined variables
-45) parametric functions
 48) fix error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
 51) make the delete button delete all of multi-letter fuctions other
@@ -283,6 +283,7 @@ use_gui = True
 graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
+# unused
 illegal_chrs = (
 	"@", "#", "$", "&", "{", "}", "\"", "'", "\\", ";", ":", "<", ">",
 	"?", "~", "`",)
@@ -979,7 +980,7 @@ def find_y(s):
 
 	return(d)
 
-
+# unused
 def look_for_incorrect_operators(s):
 	'''
 	Check if the input is obviously not a valid expression.
@@ -2475,7 +2476,7 @@ def format_default_screen(menubar):
 	plus, minus, multiply, divide, exponents, factorial, pi, e,
 	parentheses, absolute value pipes, comma, integral, x, the enter
 	key, backspace, and the menu to switch between function sets. Then
-	call switch_trig() to place the trig function buttons.
+	call switch_trig to place the trig function buttons.
 	'''
 
 	# 7 8 9
