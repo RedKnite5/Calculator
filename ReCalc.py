@@ -147,6 +147,7 @@ functions in Cartesian and polar, and solving equations.
 46) log errors
 47) don't stop the program when there is an error
 50) move gamma into one_arg_funcs
+52) allow 'y =' in graphs
 '''
 
 '''  To Do
@@ -177,7 +178,7 @@ functions in Cartesian and polar, and solving equations.
 49) don't let the user pass ln(x) multiple arguments
 51) make the delete button delete all of multi-letter fuctions other
 buttons put there
-52)
+53)
 '''
 
 
@@ -802,7 +803,7 @@ class NumpyPolarGraph(NumpyGraph):
 
 				# check if the graph goes off the screen
 				if y > self.ymax or y < self.ymin or \
-					x > self.xmax or x < self.xmin:
+					x > self.xmax or x < self.xmin and density > 2000:
 					denstiy = 2000
 
 				# adjust coordinate for the
@@ -831,6 +832,79 @@ class NumpyPolarGraph(NumpyGraph):
 				self.root.update()
 			except TclError as e:
 				theta = self.theta_max + 1
+
+
+class NumpyParameticGraph(NumpyGraph):
+	'''
+	A Parametic graphing class.
+	'''
+
+	def __init__(
+		self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		tmin = 0, tmax = 10,
+		wide = 400, high = 400):
+		'''
+		Initialize the graphing object.
+		'''
+
+		super().__init__(
+			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+			wide = wide, high = high)
+
+		self.tmin = tmin
+		self.tmax = tmax
+
+		self.trang = self.tmax - self.tmin
+
+	def draw(self, funcs, color = "black"):
+		'''
+		Draw a parametric function.
+		'''
+
+		global pic
+
+		density = 1000
+		t = self.tmin
+
+		xfunc = funcs["x"]
+		yfunc = funcs["y"]
+		pixel_color = color_dict[color]
+
+		while t < self.tmax:
+
+			# move theta a little
+			t += self.trang / density
+			try:
+				x = float(evaluate(xfunc, str(t), var = "t"))
+				y = float(evaluate(yfunc, str(t), var = "t"))
+
+				# adjust coordinate for the
+				# screen (this is the hard part)
+				a = int(round(
+					(x - self.xmin) * self.wide / self.xrang,
+					0))
+				b = int(round(
+						self.high - (
+							(y - self.ymin) * self.high / self.yrang),
+						0))
+
+				# draw the point
+				if 0 < b and b < self.high and 0 < a and a < self.wide:
+					self.data[b, a] = pixel_color
+				self.image = Image.fromarray(self.data, "RGB")
+				pic = ImageTk.PhotoImage(self.image)
+				self.screen.create_image(
+					self.wide / 2, self.high / 2, image = pic)
+
+			except (ValueError, TclError) as e:
+				pass
+
+			# update the screen
+			try:
+				self.root.update()
+			except TclError as e:
+				theta = self.tmax + 1
 
 
 # multi session variables
@@ -883,6 +957,27 @@ def check_if_ascii(s):
 		return(True)
 	except UnicodeEncodeError:
 		return(False)
+
+
+def find_y(s):
+	'''
+	Find x or y
+	'''
+
+	if polar_mode in ("Cartesian", "polar"):
+		graph_y_comp = re.compile("y ?= ?(.+)")
+		return(re.search(graph_y_comp, s).group(1))
+	elif polar_mode == "parametric":
+		graph_y_comp = re.compile(
+			"y ?= ?(.+) x ?= ?(.+)|x ?= ?(.+) y ?= ?(.+)")
+
+	funcs = re.search(graph_y_comp, s)
+	if funcs.group(1):
+		d = {"y": funcs.group(1), "x": funcs.group(2)}
+	elif funcs.group(3):
+		d = {"x": funcs.group(3), "y": funcs.group(4)}
+
+	return(d)
 
 
 def look_for_incorrect_operators(s):
@@ -992,17 +1087,17 @@ def switch_polar_mode(mode):
 	'''
 	Switch between polar and Cartesian graphing.
 
-	Only accept 'polar', 'Cartesian', True, and False as inputs.
+	Only accept 'polar', 'Cartesian', 'parametric' as inputs.
 	Otherwise raise CalculatorError.
 	'''
 
 	global polar_mode
 
 	if mode == "polar":
-		polar_mode = True
+		polar_mode = mode
 	elif mode == "Cartesian":
-		polar_mode = False
-	elif mode in (True, False):
+		polar_mode = mode
+	elif mode == "parametric":
 		polar_mode = mode
 	else:
 		raise CalculatorError("Can not set polar_mode to '%s'" % mode)
@@ -1306,18 +1401,28 @@ def graph_function(func_arg):
 				min = temp_graph_xmin,
 				max = temp_graph_xmax))
 
+		if any(filter(lambda a: "=" in a, funcs_to_graph)):
+			funcs_to_graph = list(map(find_y, funcs_to_graph))
+
 		# creates graph object
-		if polar_mode is False:
+		if polar_mode == "Cartesian":
 			made_graph = NumpyGraph(
 				xmin = temp_graph_xmin, xmax = temp_graph_xmax,
 				ymin = win_bound["y min"], ymax = win_bound["y max"],
 				wide = graph_w, high = graph_h)
-		else:
+		elif polar_mode == "polar":
 			made_graph = NumpyPolarGraph(
 				xmin = temp_graph_xmin, xmax = temp_graph_xmax,
 				ymin = win_bound["y min"], ymax = win_bound["y max"],
 				theta_min = win_bound["theta min"],
 				theta_max = win_bound["theta max"],
+				wide = graph_w, high = graph_h)
+		elif polar_mode == "parametric":
+			made_graph = NumpyParameticGraph(
+				xmin = temp_graph_xmin, xmax = temp_graph_xmax,
+				ymin = win_bound["y min"], ymax = win_bound["y max"],
+				tmin = win_bound["theta min"],
+				tmax = win_bound["theta max"],
 				wide = graph_w, high = graph_h)
 
 		# works out how many times it needs to
@@ -1612,7 +1717,7 @@ def single_argument(func, args):
 	'''
 
 	global degree_mode
-	
+
 	if check_if_ascii(func):
 		func = func.lower()
 
@@ -2642,6 +2747,10 @@ def tkask(s = None):
 	list_options.add_command(
 		label = "Cartesian Mode",
 		command = lambda: switch_polar_mode("Cartesian"))
+
+	list_options.add_command(
+		label = "Parametic Mode",
+		command = lambda: switch_polar_mode("parametric"))
 
 	list_options.add_command(
 		label = "Change length of history print back",
