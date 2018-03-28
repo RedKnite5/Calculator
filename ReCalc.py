@@ -301,7 +301,7 @@ color_dict = {
 }
 
 key_binds = {
-	"nt": {13: "enter", 38: "up", 40: "down"},
+	"nt": {13: "enter", 38: "up", 40: "down", 8: "backspace"},
 	"posix": {104: "enter", 36: "enter", 111: "up", 116: "down"},
 }
 
@@ -2285,20 +2285,23 @@ def key_pressed(event):
 		key = key_binds[os.name][code]
 	else:
 		key = None
-	# print(code)
+	#print(code)
 
 	if key == "enter":
 		get_input()
 
+	elif key == "backspace":
+		input_backspace()
+
 	# go backwards in the history when the up arrow is pressed
-	if key == "up":
+	elif key == "up":
 		if up_hist < len(history):
 			up_hist += 1
 			input_widget.delete(0, "end")
 			input_widget.insert(0, history[-1 * up_hist])
 
 	# go forwards in the history when the down arrow is pressed
-	if key == "down":
+	elif key == "down":
 		if up_hist > 1:
 			up_hist -= 1
 			input_widget.delete(0, "end")
@@ -2330,6 +2333,8 @@ def input_backspace():
 		input_widget.insert(0, a[:-1])
 	else:
 		input_widget.insert(0, fm.group(1))
+
+	return("break")
 
 
 def get_input(s = None):
