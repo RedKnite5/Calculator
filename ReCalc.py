@@ -1612,7 +1612,7 @@ def single_argument(func, args):
 	'''
 
 	global degree_mode
-	
+
 	if check_if_ascii(func):
 		func = func.lower()
 
