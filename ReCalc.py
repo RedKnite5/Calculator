@@ -148,6 +148,8 @@ functions in Cartesian and polar, and solving equations.
 46) log errors
 47) don't stop the program when there is an error
 50) move gamma into one_arg_funcs
+51) make the delete button delete all of multi-letter fuctions other
+buttons put there
 52) allow 'y =' in graphs
 '''
 
@@ -176,8 +178,6 @@ functions in Cartesian and polar, and solving equations.
 42) user defined variables
 48) fix error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
-51) make the delete button delete all of multi-letter fuctions other
-buttons put there
 53)
 '''
 
@@ -2317,10 +2317,19 @@ def input_backspace():
 
 	global input_widget
 
+	delete_chr_comp = compile_ignore_case(
+		"^(.*?)(" + "\(|".join(list_functions) + ")?$")
+
 	# delete the last character in the input widget
 	a = input_widget.get()
 	input_widget.delete(0, "end")
-	input_widget.insert(0, a[:-1])
+
+	fm = re.search(delete_chr_comp, a)
+
+	if fm.group(2) is None:
+		input_widget.insert(0, a[:-1])
+	else:
+		input_widget.insert(0, fm.group(1))
 
 
 def get_input(s = None):
