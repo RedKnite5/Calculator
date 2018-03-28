@@ -820,7 +820,7 @@ class InverseFunctionsDegreeMode(unittest.TestCase):
 		c.switch_degree_mode(self.mode)
 
 
-class GammaAndFactorial(unittest.TestCase):
+class Factorial(unittest.TestCase):
 	'''
 	Test the gamma and factorial functions.
 	'''
