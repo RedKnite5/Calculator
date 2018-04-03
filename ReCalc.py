@@ -59,12 +59,12 @@ Inverse Trig Functions:
 '0'
 
 Hyperbolic Functions:
-#>>> simplify("")
-''
+>>> simplify("cosh(0)")
+'1'
 
 Inverse Hyperbolic Functions:
-#>>> simplify("")
-''
+>>> simplify("arccosh(1)")
+'0'
 
 Ceiling Function:
 >>> simplify("ceil(5.3)")
@@ -75,8 +75,8 @@ Floor Function:
 '11'
 
 Gauss Error Function:
-#>>> simplify("")
-''
+>>> simplify("erf(0)")
+'0'
 
 Modulus:
 >>> simplify("13 % 5")
@@ -114,9 +114,33 @@ Mean:
 >>> simplify("mean(5, 6, 12, 7)")
 '7.5'
 
-median, mode, sample standard deviation, definite integrals,
-derivatives at a point, evaluating a function at a point, graphing
-functions in Cartesian and polar, and solving equations.
+Median:
+>>> simplify("median(3, 4, 3, 9, 7)")
+'4'
+
+Mode:
+>>> simplify("mode(4, 3, 3 ,4 ,5, 5, 6, 4)")
+'4'
+
+Sample Standard Deviation:
+>>> simplify("stdev(3, 4, 4, 6, 8)")
+'2'
+
+Definite Integrals:
+
+
+Derivatives at a point:
+
+
+
+Evaluating a Function at a Point:
+
+
+Solving Equations:
+
+
+
+and graphing functions in Cartesian and polar.
 '''
 
 
@@ -151,6 +175,7 @@ functions in Cartesian and polar, and solving equations.
 51) make the delete button delete all of multi-letter fuctions other
 buttons put there
 52) allow 'y =' in graphs
+53) put cursor in entry box on startup
 '''
 
 '''  To Do
@@ -178,7 +203,7 @@ buttons put there
 42) user defined variables
 48) fix error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
-53)
+54)
 '''
 
 
@@ -2643,6 +2668,7 @@ def tkask(s = None):
 	# input text widget
 	input_widget = tk.Entry(root, width = 90)
 	input_widget.grid(row = 1, column = 0, columnspan = 12)
+	input_widget.focus()
 
 	# list of basic buttons
 	button_keys = list(range(10)) + [
