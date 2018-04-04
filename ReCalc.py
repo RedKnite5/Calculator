@@ -410,6 +410,8 @@ list_functions = (
 	"ave", "mean", "median", "mode", "max", "min", "stdev",
 )
 
+units = ("meters", "kilometers",)
+
 def compile_ignore_case(pattern):
 	'''
 	Call re.compile with the IGNORECASE flag.
@@ -460,6 +462,9 @@ regular_expr = dict(
 	int_comp = compile_ignore_case(
 		"(?:integra(?:te ?|l ?)|∫)(.+) ?d([a-z])"
 		" (?:from )?" + reg_num + " to " + reg_num),
+
+	conv_comp = compile_ignore_case(
+		"convert (.+?)(?=to)to (" + "|".join(units) + ")"),
 
 	# regex for combinations and permutations
 	# parentheses is to differentiate it from choose notation
@@ -1595,6 +1600,14 @@ def integrate_function(expression, var, a, b):
 		"Could not integrate sympy is not installed.")
 
 
+def convert(start, end_units):
+	'''
+	Convert between different units.
+	'''
+
+	return(start)
+
+
 def combinations_and_permutations(form, letter, n, m = None):
 	'''
 	Solve combinations and permutations.
@@ -2104,14 +2117,16 @@ def simplify(s):
 					m.group(1), m.group(2),
 					m.group(3), m.group(4))
 
-			elif key in ("comb_comp", "choose_comp"):
+			elif key == "conv_comp":
+				print(m.groups())
+				result = convert(m.group(1), m.group(2))
 
-				if key == "comb_comp":
+			elif key == "comb_comp":
 					result = combinations_and_permutations(
 						"func",
 						m.group(1),
 						m.group(2))
-				elif key == "choose_comp":
+			elif key == "choose_comp":
 					result = combinations_and_permutations(
 						"choose",
 						m.group(2),
