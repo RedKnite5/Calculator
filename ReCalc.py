@@ -463,6 +463,7 @@ regular_expr = dict(
 		"(?:integra(?:te ?|l ?)|∫)(.+) ?d([a-z])"
 		" (?:from )?" + reg_num + " to " + reg_num),
 
+	# regex for converting between units
 	# intentianly not using compile_ignore_case so that you can
 	# differentiate between capital and lowercase units
 	conv_comp = re.compile(
