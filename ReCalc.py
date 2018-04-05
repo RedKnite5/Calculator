@@ -467,7 +467,7 @@ regular_expr = dict(
 	# differentiate between capital and lowercase units
 	conv_comp = re.compile(
 		"[Cc][Oo][Nn][Vv][Ee][Rr][Tt] (.+?)(?="
-		+ "|".join(units) + ")(?:" + "|".join(units) + ")[Tt][Oo] ("
+		+ "|".join(units) + ")(" + "|".join(units) + ") ?[Tt][Oo] ("
 		+ "|".join(units) + ")"),
 
 	# regex for combinations and permutations
