@@ -1,5 +1,5 @@
 # calc_experimentation.py
-
+import re
 
 	# intentianly not using compile_ignore_case so that you can
 	# differentiate between capital and lowercase units

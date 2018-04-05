@@ -463,8 +463,12 @@ regular_expr = dict(
 		"(?:integra(?:te ?|l ?)|∫)(.+) ?d([a-z])"
 		" (?:from )?" + reg_num + " to " + reg_num),
 
-	conv_comp = compile_ignore_case(
-		"convert (.+?)(?=to)to (" + "|".join(units) + ")"),
+	# intentianly not using compile_ignore_case so that you can
+	# differentiate between capital and lowercase units
+	conv_comp = re.compile(
+		"[Cc][Oo][Nn][Vv][Ee][Rr][Tt] (.+?)(?="
+		+ "|".join(units) + ")(?:" + "|".join(units) + ")[Tt][Oo] ("
+		+ "|".join(units) + ")"),
 
 	# regex for combinations and permutations
 	# parentheses is to differentiate it from choose notation
