@@ -224,6 +224,7 @@ from atexit import register
 from warnings import warn, simplefilter
 from pickle import load, dump
 from decimal import Context
+from itertools import chain
 
 version = "0.1.12"
 
@@ -413,8 +414,6 @@ list_functions = (
 	"ave", "mean", "median", "mode", "max", "min", "stdev",
 )
 
-units = ("meters", "kilometers",)
-
 def compile_ignore_case(pattern):
 	'''
 	Call re.compile with the IGNORECASE flag.
@@ -422,8 +421,107 @@ def compile_ignore_case(pattern):
 
 	return(re.compile(pattern, flags = re.I))
 
+
+def double_list(l):
+	return([i for s in ((i, i) for i in l) for i in s])
+
+
+def flatten(l):
+	return((i for s in l for i in s))
+
+
+class Unit(object):
+	'''
+	A class that represents different units
+	'''
+
+	base_units = ("meters", "m", "kilograms", "kg", "seconds", "s")
+	
+	distance_units = (
+		"kilometers", "km",
+		"centimeters", "cm",
+		"milimeters", "mm",
+		"inches", "in",
+		"feet", "ft",
+		"yards", "yd",
+		"miles", "mi",)
+	mass_units = (
+		"grams", "g",
+		"pounds", "lbs",
+	)
+	time_units = (
+		"minutes", "min",
+		"hours", "h",
+	)
+
+	multipliers_distance = (
+		0.001, 100, 1000, 39.370078740157, 3.2808398950131,
+		1.0936132983377, 0.00062137119223733,
+	)
+	multipliers_mass = (
+		0.001, 2.2046226218,
+	)
+	multipliers_time = (
+		1/60, 1/3600, 
+	)
+
+	nonbase_units = {
+		"distance": distance_units,
+		"time": time_units,
+		"mass": mass_units
+	}
+	multipliers = {
+		"distance": multipliers_distance,
+		"time": multipliers_time,
+		"mass": multipliers_mass,
+	}
+
+	for i in multipliers:
+		multipliers[i] = double_list(multipliers[i])
+
+	from_base_funcs = {unit: lambda a: a for unit in base_units}
+	for unit, mult in zip(
+		flatten(nonbase_units.values()),
+		flatten(multipliers.values())):
+
+		from_base_funcs.update({unit: lambda a, c = mult: a * c})
+
+	to_base_funcs = {}
+	for unit, mult in zip(
+		flatten(nonbase_units.values()),
+		flatten(multipliers.values())):
+
+		to_base_funcs.update({unit: lambda a, c = mult: a / c})
+
+	def __init__(self, amount, type):
+		self.type = type
+		self.amount = amount
+
+	def __str__(self):
+		return("{a} {u}".format(a = self.amount, u = self.type))
+
+	def convert_to(self, new):
+		'''
+		Change what unit the quantity is expressed as.
+		'''
+
+		if self.type in Unit.base_units:
+			self.amount = Unit.from_base_funcs[new](self.amount)
+		elif new in Unit.base_units:
+			self.amount = Unit.to_base_funcs[self.type](self.amount)
+		else:
+			self.amount = Unit.from_base_funcs[new](
+				Unit.to_base_funcs[self.type](self.amount))
+
+		self.type = new
+		return(self)
+
 # regex for a number
 reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
+
+units = tuple(chain.from_iterable((
+	Unit.base_units,
+	*Unit.nonbase_units.values())))
 
 # regular expressions
 regular_expr = dict(
@@ -534,14 +632,6 @@ regular_expr = dict(
 )
 
 
-def double_list(l):
-	return([i for s in ((i, i) for i in l) for i in s])
-
-
-def flatten(l):
-	return((i for s in l for i in s))
-
-
 class CalculatorError(Exception):
 	pass
 
@@ -618,86 +708,6 @@ class NonRepeatingList(object):
 		'''
 
 		self.items.clear()
-
-
-class Unit(object):
-	'''
-	A class that represents different units
-	'''
-
-	base_units = ("meters", "m", "kilograms", "kg", "seconds", "s")
-	
-	distance_units = (
-		"kilometers", "km",
-		"centimeters", "cm",
-		"milimeters", "mm",
-		"inches", "in",
-		"feet", "ft",
-		"yards", "yd",
-		"miles", "mi",)
-	mass_units = (
-		"grams", "g",
-		"pounds", "lbs",
-	)
-	time_units = (
-		"minutes", "min",
-		"hours", "h",
-	)
-
-	multipliers_distance = (
-		0.001, 100, 1000, 39.370078740157, 3.2808398950131,
-		1.0936132983377, 0.00062137119223733,
-	)
-	multipliers_mass = (
-		0.001, 2.2046226218,
-	)
-	multipliers_time = (
-		1/60, 1/3600, 
-	)
-
-	nonbase_units = {
-		"distance": distance_units,
-		"time": time_units,
-		"mass": mass_units
-	}
-	multipliers = {
-		"distance": multipliers_distance,
-		"time": multipliers_time,
-		"mass": multipliers_mass,
-	}
-
-	for i in multipliers:
-		multipliers[i] = double_list(multipliers[i])
-
-	from_base_funcs = {unit: lambda a: a for unit in base_units}
-	for unit, mult in zip(flatten(nonbase_units.values()), flatten(multipliers.values())):
-		from_base_funcs.update({unit: lambda a, c = mult: a * c})
-	
-	to_base_funcs = {}
-	for unit, mult in zip(flatten(nonbase_units.values()), flatten(multipliers.values())):
-		to_base_funcs.update({unit: lambda a, c = mult: a / c})
-
-	def __init__(self, amount, type):
-		self.type = type
-		self.amount = amount
-
-	def __str__(self):
-		return("{a} {u}".format(a = self.amount, u = self.type))
-
-	def convert_to(self, new):
-		'''
-		Change what unit the quantity is expressed as.
-		'''
-
-		if self.type in Unit.base_units:
-			self.amount = Unit.from_base_funcs[new](self.amount)
-		elif new in Unit.base_units:
-			self.amount = Unit.to_base_funcs[self.type](self.amount)
-		else:
-			self.amount = Unit.from_base_funcs[new](Unit.to_base_funcs[self.type](self.amount))
-
-		self.type = new
-		return(self)
 
 
 class Graph(object):
@@ -1696,12 +1706,14 @@ def integrate_function(expression, var, a, b):
 		"Could not integrate sympy is not installed.")
 
 
-def convert(start, end_units):
+def convert(amount, start, end_units):
 	'''
 	Convert between different units.
 	'''
 
-	return(start)
+	q = Unit(float(simplify(amount)), start)
+	q.convert_to(end_units)
+	return(str(q))
 
 
 def combinations_and_permutations(form, letter, n, m = None):
@@ -2214,8 +2226,7 @@ def simplify(s):
 					m.group(3), m.group(4))
 
 			elif key == "conv_comp":
-				print(m.groups())
-				result = convert(m.group(1), m.group(2))
+				result = convert(m.group(1), m.group(2), m.group(3))
 
 			elif key == "comb_comp":
 					result = combinations_and_permutations(
