@@ -55,11 +55,17 @@ class Unit(object):
 		multipliers[i] = double_list(multipliers[i])
 
 	from_base_funcs = {unit: lambda a: a for unit in base_units}
-	for unit, mult in zip(flatten(nonbase_units.values()), flatten(multipliers.values())):
+	for unit, mult in zip(
+		flatten(nonbase_units.values()),
+		flatten(multipliers.values())):
+
 		from_base_funcs.update({unit: lambda a, c = mult: a * c})
-	
+
 	to_base_funcs = {}
-	for unit, mult in zip(flatten(nonbase_units.values()), flatten(multipliers.values())):
+	for unit, mult in zip(
+		flatten(nonbase_units.values()),
+		flatten(multipliers.values())):
+
 		to_base_funcs.update({unit: lambda a, c = mult: a / c})
 
 	def __init__(self, amount, type):
@@ -75,15 +81,69 @@ class Unit(object):
 		'''
 
 		if self.type in Unit.base_units:
-			self.amount = Unit.from_base_funcs[new](self.amount)
+			new_amount = Unit.from_base_funcs[new](self.amount)
 		elif new in Unit.base_units:
-			self.amount = Unit.to_base_funcs[self.type](self.amount)
+			new_amount = Unit.to_base_funcs[self.type](self.amount)
 		else:
-			self.amount = Unit.from_base_funcs[new](Unit.to_base_funcs[self.type](self.amount))
+			new_amount = Unit.from_base_funcs[new](
+				Unit.to_base_funcs[self.type](self.amount))
 
-		self.type = new
+		return(Unit(new_amount, new))
+
+	def convert_inplace(self, new):
+		q = self.convert_to(new)
+		self.amount = q.amount
+		self.type = q.type
+
+	def __add__(self, other):
+		if isinstance(other, Unit):
+			q = other.convert_to(self.type)
+			q.amount += self.amount
+			return(q)
+		return(Unit(self.amount + other, self.type))
+
+	def __sub__(self, other):
+		if isinstance(other, Unit):
+			q = other.convert_to(self.type)
+			q.amount -= self.amount
+			return(q)
+		return(Unit(self.amount - other, self.type))
+
+	def __radd__(self, other):
+		return(other - self.amount)
+
+	def __rsub__(self, other):
+		return(other - self.amount)
+
+	def __iadd__(self, other):
+		if isinstance(other, Unit):
+			q = other.convert_inplace(self.type)
+			self.amount += other.amount
+			return(self)
+		self.amount += other
 		return(self)
+
+	def __isub__(self, other):
+		if isinstance(other, Unit):
+			q = other.convert_to(self.type)
+			self.amount -= other.amount
+			return(self)
+		self.amount -= other
+		return(self)
+
+	def __int__(self):
+		return(int(self.amount))
+
+	def __float__(self):
+		return(float(self.amount))
+
 
 
 a = Unit(4, "feet")
-print(a.convert_to("inches"))
+print(a + 4)
+a += 2
+a -= 3
+print(a)
+print(5 - a)
+a.convert_inplace("inches")
+print(a)

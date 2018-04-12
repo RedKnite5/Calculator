@@ -506,15 +506,50 @@ class Unit(object):
 		'''
 
 		if self.type in Unit.base_units:
-			self.amount = Unit.from_base_funcs[new](self.amount)
+			new_amount = Unit.from_base_funcs[new](self.amount)
 		elif new in Unit.base_units:
-			self.amount = Unit.to_base_funcs[self.type](self.amount)
+			new_amount = Unit.to_base_funcs[self.type](self.amount)
 		else:
-			self.amount = Unit.from_base_funcs[new](
+			new_amount = Unit.from_base_funcs[new](
 				Unit.to_base_funcs[self.type](self.amount))
 
-		self.type = new
-		return(self)
+		return(Unit(new_amount, new))
+
+	def convert_inplace(self, new):
+		q = self.convert_to(new)
+		self.amount = q.amount
+		self.type = q.type
+
+	def __add__(self, other):
+		q = other.convert_to(self.type)
+		q.amount += self.amount
+		return(q)
+
+	def __sub__(self, other):
+		q = other.convert_to(self.type)
+		q.amount -= self.amount
+		return(q)
+
+	def __radd__(self, other):
+		q = Unit(self.amouunt, self.type)
+		q.amount += other
+		return(q)
+
+	def __rsub__(self, other):
+		q = Unit(self.amouunt, self.type)
+		q.amount -= other
+		return(q)
+
+	def __iadd__(self, other):
+		q = other.convert_inplace(self.type)
+		self.amount += other.amount
+
+	def __isub__(self, other):
+		q = other.convert_to(self.type)
+		self.amount -= other.amount
+
+
+		
 
 # regex for a number
 reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
@@ -1712,7 +1747,7 @@ def convert(amount, start, end_units):
 	'''
 
 	q = Unit(float(simplify(amount)), start)
-	q.convert_to(end_units)
+	q.convert_inplace(end_units)
 	return(str(q))
 
 
