@@ -71,7 +71,12 @@ class Unit(object):
 	A class that represents different quantities
 	'''
 
-	base_units = ("meters", "m", "kilograms", "kg", "seconds", "s")
+	base_units = (
+		"meters", "m",
+		"kilograms", "kg",
+		"seconds", "s",
+		"liter", "l"
+	)
 
 	distance_units = (
 		"kilometers", "km",
@@ -103,6 +108,9 @@ class Unit(object):
 		"millisecond", "ms",
 		"nanosecond", "ns",
 	)
+	volume_units = (
+		"milliliter", "ml",
+	)
 
 	multipliers_distance = (
 		0.001, 100, 1000, 39.370078740157, 3.2808398950131,
@@ -117,17 +125,28 @@ class Unit(object):
 		1 / 60, 1 / 3600, 1 / 86400, 1 / 604800, 1 / 31557600,
 		1000, 1000000000,
 	)
+	multipliers_volume = (
+		1000,
+	)
 
 	nonbase_units = {
 		"distance": distance_units,
 		"time": time_units,
-		"mass": mass_units
+		"mass": mass_units,
+		"volume": volume_units,
 	}
 	multipliers = {
 		"distance": multipliers_distance,
 		"time": multipliers_time,
 		"mass": multipliers_mass,
+		"volume": multipliers_volume,
 	}
+
+	del distance_units, mass_units, time_units
+	del volume_units
+
+	del multipliers_distance, multipliers_mass, multipliers_time
+	del multipliers_volume
 
 	for i in multipliers:
 		multipliers[i] = double_list(multipliers[i])
@@ -220,6 +239,26 @@ class Unit(object):
 	def __round__(self, ndigits = None):
 		return(Unit(round(self.amount, ndigits), self.type))
 
+	def __mul__(self, other):
+		if isinstance(other, Unit):
+			return(NotImplemented)
+		return(Unit(self.amount * other, self.type))
+
+	def __truediv__(self, other):
+		if isinstance(other, Unit):
+			return(NotImplemented)
+		return(Unit(self.amount / other, self.type))
+
+	def __floordiv__(self, other):
+		if isinstance(other, Unit):
+			return(NotImplemented)
+		return(Unit(self.amount // other, self.type))
+
+	def __rmul__(self, other):
+		if isinstance(other, Unit):
+			return(NotImplemented)
+		return(Unit(self.amount * other, self.type))
+	
 
 class NonRepeatingList(object):
 	'''

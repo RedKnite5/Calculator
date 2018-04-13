@@ -128,7 +128,8 @@ Sample Standard Deviation:
 '2'
 
 Definite Integrals:
-
+>>> simplify("integral x*2 dx from 0 to 4")
+'16'
 
 Derivatives at a point:
 
