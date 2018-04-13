@@ -5,6 +5,7 @@ Classes and functions for ReCalc
 '''
 
 import re
+from decimal import Context
 
 # import tkinter if installed
 try:
@@ -17,7 +18,7 @@ except ModuleNotFoundError:
 
 
 __all__ = ["Unit", "compile_ignore_case", "CalculatorError",
-	"NonRepeatingList", "Graph", "check_if_ascii",
+	"NonRepeatingList", "Graph", "check_if_ascii", "float_to_str",
 	]
 
 def double_list(l):
@@ -26,6 +27,8 @@ def double_list(l):
 def flatten(l):
 	return((i for s in l for i in s))
 
+ctx = Context()
+ctx.prec = 17
 
 def compile_ignore_case(pattern):
 	'''
@@ -43,13 +46,29 @@ def check_if_ascii(s):
 		return(False)
 
 
+def float_to_str(f):
+	'''
+	Convert the given float to a string,
+	without resorting to scientific notation.
+
+	>>> float_to_str(3.0030)
+	'3.003'
+	'''
+
+	d1 = ctx.create_decimal(repr(float(f)))
+	string = format(d1, "f")
+	if string[-2:] == ".0":
+		return string[:-2]
+	return string
+
+
 class CalculatorError(Exception):
 	pass
 
 
 class Unit(object):
 	'''
-	A class that represents different units
+	A class that represents different quantities
 	'''
 
 	base_units = ("meters", "m", "kilograms", "kg", "seconds", "s")
@@ -71,7 +90,7 @@ class Unit(object):
 		"pounds", "lbs",
 		"milligrams", "mg",
 		"ounces", "oz",
-		"tons", "ton",
+		"tons", "tons",
 		"micrograms", "µg",
 		"tonnes", "t",
 	)
@@ -129,7 +148,10 @@ class Unit(object):
 
 	def __init__(self, amount, type):
 		self.type = type
-		self.amount = amount
+		self.amount = float(amount)
+
+	def __repr__(self):
+		return("Unit({a} {u})".format(a = self.amount, u = self.type))
 
 	def __str__(self):
 		return("{a} {u}".format(a = self.amount, u = self.type))

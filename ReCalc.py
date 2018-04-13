@@ -225,7 +225,6 @@ import re
 from atexit import register
 from warnings import warn, simplefilter
 from pickle import load, dump
-from decimal import Context
 from itertools import chain
 
 version = "0.1.12"
@@ -311,7 +310,6 @@ from ReCalc_objects import *
 logger.info("operating system: %s", os.name)
 
 up_hist = 0
-ctx = Context()
 
 # changeable variables
 use_gui = True
@@ -319,7 +317,7 @@ graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
 
-ctx.prec = 17
+
 
 key_binds = {
 	"nt": {13: "enter", 38: "up", 40: "down", 8: "backspace"},
@@ -829,22 +827,6 @@ def find_y(s):
 		d = {"x": funcs.group(3), "y": funcs.group(4)}
 
 	return(d)
-
-
-def float_to_str(f):
-	'''
-	Convert the given float to a string,
-	without resorting to scientific notation.
-
-	>>> float_to_str(3.0030)
-	'3.003'
-	'''
-
-	d1 = ctx.create_decimal(repr(float(f)))
-	string = format(d1, "f")
-	if string[-2:] == ".0":
-		return string[:-2]
-	return string
 
 
 def check_if_float(x):
@@ -2114,7 +2096,8 @@ def key_pressed(event):
 	'''
 	Handle keys pressed in the GUI.
 
-	Used keys are the up arrow, down arrow, and the enter key.
+	Used keys are the up arrow, down arrow, the enter key, and
+	backspace.
 	'''
 
 	global up_hist
@@ -2134,7 +2117,9 @@ def key_pressed(event):
 		get_input()
 
 	elif key == "backspace":
-		input_backspace()
+		out = input_backspace()
+		if out is not None:
+			return(out)
 
 	# go backwards in the history when the up arrow is pressed
 	elif key == "up":
@@ -2168,12 +2153,15 @@ def input_backspace():
 
 	# delete the last character in the input widget
 	a = input_widget.get()
+	cursor_pos = input_widget.index("insert")
+
 	input_widget.delete(0, "end")
 
 	fm = re.search(delete_chr_comp, a)
 
+	print(a)
 	if fm.group(2) is None:
-		input_widget.insert(0, a[:-1])
+		input_widget.insert(0, a[:])
 	else:
 		input_widget.insert(0, fm.group(1))
 
