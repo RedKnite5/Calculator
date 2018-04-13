@@ -1,9 +1,5 @@
 # calc_experimentation.py
 
-def double_list(l):
-	return([i for s in ((i, i) for i in l) for i in s])
-def flatten(l):
-	return((i for s in l for i in s))
 
 class Unit(object):
 	'''
@@ -51,6 +47,12 @@ class Unit(object):
 		"mass": multipliers_mass,
 	}
 
+	def double_list(l):
+		return([i for s in ((i, i) for i in l) for i in s])
+
+	def flatten(l):
+		return((i for s in l for i in s))
+
 	for i in multipliers:
 		multipliers[i] = double_list(multipliers[i])
 
@@ -67,6 +69,9 @@ class Unit(object):
 		flatten(multipliers.values())):
 
 		to_base_funcs.update({unit: lambda a, c = mult: a / c})
+
+	del double_list
+	del flatten
 
 	def __init__(self, amount, type):
 		self.type = type
@@ -95,6 +100,15 @@ class Unit(object):
 		self.amount = q.amount
 		self.type = q.type
 
+	def __floor__(self):
+		return(Unit(floor(self.amount), self.type))
+
+	def __ceil__(self):
+		return(Unit(ceil(self.amount), self.type))
+
+	def __trunc__(self):
+		return(trunc(self.amount))
+
 	def __add__(self, other):
 		if isinstance(other, Unit):
 			q = other.convert_to(self.type)
@@ -105,7 +119,7 @@ class Unit(object):
 	def __sub__(self, other):
 		if isinstance(other, Unit):
 			q = other.convert_to(self.type)
-			q.amount -= self.amount
+			q.amount = self.amount - q.amount
 			return(q)
 		return(Unit(self.amount - other, self.type))
 
@@ -115,35 +129,34 @@ class Unit(object):
 	def __rsub__(self, other):
 		return(other - self.amount)
 
-	def __iadd__(self, other):
-		if isinstance(other, Unit):
-			q = other.convert_inplace(self.type)
-			self.amount += other.amount
-			return(self)
-		self.amount += other
-		return(self)
-
-	def __isub__(self, other):
-		if isinstance(other, Unit):
-			q = other.convert_to(self.type)
-			self.amount -= other.amount
-			return(self)
-		self.amount -= other
-		return(self)
-
-	def __int__(self):
-		return(int(self.amount))
-
 	def __float__(self):
 		return(float(self.amount))
 
+	def __neg__(self):
+		return(Unit(-self.amount, self.type))
+
+	def __pos__(self):
+		return(Unit(self.amount, self.type))
+
+	def __abs__(self):
+		return(Unit(abs(self.amount), self.type))
+
+	def __round__(self, ndigits = None):
+		return(Unit(round(self.amount, ndigits), self.type))
 
 
-a = Unit(4, "feet")
+	
+
+
+a = Unit(4, "meters")
 print(a + 4)
 a += 2
 a -= 3
 print(a)
 print(5 - a)
-a.convert_inplace("inches")
+a.convert_inplace("cm")
 print(a)
+b = Unit(1500, "mm")
+print(a + b)
+print(a - b)
+print(a * 2)

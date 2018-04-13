@@ -422,14 +422,6 @@ def compile_ignore_case(pattern):
 	return(re.compile(pattern, flags = re.I))
 
 
-def double_list(l):
-	return([i for s in ((i, i) for i in l) for i in s])
-
-
-def flatten(l):
-	return((i for s in l for i in s))
-
-
 class Unit(object):
 	'''
 	A class that represents different units
@@ -476,6 +468,12 @@ class Unit(object):
 		"mass": multipliers_mass,
 	}
 
+	def double_list(l):
+		return([i for s in ((i, i) for i in l) for i in s])
+
+	def flatten(l):
+		return((i for s in l for i in s))
+
 	for i in multipliers:
 		multipliers[i] = double_list(multipliers[i])
 
@@ -492,6 +490,9 @@ class Unit(object):
 		flatten(multipliers.values())):
 
 		to_base_funcs.update({unit: lambda a, c = mult: a / c})
+
+	del double_list
+	del flatten
 
 	def __init__(self, amount, type):
 		self.type = type
@@ -521,35 +522,40 @@ class Unit(object):
 		self.type = q.type
 
 	def __add__(self, other):
-		q = other.convert_to(self.type)
-		q.amount += self.amount
-		return(q)
+		if isinstance(other, Unit):
+			q = other.convert_to(self.type)
+			q.amount += self.amount
+			return(q)
+		return(Unit(self.amount + other, self.type))
 
 	def __sub__(self, other):
-		q = other.convert_to(self.type)
-		q.amount -= self.amount
-		return(q)
+		if isinstance(other, Unit):
+			q = other.convert_to(self.type)
+			q.amount = self.amount - q.amount
+			return(q)
+		return(Unit(self.amount - other, self.type))
 
 	def __radd__(self, other):
-		q = Unit(self.amouunt, self.type)
-		q.amount += other
-		return(q)
+		return(other - self.amount)
 
 	def __rsub__(self, other):
-		q = Unit(self.amouunt, self.type)
-		q.amount -= other
-		return(q)
+		return(other - self.amount)
 
-	def __iadd__(self, other):
-		q = other.convert_inplace(self.type)
-		self.amount += other.amount
+	def __trunc__(self):
+		return(trunc(self.amount))
 
-	def __isub__(self, other):
-		q = other.convert_to(self.type)
-		self.amount -= other.amount
+	def __float__(self):
+		return(float(self.amount))
 
+	def __neg__(self):
+		return(Unit(-self.amount, self.type))
 
-		
+	def __pos__(self):
+		return(Unit(self.amount, self.type))
+
+	def __abs__(self):
+		return(Unit(abs(self.amount), self.type))
+
 
 # regex for a number
 reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
