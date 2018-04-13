@@ -204,7 +204,9 @@ buttons put there
 42) user defined variables
 48) fix error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
-54)
+54) error handling for passing graph functions incorrectly
+55) don't move cursor to end of line when backspace is hit
+56)
 '''
 
 
@@ -318,16 +320,6 @@ graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
 
 ctx.prec = 17
-
-color_dict = {
-	"black": (0, 0, 0),
-	"red": (255, 0, 0),
-	"green": (0, 128, 0),
-	"blue": (0, 0, 255),
-	"orange": (255, 165, 0),
-	"purple": (128, 0, 128),
-	"magenta": (255, 0, 255),
-}
 
 key_binds = {
 	"nt": {13: "enter", 38: "up", 40: "down", 8: "backspace"},
@@ -531,6 +523,92 @@ regular_expr = dict(
 )
 
 
+class NumpyGraph(Graph):
+	'''
+	Cartesian Graphing window class using numpy and PIL.
+	'''
+
+	def __init__(
+		self,
+		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
+		wide = 400, high = 400):
+		'''
+		Initialize the graphing window.
+		'''
+
+		super().__init__(
+			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+			wide = wide, high = high)
+
+		self.data = np.zeros(
+			(self.high, self.wide, 3),
+			dtype = np.uint8)
+		self.data.fill(255)
+
+		# create the image
+		self.pic = ImageTk.PhotoImage(
+			Image.fromarray(self.data, "RGB"))
+		self.screen.create_image(
+			self.wide / 2, self.high / 2, image = self.pic)
+
+		# draws the axes
+		self.axes()
+
+	# draw the axes
+	def axes(self):
+		'''
+		Draw the axis.
+		'''
+
+		# adjusted y coordinate of x-axis
+		b = self.high + (self.ymin * self.high / self.yrang)
+
+		# adjusted x coordinate of y-axis
+		a = -1 * self.xmin * self.wide / self.xrang
+
+		try:
+			self.data[int(round(b, 0)), :, :] = 0
+		except IndexError:
+			pass
+		try:
+			self.data[:, int(round(a, 0)), :] = 0
+		except IndexError:
+			pass
+
+		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
+		self.screen.create_image(
+			self.wide / 2, self.high / 2, image = self.pic)
+
+		try:
+			self.root.update()
+		except TclError:
+			pass
+
+	def draw(self, func, color = "black"):
+		'''
+		Draw a Cartesian function.
+		'''
+
+		pixel_color = Graph.color_dict[color]
+
+		for i in range(self.data.shape[1]):
+
+			x = i * self.xrang / self.wide + self.xmin
+			y = float(evaluate(func, str(x)))
+			a = int(round((x - self.xmin) * self.wide / self.xrang, 0))
+			b = int(round(
+				self.high - (y - self.ymin) * self.high / self.yrang,
+				0))
+
+			if 0 < b and b < self.high:
+				self.data[b, i] = pixel_color
+
+			self.image = Image.fromarray(self.data, "RGB")
+			self.pic = ImageTk.PhotoImage(self.image)
+			self.screen.create_image(
+				self.wide / 2, self.high / 2, image = self.pic)
+
+			self.root.update()
 
 
 class NumpyPolarGraph(NumpyGraph):
@@ -558,12 +636,10 @@ class NumpyPolarGraph(NumpyGraph):
 		Draw a polar function with numpy.
 		'''
 
-		global pic
-
 		density = 1000
 		theta = self.theta_min
 
-		pixel_color = color_dict[color]
+		pixel_color = Graph.color_dict[color]
 
 		while theta < self.theta_max:
 
@@ -602,9 +678,9 @@ class NumpyPolarGraph(NumpyGraph):
 				if 0 < b and b < self.high and 0 < a and a < self.wide:
 					self.data[b, a] = pixel_color
 				self.image = Image.fromarray(self.data, "RGB")
-				pic = ImageTk.PhotoImage(self.image)
+				self.pic = ImageTk.PhotoImage(self.image)
 				self.screen.create_image(
-					self.wide / 2, self.high / 2, image = pic)
+					self.wide / 2, self.high / 2, image = self.pic)
 
 			except (ValueError, TclError) as e:
 				pass
@@ -644,14 +720,15 @@ class NumpyParameticGraph(NumpyGraph):
 		Draw a parametric function.
 		'''
 
-		global pic
-
 		density = 1000
 		t = self.tmin
 
+		
 		xfunc = funcs["x"]
 		yfunc = funcs["y"]
-		pixel_color = color_dict[color]
+		
+
+		pixel_color = Graph.color_dict[color]
 
 		while t < self.tmax:
 
@@ -675,9 +752,9 @@ class NumpyParameticGraph(NumpyGraph):
 				if 0 < b and b < self.high and 0 < a and a < self.wide:
 					self.data[b, a] = pixel_color
 				self.image = Image.fromarray(self.data, "RGB")
-				pic = ImageTk.PhotoImage(self.image)
+				self.pic = ImageTk.PhotoImage(self.image)
 				self.screen.create_image(
-					self.wide / 2, self.high / 2, image = pic)
+					self.wide / 2, self.high / 2, image = self.pic)
 
 			except (ValueError, TclError) as e:
 				pass

@@ -6,6 +6,7 @@ Classes and functions for ReCalc
 
 import re
 
+# import tkinter if installed
 try:
 	import tkinter as tk
 	from tkinter import filedialog
@@ -14,8 +15,9 @@ try:
 except ModuleNotFoundError:
 	pass
 
+
 __all__ = ["Unit", "compile_ignore_case", "CalculatorError",
-	"NonRepeatingList", "Graph", "NumpyGraph"]
+	"NonRepeatingList", "Graph",]
 
 def double_list(l):
 	return([i for s in ((i, i) for i in l) for i in s])
@@ -267,6 +269,16 @@ class Graph(object):
 	Base class for all graphs.
 	'''
 
+	color_dict = {
+		"black": (0, 0, 0),
+		"red": (255, 0, 0),
+		"green": (0, 128, 0),
+		"blue": (0, 0, 255),
+		"orange": (255, 165, 0),
+		"purple": (128, 0, 128),
+		"magenta": (255, 0, 255),
+	}
+
 	def __init__(
 		self,
 		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
@@ -344,97 +356,3 @@ class Graph(object):
 		fout = filedialog.asksaveasfile()
 		self.image.save(fout)
 		print("Saved")
-
-
-class NumpyGraph(Graph):
-	'''
-	Cartesian Graphing window class using numpy and PIL.
-	'''
-
-	def __init__(
-		self,
-		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-		wide = 400, high = 400):
-		'''
-		Initialize the graphing window.
-		'''
-
-		super().__init__(
-			xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
-			wide = wide, high = high)
-
-		self.data = np.zeros(
-			(self.high, self.wide, 3),
-			dtype = np.uint8)
-		self.data.fill(255)
-
-		global pic
-
-		# create the image
-		pic = ImageTk.PhotoImage(
-			Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = pic)
-
-		# draws the axes
-		self.axes()
-
-	# draw the axes
-	def axes(self):
-		'''
-		Draw the axis.
-		'''
-
-		global pic
-
-		# adjusted y coordinate of x-axis
-		b = self.high + (self.ymin * self.high / self.yrang)
-
-		# adjusted x coordinate of y-axis
-		a = -1 * self.xmin * self.wide / self.xrang
-
-		try:
-			self.data[int(round(b, 0)), :, :] = 0
-		except IndexError:
-			pass
-		try:
-			self.data[:, int(round(a, 0)), :] = 0
-		except IndexError:
-			pass
-
-		pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
-		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = pic)
-
-		try:
-			self.root.update()
-		except TclError:
-			pass
-
-	def draw(self, func, color = "black"):
-		'''
-		Draw a Cartesian function.
-		'''
-
-		global pic
-
-		pixel_color = color_dict[color]
-
-		for i in range(self.data.shape[1]):
-
-			x = i * self.xrang / self.wide + self.xmin
-			y = float(evaluate(func, str(x)))
-			a = int(round((x - self.xmin) * self.wide / self.xrang, 0))
-			b = int(round(
-				self.high - (y - self.ymin) * self.high / self.yrang,
-				0))
-
-			if 0 < b and b < self.high:
-				self.data[b, i] = pixel_color
-
-			self.image = Image.fromarray(self.data, "RGB")
-			pic = ImageTk.PhotoImage(self.image)
-			self.screen.create_image(
-				self.wide / 2, self.high / 2, image = pic)
-
-			self.root.update()
