@@ -14,63 +14,6 @@ import string
 
 import numpy as np
 
-
-class NonRepeatingList(object):
-	'''
-	A mutable list that doesn't have two of the same element in a row.
-
-	>>> repr(NonRepeatingList(3, 3, 4))
-	'NonRepeatingList(3, 4)'
-	'''
-
-	def __init__(self, *args):
-		if len(args) > 0:
-			self.items = [args[0]]
-			for i in args:
-				if i != self.items[-1]:
-					self.items.append(i)
-		else:
-			self.items = []
-
-	def __getitem__(self, index):
-		return(self.items[index])
-
-	def __delitem__(self, index):
-		del self.items[index]
-		if index != 0:
-			if self.items[index] == self.items[index - 1]:
-				del self.items[index]
-
-	def __contains__(self, item):
-		return(item in self.items)
-
-	def __len__(self):
-		return(len(self.items))
-
-	def __repr__(self):
-		return("NonRepeatingList(" + repr(self.items)[1:-1] + ")")
-
-	def __str__(self):
-		return(str(self.items))
-
-	def __eq__(self, other):
-		if isinstance(other, NonRepeatingList):
-			if self.items == other.items:
-				return(True)
-		return(False)
-
-	def append(self, *args):
-		for item in args:
-			if len(self.items) > 0:
-				if self.items[-1] != item:
-					self.items.append(item)
-			else:
-				self.items.append(item)
-
-	def clear(self):
-		self.items.clear()
-
-
 import ReCalc as c
 
 
@@ -225,23 +168,13 @@ class SwitchPolarCartesian(unittest.TestCase):
 
 	def test_set_polar(self):
 		c.switch_polar_mode("polar")
-		self.assertEqual(c.polar_mode, True)
-		self.assertEqual(c.calc_info["polar_mode"], True)
+		self.assertEqual(c.polar_mode, "polar")
+		self.assertEqual(c.calc_info["polar_mode"], "polar")
 
 	def test_set_cartesian(self):
 		c.switch_polar_mode("Cartesian")
-		self.assertEqual(c.polar_mode, False)
-		self.assertEqual(c.calc_info["polar_mode"], False)
-
-	def test_set_polar_boolean(self):
-		c.switch_polar_mode(True)
-		self.assertEqual(c.polar_mode, True)
-		self.assertEqual(c.calc_info["polar_mode"], True)
-
-	def test_set_cartesian_boolean(self):
-		c.switch_polar_mode(False)
-		self.assertEqual(c.polar_mode, False)
-		self.assertEqual(c.calc_info["polar_mode"], False)
+		self.assertEqual(c.polar_mode, "Cartesian")
+		self.assertEqual(c.calc_info["polar_mode"], "Cartesian")
 
 	def test_set_not_option(self):
 		with self.assertRaises(c.CalculatorError):
