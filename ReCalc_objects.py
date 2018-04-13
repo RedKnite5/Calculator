@@ -17,15 +17,42 @@ except ModuleNotFoundError:
 	pass
 
 
-__all__ = ["Unit", "compile_ignore_case", "CalculatorError",
+__all__ = [
+	"Unit", "compile_ignore_case", "CalculatorError",
 	"NonRepeatingList", "Graph", "check_if_ascii", "float_to_str",
-	]
+	"check_if_float", "find_match", "separate",
+]
 
 def double_list(l):
 	return([i for s in ((i, i) for i in l) for i in s])
 
 def flatten(l):
 	return((i for s in l for i in s))
+
+def brackets(s):
+	'''
+	Return True if the parentheses match, False otherwise.
+
+	>>> brackets("())")
+	False
+
+	>>> brackets("(()())")
+	True
+
+	>>> brackets("w(h)(a()t)")
+	True
+	'''
+
+	x = 0
+	for i in s:
+		if i == "(":
+			x += 1
+		elif i == ")":
+			x -= 1
+		if x < 0:
+			return(False)
+	return(not x)
+
 
 ctx = Context()
 ctx.prec = 17
@@ -60,6 +87,98 @@ def float_to_str(f):
 	if string[-2:] == ".0":
 		return string[:-2]
 	return string
+
+
+def check_if_float(x):
+	'''
+	Test if a object can be made a float.
+
+	>>> check_if_float("4.5")
+	True
+
+	>>> check_if_float("this")
+	False
+	'''
+
+	try:
+		float(x)
+		return(True)
+	except (ValueError, TypeError):
+		return(False)
+
+
+def find_match(s):
+	'''
+	Split a string into two parts. The first part contains the
+	string until the first time parentheses are completely matched. The
+	second part contains the rest of the string.
+
+	>>> find_match("(4, (5), 3) + 2")
+	('(4, (5), 3)', ' + 2')
+	'''
+
+	x = 0
+	if not s.startswith("("):
+		raise CalculatorError(
+			"Error '%s' is an invalid input, must start with '('" % s)
+
+	for i in range(len(s)):
+
+		# count the parentheses
+		if s[i] == "(":
+			x += 1
+		elif s[i] == ")":
+			x -= 1
+
+		if x == 0:
+
+			# left is all the excess characters after
+			# the matched parentheses
+			# an is the matched parentheses and everything in them
+			an = s[:i+1]
+			left = s[i+1:]
+
+			break
+
+		elif x < 0:
+			raise CalculatorError(
+				"'%s' is an invalid input. Parentheses do "
+				"not match." % s)
+
+	try:
+		return(an, left)
+	except UnboundLocalError:
+		raise CalculatorError(
+			"'%s' is an invalid input to find_match." % s)
+
+
+def separate(s):
+	'''
+	Split up arguments of a function with commas
+	like mod(x, y) or log(x, y) based on where commas that aren't in
+	parentheses.
+
+	>>> separate("5, 6 , (4, 7)")
+	('5', ' 6 ', ' (4, 7)')
+	'''
+
+	terms = s.split(",")
+
+	new_terms = []
+	middle = False
+	term = ""
+	for i in terms:
+		if middle:
+			term = term + "," + i
+		else:
+			term = i
+		x = brackets(term)
+		if x:
+			new_terms.append(term)
+			middle = False
+		else:
+			middle = True
+	return(tuple(new_terms))
 
 
 class CalculatorError(Exception):

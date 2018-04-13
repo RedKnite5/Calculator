@@ -15,6 +15,7 @@ import string
 import numpy as np
 
 import ReCalc as c
+from ReCalc_objects import brackets
 
 
 class TestCheckIfFloat(unittest.TestCase):
@@ -212,17 +213,17 @@ class BracketsFunction(unittest.TestCase):
 	'''
 
 	def test_matched_brackets(self):
-		self.assertTrue(c.brackets(""))
-		self.assertTrue(c.brackets("()"))
-		self.assertTrue(c.brackets("(())"))
-		self.assertTrue(c.brackets("(()())"))
-		self.assertTrue(c.brackets("((word)(other)word)"))
+		self.assertTrue(brackets(""))
+		self.assertTrue(brackets("()"))
+		self.assertTrue(brackets("(())"))
+		self.assertTrue(brackets("(()())"))
+		self.assertTrue(brackets("((word)(other)word)"))
 
 	def test_unmatched_brackets(self):
-		self.assertFalse(c.brackets("("))
-		self.assertFalse(c.brackets(")"))
-		self.assertFalse(c.brackets(")("))
-		self.assertFalse(c.brackets("(()words"))
+		self.assertFalse(brackets("("))
+		self.assertFalse(brackets(")"))
+		self.assertFalse(brackets(")("))
+		self.assertFalse(brackets("(()words"))
 
 
 class Separate(unittest.TestCase):
