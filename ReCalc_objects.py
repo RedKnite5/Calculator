@@ -17,7 +17,8 @@ except ModuleNotFoundError:
 
 
 __all__ = ["Unit", "compile_ignore_case", "CalculatorError",
-	"NonRepeatingList", "Graph",]
+	"NonRepeatingList", "Graph", "check_if_ascii",
+	]
 
 def double_list(l):
 	return([i for s in ((i, i) for i in l) for i in s])
@@ -32,6 +33,14 @@ def compile_ignore_case(pattern):
 	'''
 
 	return(re.compile(pattern, flags = re.I))
+
+
+def check_if_ascii(s):
+	try:
+		s.encode("ascii")
+		return(True)
+	except UnicodeEncodeError:
+		return(False)
 
 
 class CalculatorError(Exception):

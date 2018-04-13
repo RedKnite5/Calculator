@@ -810,14 +810,6 @@ def log_end():
 register(log_end)
 
 
-def check_if_ascii(s):
-	try:
-		s.encode("ascii")
-		return(True)
-	except UnicodeEncodeError:
-		return(False)
-
-
 def find_y(s):
 	'''
 	Find x or y
