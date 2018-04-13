@@ -15,7 +15,7 @@ Usage:
 	ReCalc [-vc] [EXPRESSION ...]
 	ReCalc [EXPRESSION ...]
 	ReCalc [-vc]
-	ReCalc [--verbose --commandline]
+	ReCalc [--verbose --commandline --version]
 
 Arguments:
 	EXPRESSION    optional expression to start with
@@ -23,6 +23,7 @@ Arguments:
 Options:
 	-v, --verbose      verbose logging
 	-c, --commandline  use the command line interface
+	--version          give the version of ReCalc
 
 It can do:
 
@@ -203,7 +204,9 @@ buttons put there
 42) user defined variables
 48) fix error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
-54)
+54) error handling for passing graph functions incorrectly
+55) don't move cursor to end of line when backspace is hit
+56)
 '''
 
 
@@ -223,6 +226,9 @@ from atexit import register
 from warnings import warn, simplefilter
 from pickle import load, dump
 from decimal import Context
+from itertools import chain
+
+version = "0.1.12"
 
 logger = logging.getLogger("ReCalc_logger")
 logger.setLevel(logging.DEBUG)
@@ -298,6 +304,10 @@ except ModuleNotFoundError:
 		"work.",
 		category = ImportWarning)
 
+
+from ReCalc_objects import *
+
+
 logger.info("operating system: %s", os.name)
 
 up_hist = 0
@@ -308,22 +318,8 @@ use_gui = True
 graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
-# unused
-illegal_chrs = (
-	"@", "#", "$", "&", "{", "}", "\"", "'", "\\", ";", ":", "<", ">",
-	"?", "~", "`",)
 
 ctx.prec = 17
-
-color_dict = {
-	"black": (0, 0, 0),
-	"red": (255, 0, 0),
-	"green": (0, 128, 0),
-	"blue": (0, 0, 255),
-	"orange": (255, 165, 0),
-	"purple": (128, 0, 128),
-	"magenta": (255, 0, 255),
-}
 
 key_binds = {
 	"nt": {13: "enter", 38: "up", 40: "down", 8: "backspace"},
@@ -410,17 +406,13 @@ list_functions = (
 	"ave", "mean", "median", "mode", "max", "min", "stdev",
 )
 
-units = ("meters", "kilometers",)
-
-def compile_ignore_case(pattern):
-	'''
-	Call re.compile with the IGNORECASE flag.
-	'''
-
-	return(re.compile(pattern, flags = re.I))
 
 # regex for a number
 reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
+
+units = tuple(chain.from_iterable((
+	Unit.base_units,
+	*Unit.nonbase_units.values())))
 
 # regular expressions
 regular_expr = dict(
@@ -463,8 +455,13 @@ regular_expr = dict(
 		"(?:integra(?:te ?|l ?)|∫)(.+) ?d([a-z])"
 		" (?:from )?" + reg_num + " to " + reg_num),
 
-	conv_comp = compile_ignore_case(
-		"convert (.+?)(?=to)to (" + "|".join(units) + ")"),
+	# regex for converting between units
+	# intentianly not using compile_ignore_case so that you can
+	# differentiate between capital and lowercase units
+	conv_comp = re.compile(
+		"[Cc][Oo][Nn][Vv][Ee][Rr][Tt] (.+?)(?="
+		+ "|".join(units) + ")(" + "|".join(units) + ") ?[Tt][Oo] ("
+		+ "|".join(units) + ")"),
 
 	# regex for combinations and permutations
 	# parentheses is to differentiate it from choose notation
@@ -526,168 +523,6 @@ regular_expr = dict(
 )
 
 
-class CalculatorError(Exception):
-	pass
-
-
-class NonRepeatingList(object):
-	'''
-	A mutable list that doesn't have two of the same element in a row.
-
-	>>> repr(NonRepeatingList(3, 3, 4))
-	'NonRepeatingList(3, 4)'
-	'''
-
-	def __init__(self, *args):
-		if len(args) > 0:
-			self.items = [args[0]]
-			for i in args:
-				if i != self.items[-1]:
-					self.items.append(i)
-		else:
-			self.items = []
-
-	def __getitem__(self, index):
-		return(self.items[index])
-
-	def __delitem__(self, index):
-		'''
-		Delete the item in the given index. If that puts two equal
-		items adjacent delete the for recent one.
-		'''
-
-		del self.items[index]
-		if index != 0:
-			if self.items[index] == self.items[index - 1]:
-				del self.items[index]
-
-	def __contains__(self, item):
-		'''
-		Check if an item is in the NonRepeatingList.
-		'''
-
-		return(item in self.items)
-
-	def __len__(self):
-		return(len(self.items))
-
-	def __repr__(self):
-		return("NonRepeatingList(" + repr(self.items)[1:-1] + ")")
-
-	def __str__(self):
-		return(str(self.items))
-
-	def __eq__(self, other):
-		if isinstance(other, NonRepeatingList):
-			if self.items == other.items:
-				return(True)
-		return(False)
-
-	def append(self, *args):
-		'''
-		Add all arguments to the list if one is not the equal to the
-		previous item.
-		'''
-
-		for item in args:
-			if len(self.items) > 0:
-				if self.items[-1] != item:
-					self.items.append(item)
-			else:
-				self.items.append(item)
-
-	def clear(self):
-		'''
-		Delete all items in the list.
-		'''
-
-		self.items.clear()
-
-
-class Graph(object):
-	'''
-	Base class for all graphs.
-	'''
-
-	def __init__(
-		self,
-		xmin = -5, xmax = 5, ymin = -5, ymax = 5,
-		wide = 400, high = 400):
-		'''
-		Initialize the graphing window.
-		'''
-
-		self.root = tk.Toplevel()
-
-		self.root.title("ReCalc")
-
-		# sets bounds
-		self.xmin = xmin
-		self.xmax = xmax
-		self.ymin = ymin
-		self.ymax = ymax
-
-		self.xrang = self.xmax - self.xmin
-		self.yrang = self.ymax - self.ymin
-
-		# dimensions of the window
-		self.wide = wide
-		self.high = high
-
-		# create the canvas
-		self.screen = tk.Canvas(
-			self.root,
-			width = self.wide, height = self.high)
-		self.screen.pack()
-
-		self.options = tk.Menu(self.root)
-		self.file_options = tk.Menu(self.options, tearoff = 0)
-
-		self.file_options.add_command(
-			label = "Save",
-			command = self.save_image)
-		self.file_options.add_command(
-			label = "Exit",
-			command = self.root.destroy)
-
-		self.options.add_cascade(
-			label = "File",
-			menu = self.file_options)
-
-		self.root.config(menu = self.options)
-
-	def axes(self):
-		'''
-		Draw the axis.
-		'''
-
-		# adjusted y coordinate of x-axis
-		b = self.high + (self.ymin * self.high / self.yrang)
-
-		# adjusted x coordinate of y-axis
-		a = -1 * self.xmin * self.wide / self.xrang
-
-		try:
-			# draw x-axis
-			self.screen.create_line(0, b, self.wide, b, fill = "gray")
-
-			# draw y-axis
-			self.screen.create_line(a, self.high, a, 0, fill = "gray")
-
-			self.root.update()
-		except TclError as e:
-			pass
-
-	def save_image(self):
-		'''
-		Save the image to a file.
-		'''
-
-		fout = filedialog.asksaveasfile()
-		self.image.save(fout)
-		print("Saved")
-
-
 class NumpyGraph(Graph):
 	'''
 	Cartesian Graphing window class using numpy and PIL.
@@ -710,13 +545,11 @@ class NumpyGraph(Graph):
 			dtype = np.uint8)
 		self.data.fill(255)
 
-		global pic
-
 		# create the image
-		pic = ImageTk.PhotoImage(
+		self.pic = ImageTk.PhotoImage(
 			Image.fromarray(self.data, "RGB"))
 		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = pic)
+			self.wide / 2, self.high / 2, image = self.pic)
 
 		# draws the axes
 		self.axes()
@@ -726,8 +559,6 @@ class NumpyGraph(Graph):
 		'''
 		Draw the axis.
 		'''
-
-		global pic
 
 		# adjusted y coordinate of x-axis
 		b = self.high + (self.ymin * self.high / self.yrang)
@@ -744,9 +575,9 @@ class NumpyGraph(Graph):
 		except IndexError:
 			pass
 
-		pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
+		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
 		self.screen.create_image(
-			self.wide / 2, self.high / 2, image = pic)
+			self.wide / 2, self.high / 2, image = self.pic)
 
 		try:
 			self.root.update()
@@ -758,9 +589,7 @@ class NumpyGraph(Graph):
 		Draw a Cartesian function.
 		'''
 
-		global pic
-
-		pixel_color = color_dict[color]
+		pixel_color = Graph.color_dict[color]
 
 		for i in range(self.data.shape[1]):
 
@@ -775,9 +604,9 @@ class NumpyGraph(Graph):
 				self.data[b, i] = pixel_color
 
 			self.image = Image.fromarray(self.data, "RGB")
-			pic = ImageTk.PhotoImage(self.image)
+			self.pic = ImageTk.PhotoImage(self.image)
 			self.screen.create_image(
-				self.wide / 2, self.high / 2, image = pic)
+				self.wide / 2, self.high / 2, image = self.pic)
 
 			self.root.update()
 
@@ -807,12 +636,10 @@ class NumpyPolarGraph(NumpyGraph):
 		Draw a polar function with numpy.
 		'''
 
-		global pic
-
 		density = 1000
 		theta = self.theta_min
 
-		pixel_color = color_dict[color]
+		pixel_color = Graph.color_dict[color]
 
 		while theta < self.theta_max:
 
@@ -851,9 +678,9 @@ class NumpyPolarGraph(NumpyGraph):
 				if 0 < b and b < self.high and 0 < a and a < self.wide:
 					self.data[b, a] = pixel_color
 				self.image = Image.fromarray(self.data, "RGB")
-				pic = ImageTk.PhotoImage(self.image)
+				self.pic = ImageTk.PhotoImage(self.image)
 				self.screen.create_image(
-					self.wide / 2, self.high / 2, image = pic)
+					self.wide / 2, self.high / 2, image = self.pic)
 
 			except (ValueError, TclError) as e:
 				pass
@@ -893,14 +720,15 @@ class NumpyParameticGraph(NumpyGraph):
 		Draw a parametric function.
 		'''
 
-		global pic
-
 		density = 1000
 		t = self.tmin
 
+		
 		xfunc = funcs["x"]
 		yfunc = funcs["y"]
-		pixel_color = color_dict[color]
+		
+
+		pixel_color = Graph.color_dict[color]
 
 		while t < self.tmax:
 
@@ -924,9 +752,9 @@ class NumpyParameticGraph(NumpyGraph):
 				if 0 < b and b < self.high and 0 < a and a < self.wide:
 					self.data[b, a] = pixel_color
 				self.image = Image.fromarray(self.data, "RGB")
-				pic = ImageTk.PhotoImage(self.image)
+				self.pic = ImageTk.PhotoImage(self.image)
 				self.screen.create_image(
-					self.wide / 2, self.high / 2, image = pic)
+					self.wide / 2, self.high / 2, image = self.pic)
 
 			except (ValueError, TclError) as e:
 				pass
@@ -1009,24 +837,6 @@ def find_y(s):
 		d = {"x": funcs.group(3), "y": funcs.group(4)}
 
 	return(d)
-
-# unused
-def look_for_incorrect_operators(s):
-	'''
-	Check if the input is obviously not a valid expression.
-	'''
-
-	no_space = "".join(s.split())
-	if any(ch in s for ch in illegal_chrs):
-		return("Illegal Character")
-	if re.search("[/^%]*[/^%]", no_space):
-		return(False)
-	if re.search("[/^*%]/[/^*%]", no_space):
-		return(False)
-	if re.search("[/^%*]^[/^*%]", no_space):
-		return(False)
-	if re.search("[/^%,*],[/^*,%]", no_space):
-		return(False)
 
 
 def float_to_str(f):
@@ -1600,12 +1410,14 @@ def integrate_function(expression, var, a, b):
 		"Could not integrate sympy is not installed.")
 
 
-def convert(start, end_units):
+def convert(amount, start, end_units):
 	'''
 	Convert between different units.
 	'''
 
-	return(start)
+	q = Unit(float(simplify(amount)), start)
+	q.convert_inplace(end_units)
+	return(str(q))
 
 
 def combinations_and_permutations(form, letter, n, m = None):
@@ -2118,8 +1930,7 @@ def simplify(s):
 					m.group(3), m.group(4))
 
 			elif key == "conv_comp":
-				print(m.groups())
-				result = convert(m.group(1), m.group(2))
+				result = convert(m.group(1), m.group(2), m.group(3))
 
 			elif key == "comb_comp":
 					result = combinations_and_permutations(
@@ -2853,7 +2664,10 @@ def main():
 
 	if "docopt" in sys.modules:
 		args = docopt(__doc__)
-
+		
+		if args["--version"]:
+			print(version)
+			sys.exit()
 		if args["-c"] or args["--commandline"]:
 			use_gui = False
 		if args["-v"] or args["--verbose"]:

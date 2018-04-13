@@ -11,10 +11,11 @@ setup.py
 import os
 import pickle
 from setuptools import setup, find_packages
+from ReCalc import version
 
 setup(
     name = "ReCalc",
-    version = "0.1.12",
+    version = version,
     packages = find_packages(),
 	# scripts = [
 		# "ReCalc.py",
@@ -129,5 +130,3 @@ with open(os.path.join(calc_path, "ReCalc_info.txt"), "wb+") as file:
 	}
 
 	pickle.dump(calc_info, file)
-
-
