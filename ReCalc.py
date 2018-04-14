@@ -173,6 +173,7 @@ and graphing functions in Cartesian and polar.
 45) parametric functions
 46) log errors
 47) don't stop the program when there is an error
+48) fix error when you close a polar graphing window early
 50) move gamma into one_arg_funcs
 51) make the delete button delete all of multi-letter fuctions other
 buttons put there
@@ -203,7 +204,6 @@ buttons put there
 39) make tests for all parts of the program
 41) user defined functions
 42) user defined variables
-48) fix error when you close a polar graphing window early
 49) don't let the user pass ln(x) multiple arguments
 54) error handling for passing graph functions incorrectly
 55) don't move cursor to end of line when backspace is hit
@@ -681,7 +681,7 @@ class NumpyPolarGraph(NumpyGraph):
 				self.screen.create_image(
 					self.wide / 2, self.high / 2, image = self.pic)
 
-			except (ValueError, TclError) as e:
+			except (ValueError,) as e:
 				pass
 
 			# update the screen
@@ -1131,7 +1131,10 @@ def graph_function(func_arg):
 
 		# passes functions to be graphed and the color to do so with
 		for f, c in zip(funcs_to_graph, graph_colors * color_loops):
-			made_graph.draw(f, color = c)
+			try:
+				made_graph.draw(f, color = c)
+			except TclError:
+				pass
 
 		# necessary for some of the tests
 		return(made_graph)
@@ -2043,7 +2046,6 @@ def input_backspace():
 
 	fm = re.search(delete_chr_comp, a)
 
-	print(a)
 	if fm.group(2) is None:
 		input_widget.insert(0, a[:])
 	else:
