@@ -161,6 +161,7 @@ and graphing functions in Cartesian and polar.
 18) set y bounds on graphs
 19) pickle degree mode
 20) graph closes only when user dictates
+22) unit conversions
 28) improve tkinter interface
 29) cut off trailing zeros
 30) two expressions adjacent means multiplication
@@ -190,7 +191,6 @@ buttons put there
 13) integrals can have non-number bounds
 14) derivatives non-number arguments
 21) matrices
-22) unit conversions
 23) indefinite integrals
 24) derivatives of functions
 25) summation notation
@@ -207,7 +207,8 @@ buttons put there
 49) don't let the user pass ln(x) multiple arguments
 54) error handling for passing graph functions incorrectly
 55) don't move cursor to end of line when backspace is hit
-56)
+56) manipulate units
+57)
 '''
 
 

@@ -5,7 +5,7 @@ Classes and functions for ReCalc
 '''
 
 import re
-from decimal import Context
+from decimal import Context, Decimal
 
 # import tkinter if installed
 try:
@@ -268,7 +268,7 @@ class Unit(object):
 	del multipliers_volume
 
 	for i in multipliers:
-		multipliers[i] = double_list(multipliers[i])
+		multipliers[i] = double_list(map(Decimal, multipliers[i]))
 
 	from_base_funcs = {unit: lambda a: a for unit in base_units}
 	for unit, mult in zip(
@@ -286,7 +286,7 @@ class Unit(object):
 
 	def __init__(self, amount, type):
 		self.type = type
-		self.amount = float(amount)
+		self.amount = Decimal(amount)
 
 	def __repr__(self):
 		return("Unit({a} {u})".format(a = self.amount, u = self.type))
@@ -307,7 +307,7 @@ class Unit(object):
 			new_amount = Unit.from_base_funcs[new](
 				Unit.to_base_funcs[self.type](self.amount))
 
-		return(Unit(new_amount, new))
+		return(Unit(float_to_str(new_amount), new))
 
 	def convert_inplace(self, new):
 		q = self.convert_to(new)
@@ -377,7 +377,20 @@ class Unit(object):
 		if isinstance(other, Unit):
 			return(NotImplemented)
 		return(Unit(self.amount * other, self.type))
-	
+
+	def __eq__(self, other):
+		if isinstance(other, Unit):
+			return(
+				float_to_str(self.amount)
+				== float_to_str(other.convert_to(self.type)))
+		return(False)
+
+	def __lt__(self, other):
+		if isinstance(other, Unit):
+			return(
+				float_to_str(self.amount)
+				< float_to_str(other.convert_to(self.type)))
+		return(False)
 
 class NonRepeatingList(object):
 	'''
