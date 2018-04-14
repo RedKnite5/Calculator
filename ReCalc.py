@@ -12,9 +12,9 @@ is installed. It defines graphing and polar graphing classes. It
 remembers every input it is given.
 
 Usage:
-	ReCalc [-vc] [EXPRESSION ...]
+	ReCalc [-vcV] [EXPRESSION ...]
 	ReCalc [EXPRESSION ...]
-	ReCalc [-vc]
+	ReCalc [-vcV]
 	ReCalc [--verbose --commandline --version]
 
 Arguments:
@@ -23,7 +23,7 @@ Arguments:
 Options:
 	-v, --verbose      verbose logging
 	-c, --commandline  use the command line interface
-	--version          give the version of ReCalc
+	-V  --version      give the version of ReCalc
 
 It can do:
 
@@ -2529,7 +2529,7 @@ def main():
 	if "docopt" in sys.modules:
 		args = docopt(__doc__)
 		
-		if args["--version"]:
+		if args["-V"] or args["--version"]:
 			print(version)
 			sys.exit()
 		if args["-c"] or args["--commandline"]:
