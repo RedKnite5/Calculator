@@ -1,12 +1,7 @@
 # ReCalc
-This is a graphing calculator written in python.
-
-prerequisites:
+This is a graphing calculator written in python. 
 
 To run this program you will need python 3.6, Sympy, Pillow, docopt,
-and tkinter.
-I have tested it on Windows 10 and Fedora 26-27.
+and tkinter. It will function without these, but certain functionality will be limited.
 
-Installation:
-
-Once you have installed the above, get the files on github.
+I have tested it on Windows 10 and Fedora 26-27. It will not necessarily work on other operating systems.
