@@ -15,25 +15,50 @@
 </head>
 
 <body>
-	 <iframe id="frmFile" src="README.md" onload="LoadFile();" style="display: none;"></iframe>
-	
 	<h1>ReCalc</h1>
 	
-	<p class=description>ReCalc is a graphing calculator written in python.</p>
+	<p class="description">ReCalc is a graphing calculator written in python.</p>
+	<br>
+	
+	<p id="output">Input an expression:</p>
+	<input type="text" id="input" class="input" size=100>
+	<br>
 </body>
 
 <script>
-	function LoadFile() {
-	var oFrame = document.getElementById("frmFile");
-	var strRawContents = oFrame.contentWindow.document.body.childNodes[0].innerHTML;
-	console.log(strRawContents);
-	while (strRawContents.indexOf("\r") >= 0)
-		strRawContents = strRawContents.replace("\r", "");
-	var arrLines = strRawContents.split("\n");
-	alert("File " + oFrame.src + " has " + arrLines.length + " lines");
-	for (var i = 0; i < arrLines.length; i++) {
-		var curLine = arrLines[i];
-		alert("Line #" + (i + 1) + " is: '" + curLine + "'");
+	
+	var body = document.getElementsByTagName("body")[0];
+	var buttonSymbols = [
+		"7", "8", "9", "+", "-", "(", ")", "4", "5", "6", "*", "÷",
+		"|", ",", "1", "2", "3", "^", "!", "∫", "x", "0", ".", "=",
+		"π", "e"
+	];
+	var buttonsArray = [];
+	
+	for (var i=0; i<buttonSymbols.length; i++) {
+		buttonsArray.push(document.createElement("button"));
+		buttonsArray[i].innerHTML = buttonSymbols[i];
+		buttonsArray[i].style.width = "50px";
+		buttonsArray[i].id = buttonSymbols[i];
+		buttonsArray[i].addEventListener("click", (function (id) {return function() {buttonPress(id)}})(buttonSymbols[i]));
+		
+		body.appendChild(buttonsArray[i]);
+		
+		if ((i+1)%7 === 0 && i !== 1) {
+			body.appendChild(document.createElement("br"));
+		}
 	}
+	document.getElementById("=").style.background = "#0000ff";
+	
+	var entry = document.getElementById("input");
+	var outputBox = document.getElementById("output");
+	function buttonPress(button) {
+		if (button !== "=") {
+			entry.value += button;
+		} else {
+			var expression = entry.value;
+			outputBox.textContent = "NotImplemented";
+		}
+		
 	}
 </script>
