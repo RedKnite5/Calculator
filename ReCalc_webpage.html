@@ -11,6 +11,26 @@
 		h1 {
 			text-align: center;
 		}
+		.normalButton {
+			width: 50px;
+		}
+		.mutableButton {
+			width: 50px;
+		}
+		.dropdown {
+			display: inline-block;
+		}
+		.dropbtn {
+			width: 75px;
+		}
+		.dropdown-content {
+			display: none;
+			position: absolute;
+			z-index: 1;
+		}
+		.show {
+			display: block;
+		}
 	</style>
 </head>
 
@@ -28,27 +48,88 @@
 <script>
 	
 	var body = document.getElementsByTagName("body")[0];
+	
+	var dropDownList = document.createElement("div");
+	dropDownList.id = "myDropdown";
+	dropDownList.className = "dropdown-content";
+	
+	var trigFuncButton = document.createElement("button");
+	trigFuncButton.innerHTML = "Trig Functions";
+	trigFuncButton.className = "functionsButton";
+	trigFuncButton.addEventListener("click", switchTrig);
+	
+	var hyperFuncButton = document.createElement("button");
+	hyperFuncButton.innerHTML = "Hyperbolic Functions";
+	hyperFuncButton.className = "functionsButton";
+	hyperFuncButton.addEventListener("click", switchHyperbolic);
+	
+	var statsFuncButton = document.createElement("button");
+	statsFuncButton.innerHTML = "Statistics Functions";
+	statsFuncButton.className = "functionsButton";
+	statsFuncButton.addEventListener("click", switchStats);
+	
+	var miscFuncButton = document.createElement("button");
+	miscFuncButton.innerHTML = "Misc Functions";
+	miscFuncButton.className = "functionsButton";
+	miscFuncButton.addEventListener("click", switchMisc);
+	
+	dropDownList.appendChild(trigFuncButton);
+	dropDownList.appendChild(document.createElement("br"));
+	dropDownList.appendChild(hyperFuncButton);
+	dropDownList.appendChild(document.createElement("br"));
+	dropDownList.appendChild(statsFuncButton);
+	dropDownList.appendChild(document.createElement("br"));
+	dropDownList.appendChild(miscFuncButton);
+	
 	var buttonSymbols = [
-		"7", "8", "9", "+", "-", "(", ")", "4", "5", "6", "*", "÷",
-		"|", ",", "1", "2", "3", "^", "!", "∫", "x", "0", ".", "=",
-		"π", "e"
+		"7", "8", "9", "+", "-", "(", ")",
+		"4", "5", "6", "*", "÷", "|", ",",
+		"1", "2", "3", "^", "!", "∫", "x",
+		"0", ".", "=", "π", "e", "empty1", "empty2"
 	];
 	var buttonsArray = [];
+	var mutableButtons = [];
 	
 	for (var i=0; i<buttonSymbols.length; i++) {
 		buttonsArray.push(document.createElement("button"));
+		buttonsArray[i].className = "normalButton";
 		buttonsArray[i].innerHTML = buttonSymbols[i];
-		buttonsArray[i].style.width = "50px";
 		buttonsArray[i].id = buttonSymbols[i];
 		buttonsArray[i].addEventListener("click", (function (id) {return function() {buttonPress(id)}})(buttonSymbols[i]));
 		
 		body.appendChild(buttonsArray[i]);
+		
+		if ([")", ",", "x", "empty2"].includes(buttonSymbols[i])) {
+			for (var k=0; k<3; k++) {
+				mutableButtons.push(document.createElement("button"));
+				mutableButtons[mutableButtons.length-1].className = "mutableButton";
+				mutableButtons[mutableButtons.length-1].innerHTML = "dev";
+				body.appendChild(mutableButtons[mutableButtons.length-1]);
+			}
+			if (mutableButtons.length === 3) {
+				var dropDownDiv = document.createElement("div");
+				dropDownDiv.className = "dropdown";
+				
+				var dropDownButton = document.createElement("button");
+				dropDownButton.innerHTML = "functions";
+				dropDownButton.className = "dropbtn";
+				dropDownButton.addEventListener("click", showDropDown);
+				
+				body.appendChild(dropDownDiv);
+				
+				dropDownDiv.appendChild(dropDownButton);
+				dropDownDiv.appendChild(dropDownList);
+			}
+		}
 		
 		if ((i+1)%7 === 0 && i !== 1) {
 			body.appendChild(document.createElement("br"));
 		}
 	}
 	document.getElementById("=").style.background = "#0000ff";
+	
+	buttonsArray[buttonsArray.length-1].style.visibility = "hidden";
+	buttonsArray[buttonsArray.length-2].style.visibility = "hidden";
 	
 	var entry = document.getElementById("input");
 	var outputBox = document.getElementById("output");
@@ -58,7 +139,42 @@
 		} else {
 			var expression = entry.value;
 			outputBox.textContent = "NotImplemented";
+			//loadDoc()
 		}
-		
 	}
+	
+	function showDropDown() {
+		document.getElementById("myDropdown").classList.toggle("show");
+	}
+	
+	function switchTrig() {
+		//pass
+	}
+	
+	function switchHyperbolic() {
+		//pass
+	}
+	
+	function switchStats() {
+		//pass
+	}
+	
+	function switchMisc() {
+		//pass
+	}
+	
+	
+	function loadDoc() {
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				console.log(this.responseText);
+			}
+		};
+		xhttp.open("GET", "server_for_ReCalc.py", true);
+		xhttp.send();
+	}
+	
+	
+	
 </script>
