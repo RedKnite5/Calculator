@@ -2454,11 +2454,11 @@ def tkask(s = None):
 		label = "Hyperbolic Functions",
 		command = switch_hyperbolic)
 	dropdown.add_command(
-		label = "Misc Functions",
-		command = switch_misc)
-	dropdown.add_command(
 		label = "Stats Functions",
 		command = switch_stats)
+	dropdown.add_command(
+		label = "Misc Functions",
+		command = switch_misc)
 
 	menubar.config(menu = dropdown)
 
