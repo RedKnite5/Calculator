@@ -19,6 +19,7 @@
 		}
 		.dropdown {
 			display: inline-block;
+			margin-left: 5px;
 		}
 		.dropbtn {
 			width: 75px;
@@ -104,6 +105,10 @@
 				mutableButtons.push(document.createElement("button"));
 				mutableButtons[mutableButtons.length-1].className = "mutableButton";
 				mutableButtons[mutableButtons.length-1].innerHTML = "dev";
+
+				if (k%3 === 0) {
+					mutableButtons[mutableButtons.length-1].style.marginLeft = "5px";
+				}
 				body.appendChild(mutableButtons[mutableButtons.length-1]);
 			}
 			if (mutableButtons.length === 3) {
@@ -119,20 +124,30 @@
 				
 				dropDownDiv.appendChild(dropDownButton);
 				dropDownDiv.appendChild(dropDownList);
+				
+				var deleteButton = document.createElement("button");
+				deleteButton.innerHTML = "delete";
+				deleteButton.addEventListener("click", backspace);
+				body.appendChild(deleteButton);
 			}
 		}
 		
 		if ((i+1)%7 === 0 && i !== 1) {
 			body.appendChild(document.createElement("br"));
 		}
+		if ((i+4)%7 === 0) {
+			buttonsArray[i].style.marginLeft = "5px";
+		}
+		
 	}
-	document.getElementById("=").style.background = "#0000ff";
+	document.getElementById("=").style.background = "#5060ff";
 	
 	buttonsArray[buttonsArray.length-1].style.visibility = "hidden";
 	buttonsArray[buttonsArray.length-2].style.visibility = "hidden";
 	
 	var entry = document.getElementById("input");
 	var outputBox = document.getElementById("output");
+	
 	function buttonPress(button) {
 		if (button !== "=") {
 			entry.value += button;
@@ -147,8 +162,15 @@
 		document.getElementById("myDropdown").classList.toggle("show");
 	}
 	
+	switchTrig()
+	
 	function switchTrig() {
-		//pass
+		trigFuncs = ["sin", "cos", "tan", "sec", "csc", "cot", "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot"];
+		
+		for (var i=0; i<mutableButtons.length; i++) {
+			mutableButtons[i].innerHTML = trigFuncs[i];
+			mutableButtons[i].onclick = (function(i) {return(function() {buttonPress(trigFuncs[i] + "(")})})();
+		}
 	}
 	
 	function switchHyperbolic() {
@@ -175,6 +197,29 @@
 		xhttp.send();
 	}
 	
+	function backspace() {
+		//NotImplemented
+	}
 	
+	document.addEventListener("keydown", keyCheck);
+	
+	function keyCheck(event) {
+		var keyID = event.code;
+		if (keyID === "backspace") {
+			backspace();
+		}
+	}
+	
+	window.onclick = function(event) {
+		if (!event.target.matches('.dropbtn')) {
+			var dropdowns = document.getElementsByClassName("dropdown-content");
+			for (var i = 0; i < dropdowns.length; i++) {
+				var openDropdown = dropdowns[i];
+				if (openDropdown.classList.contains('show')) {
+					openDropdown.classList.remove('show');
+				}
+			}
+		}
+	}
 	
 </script>
