@@ -1,6 +1,7 @@
 ReCalc.egg-info
 dist
 __pycache__
+backups
 ReCalc_info.txt
 log_file.log
 ReCalc1.py
