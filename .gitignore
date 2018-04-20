@@ -3,6 +3,7 @@ dist
 __pycache__
 backups
 ReCalc_info.txt
+ReCalc1_info.txt
 log_file.log
 ReCalc1.py
 calc_experimentation.py
