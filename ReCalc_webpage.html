@@ -11,11 +11,17 @@
 		h1 {
 			text-align: center;
 		}
+		.output {
+			border: 1px;
+			border-style: solid;
+			border-radius: 20px;
+			padding: 0px 5px 0px 5px;
+		}
 		.normalButton {
 			width: 50px;
 		}
 		.mutableButton {
-			width: 50px;
+			width: 60px;
 		}
 		.dropdown {
 			display: inline-block;
@@ -41,8 +47,8 @@
 	<p class="description">ReCalc is a graphing calculator written in python.</p>
 	<br>
 	
-	<p id="output">Input an expression:</p>
-	<input type="text" id="input" class="input" size=100>
+	<p id="output" class="output">Input an expression</p>
+	<input type="text" id="input" class="input" size=110>
 	<br>
 </body>
 
@@ -154,7 +160,7 @@
 		} else {
 			var expression = entry.value;
 			outputBox.textContent = "NotImplemented";
-			//loadDoc()
+			loadDoc(expression);
 		}
 	}
 	
@@ -186,15 +192,15 @@
 	}
 	
 	
-	function loadDoc() {
+	function loadDoc(expression) {
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
 				console.log(this.responseText);
 			}
 		};
-		xhttp.open("GET", "server_for_ReCalc.py", true);
-		xhttp.send();
+		xhttp.open("POST", "http://127.0.0.1:5000/", true);
+		xhttp.send(expression);
 	}
 	
 	function backspace() {
