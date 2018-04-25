@@ -26,9 +26,10 @@
 		.dropdown {
 			display: inline-block;
 			margin-left: 5px;
+			margin-right: 5px;
 		}
 		.dropbtn {
-			width: 75px;
+			width: 95px;
 		}
 		.dropdown-content {
 			display: none;
@@ -48,7 +49,7 @@
 	<br>
 	
 	<p id="output" class="output">Input an expression</p>
-	<input type="text" id="input" class="input" size=110>
+	<input type="text" id="input" class="input" size=114>
 	<br>
 </body>
 
@@ -111,6 +112,9 @@
 				mutableButtons.push(document.createElement("button"));
 				mutableButtons[mutableButtons.length-1].className = "mutableButton";
 				mutableButtons[mutableButtons.length-1].innerHTML = "dev";
+				
+				// Here the function for the button should be created which calls buttonPress on whatever is written on the  button
+				// This could not yet be accomplished.
 
 				if (k%3 === 0) {
 					mutableButtons[mutableButtons.length-1].style.marginLeft = "5px";
@@ -122,7 +126,7 @@
 				dropDownDiv.className = "dropdown";
 				
 				var dropDownButton = document.createElement("button");
-				dropDownButton.innerHTML = "functions";
+				dropDownButton.innerHTML = "functions ▼";
 				dropDownButton.className = "dropbtn";
 				dropDownButton.addEventListener("click", showDropDown);
 				
@@ -175,20 +179,116 @@
 		
 		for (var i=0; i<mutableButtons.length; i++) {
 			mutableButtons[i].innerHTML = trigFuncs[i];
-			mutableButtons[i].onclick = (function(i) {return(function() {buttonPress(trigFuncs[i] + "(")})})();
+			mutableButtons[i].style.visibility = "visible";
+			
+			// This is the backup place functions should be created which should be called when the button is clicked.
+			// They should call buttonPress with the corrasponding element of the function arrays.
+			
+			//mutableButtons[i].onclick = (function(i) {return(function() {buttonPress(trigFuncs[i] + "(")})})();
 		}
+		// This is where the functions are actually defined. Imporve this ASAP.
+		mutableButtons[0].onclick = function() {buttonPress("sin(");};
+		mutableButtons[1].onclick = function() {buttonPress("cos(");};
+		mutableButtons[2].onclick = function() {buttonPress("tan(");};
+		mutableButtons[3].onclick = function() {buttonPress("sec(");};
+		mutableButtons[4].onclick = function() {buttonPress("csc(");};
+		mutableButtons[5].onclick = function() {buttonPress("cot(");};
+		mutableButtons[6].onclick = function() {buttonPress("arcsin(");};
+		mutableButtons[7].onclick = function() {buttonPress("arccos(");};
+		mutableButtons[8].onclick = function() {buttonPress("arctan(");};
+		mutableButtons[9].onclick = function() {buttonPress("arcsec(");};
+		mutableButtons[10].onclick = function() {buttonPress("arccsc(");};
+		mutableButtons[11].onclick = function() {buttonPress("arccot(");};
+		
 	}
 	
 	function switchHyperbolic() {
-		//pass
+		hyperFuncs = ["sinh", "cosh", "tanh", "sech", "csch", "coth", "arcsinh", "arccosh", "arctanh", "arcsech", "arccsch", "arccoth"];
+		
+		for (var i=0; i<mutableButtons.length; i++) {
+			mutableButtons[i].innerHTML = hyperFuncs[i];
+			mutableButtons[i].style.visibility = "visible";
+			
+			// This is the backup place functions should be created which should be called when the button is clicked.
+			// They should call buttonPress with the corrasponding element of the function arrays.
+			
+			//mutableButtons[i].onclick = (function(i) {return(function() {buttonPress(trigFuncs[i] + "(")})})();
+		}
+		// This is where the functions are actually defined. Imporve this ASAP.
+		mutableButtons[0].onclick = function() {buttonPress("sinh(");};
+		mutableButtons[1].onclick = function() {buttonPress("cosh(");};
+		mutableButtons[2].onclick = function() {buttonPress("tanh(");};
+		mutableButtons[3].onclick = function() {buttonPress("sech(");};
+		mutableButtons[4].onclick = function() {buttonPress("csch(");};
+		mutableButtons[5].onclick = function() {buttonPress("coth(");};
+		mutableButtons[6].onclick = function() {buttonPress("arcsinh(");};
+		mutableButtons[7].onclick = function() {buttonPress("arccosh(");};
+		mutableButtons[8].onclick = function() {buttonPress("arctanh(");};
+		mutableButtons[9].onclick = function() {buttonPress("arcsech(");};
+		mutableButtons[10].onclick = function() {buttonPress("arccsch(");};
+		mutableButtons[11].onclick = function() {buttonPress("arccoth(");};
 	}
 	
 	function switchStats() {
-		//pass
+		statsFuncs = ["mean", "median", "mode", "stdev", "max", "min"];
+		
+		for (var i=0; i<mutableButtons.length; i++) {
+			if (i<statsFuncs.length) {
+				mutableButtons[i].innerHTML = statsFuncs[i];
+				mutableButtons[i].style.visibility = "visible";
+			} else {
+				mutableButtons[i].style.visibility = "hidden";
+			}
+			
+			// This is the backup place functions should be created which should be called when the button is clicked.
+			// They should call buttonPress with the corrasponding element of the function arrays.
+			
+			//mutableButtons[i].onclick = (function(i) {return(function() {buttonPress(trigFuncs[i] + "(")})})();
+		}
+		// This is where the functions are actually defined. Imporve this ASAP.
+		mutableButtons[0].onclick = function() {buttonPress("mean(");};
+		mutableButtons[1].onclick = function() {buttonPress("median(");};
+		mutableButtons[2].onclick = function() {buttonPress("mode(");};
+		mutableButtons[3].onclick = function() {buttonPress("stdev(");};
+		mutableButtons[4].onclick = function() {buttonPress("max(");};
+		mutableButtons[5].onclick = function() {buttonPress("min(");};
+		mutableButtons[6].onclick = function() {buttonPress("");};
+		mutableButtons[7].onclick = function() {buttonPress("");};
+		mutableButtons[8].onclick = function() {buttonPress("");};
+		mutableButtons[9].onclick = function() {buttonPress("");};
+		mutableButtons[10].onclick = function() {buttonPress("");};
+		mutableButtons[11].onclick = function() {buttonPress("");};
 	}
 	
 	function switchMisc() {
-		//pass
+		miscFuncs = ["log", "ln", "Γ", "abs", "ceil", "floor", "erf", "mod", "C", "P"];
+		
+		for (var i=0; i<mutableButtons.length; i++) {
+			if (i<miscFuncs.length) {
+				mutableButtons[i].innerHTML = miscFuncs[i];
+				mutableButtons[i].style.visibility = "visible";
+			} else {
+				mutableButtons[i].style.visibility = "hidden";
+			}
+			
+			// This is the backup place functions should be created which should be called when the button is clicked.
+			// They should call buttonPress with the corrasponding element of the function arrays.
+			
+			//mutableButtons[i].onclick = (function(i) {return(function() {buttonPress(trigFuncs[i] + "(")})})();
+		}
+		// This is where the functions are actually defined. Imporve this ASAP.
+		mutableButtons[0].onclick = function() {buttonPress("log(");};
+		mutableButtons[1].onclick = function() {buttonPress("ln(");};
+		mutableButtons[2].onclick = function() {buttonPress("Γ(");};
+		mutableButtons[3].onclick = function() {buttonPress("abs(");};
+		mutableButtons[4].onclick = function() {buttonPress("ceil(");};
+		mutableButtons[5].onclick = function() {buttonPress("floor(");};
+		mutableButtons[6].onclick = function() {buttonPress("erf(");};
+		mutableButtons[7].onclick = function() {buttonPress("mod(");};
+		mutableButtons[8].onclick = function() {buttonPress("C(");};
+		mutableButtons[9].onclick = function() {buttonPress("P(");};
+		mutableButtons[10].onclick = function() {buttonPress("");};
+		mutableButtons[11].onclick = function() {buttonPress("");};
 	}
 	
 	
@@ -204,7 +304,12 @@
 	}
 	
 	function backspace() {
-		//NotImplemented
+		var expression = entry.value;
+		var cursor = entry.selectionStart;
+		entry.value = expression.slice(0, cursor-1) + expression.slice(cursor);
+		var range = entry.createTextRange();
+		range.moveToPoint(cursor);
+		range.select();
 	}
 	
 	document.addEventListener("keydown", keyCheck);
