@@ -180,6 +180,8 @@ and graphing functions in Cartesian and polar.
 buttons put there
 52) allow 'y =' in graphs
 53) put cursor in entry box on startup
+57) unit detection will only use first part is the first part is another
+unit
 '''
 
 '''  To Do
@@ -208,8 +210,6 @@ buttons put there
 54) error handling for passing graph functions incorrectly
 55) don't move cursor to end of line when backspace is hit
 56) manipulate units
-57) unit detection will only use first part is the first part is another
-unit
 58)
 '''
 
@@ -412,7 +412,7 @@ list_functions = (
 # regex for a number
 reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
 
-units = tuple(chain.from_iterable((
+units = sort_by_length(chain.from_iterable((
 	Unit.base_units,
 	*Unit.nonbase_units.values())))
 

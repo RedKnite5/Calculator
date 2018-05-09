@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 __all__ = [
 	"Unit", "compile_ignore_case", "CalculatorError",
 	"NonRepeatingList", "Graph", "check_if_ascii", "float_to_str",
-	"check_if_float", "find_match", "separate",
+	"check_if_float", "find_match", "separate", "sort_by_length"
 ]
 
 def double_list(l):
@@ -179,6 +179,10 @@ def separate(s):
 		else:
 			middle = True
 	return(tuple(new_terms))
+
+
+def sort_by_length(l):
+	return(tuple(reversed(sorted(l))))
 
 
 class CalculatorError(Exception):
