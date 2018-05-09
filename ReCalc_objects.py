@@ -194,9 +194,16 @@ class Unit(object):
 		"meters", "m",
 		"kilograms", "kg",
 		"seconds", "s",
-		"liter", "l"
+		"liters", "L",
+		"volts", "V",
+		"joules", "J",
+		"square meter", "m^2",
+		"hertz", "Hz",
+		"pascal", "Pa",
+		"meters-per-second", "m/s",
+		"meters-per-second-squared", "m/s^2",
 	)
-
+	
 	distance_units = (
 		"kilometers", "km",
 		"centimeters", "cm",
@@ -209,6 +216,12 @@ class Unit(object):
 		"rods", "poles",
 		"nautical miles", "nmi",
 	)
+	distance_mult = (
+		0.001, 100, 1000, 39.370078740157, 3.2808398950131,
+		1.0936132983377, 0.00062137119223733, .039370078740157,
+		5.029, 0.000539957,
+	)
+	
 	mass_units = (
 		"grams", "g",
 		"pounds", "lbs",
@@ -218,34 +231,109 @@ class Unit(object):
 		"micrograms", "µg",
 		"tonnes", "t",
 	)
+	mass_mult = (
+		1000, 2.2046226218, 1000000, 35.274, 0.00110231, 1000000000000,
+		0.001,
+	)
+	
 	time_units = (
 		"minutes", "min",
 		"hours", "hr",
 		"days", "d",
 		"weeks", "wk",
 		"years", "yr",
-		"millisecond", "ms",
-		"nanosecond", "ns",
+		"milliseconds", "ms",
+		"nanoseconds", "ns",
 	)
-	volume_units = (
-		"milliliter", "ml",
-	)
-
-	multipliers_distance = (
-		0.001, 100, 1000, 39.370078740157, 3.2808398950131,
-		1.0936132983377, 0.00062137119223733, .039370078740157,
-		5.029, 0.000539957,
-	)
-	multipliers_mass = (
-		1000, 2.2046226218, 1000000, 35.274, 0.00110231, 1000000000000,
-		0.001,
-	)
-	multipliers_time = (
+	time_mult = (
 		1 / 60, 1 / 3600, 1 / 86400, 1 / 604800, 1 / 31557600,
 		1000, 1000000000,
 	)
-	multipliers_volume = (
-		1000,
+	
+	volume_units = (
+		"milliliters", "mL",
+		"centimeters cubed", "cm^3",
+		"feet cubed", "ft^3",
+		"gallons", "gal",
+		"kiloliters", "kL",
+		"fluid ounces", "fl oz",
+		"pints", "pt",
+		"quarts", "qt",
+		"drams", "dr",
+		"tablespoons", "tblsp",
+		"teaspoons", "tsp",
+		"microliters", "µL",
+		"deciliters", "dL"
+	)
+	volume_mult = (
+		1000, 1000, 0.0353147, 0.264172, .0001, 33.814, 2.11338,
+		1.05669, 270.512, 67.628, 202.884, 1000000,
+	)
+	
+	voltage_units = (
+		"kilovolts", "kV",
+		"megavolts", "MV",
+	)
+	voltage_mult = (
+		0.001, 0.000001,
+	)
+	
+	energy_units = (
+		"calories", "cal",
+		"kilocalories", "Cal",
+		"kilojoules", "kJ",
+		"foot-pounds", "ft lb",
+		"watt-hours", "Wh",
+		"kilowatt-hours", "kWh",
+		"British thermal units", "BTU",
+	)
+	energy_mult = (
+		0.239006, 0.000239006, 0.001, 0.737562, 0.000277778,
+		0.000000277778, 0.000947817,
+	)
+	
+	area_units = (
+		"square feet", "ft^2",
+		"square inches", "in^2",
+		"square yards", "yd^2",
+		"hectares", "ha",
+		"acres", "ac",
+		"square miles", "mi^2",
+		"square kilometers", "km^2",
+	)
+	area_mult = (
+		10.7639, 1550, 1.1959876543, 0.0001, 0.000247105, 0.0000003861,
+		0.000001,
+	)
+	
+	frequency_units = (
+		"kilohertz", "kHz",
+		"megahertz", "MHz",
+		"gigahertz", "GHz",
+	)
+	frequency_mult = (
+		0.001, 0.000001, 0.000000001,
+	)
+	
+	pressure_units = (
+		"atmospheres", "Atm",
+		"bars", "Bar",
+		"torrs", "Torr",
+		"kilopascals", "kPa",
+		"gigapascals", "GPa",
+	)
+	pressure_mult = (
+		0.0000098692, 0.00001, 0.00750062, 0.001, 0.000000001,
+	)
+	
+	speed_units = (
+		"kilometers-per-hour", "k/h",
+		"feet-per-second", "ft/s",
+		"miles-per-hour", "mi/h",
+		"knots", "kn",
+	)
+	speed_mult = (
+		3.6, 3.28084, 2.23694, 1.94384,
 	)
 
 	nonbase_units = {
@@ -253,19 +341,32 @@ class Unit(object):
 		"time": time_units,
 		"mass": mass_units,
 		"volume": volume_units,
+		"voltage": voltage_units,
+		"energy": energy_units,
+		"area": area_units,
+		"frequency": frequency_units,
+		"pressure": pressure_units,
+		"speed": speed_units,
 	}
 	multipliers = {
-		"distance": multipliers_distance,
-		"time": multipliers_time,
-		"mass": multipliers_mass,
-		"volume": multipliers_volume,
+		"distance": distance_mult,
+		"time": time_mult,
+		"mass": mass_mult,
+		"volume": volume_mult,
+		"voltage": voltage_mult,
+		"energy": energy_mult,
+		"area": area_mult,
+		"frequency": frequency_mult,
+		"pressure": pressure_mult,
+		"speed": speed_mult,
 	}
+	
 
 	del distance_units, mass_units, time_units
 	del volume_units
 
-	del multipliers_distance, multipliers_mass, multipliers_time
-	del multipliers_volume
+	#del multipliers_distance, multipliers_mass, multipliers_time
+	#del multipliers_volume
 
 	for i in multipliers:
 		multipliers[i] = double_list(map(Decimal, multipliers[i]))
@@ -299,6 +400,7 @@ class Unit(object):
 		Change what unit the quantity is expressed as.
 		'''
 
+		print("convert to ", new)
 		if self.type in Unit.base_units:
 			new_amount = Unit.from_base_funcs[new](self.amount)
 		elif new in Unit.base_units:

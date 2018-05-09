@@ -208,7 +208,9 @@ buttons put there
 54) error handling for passing graph functions incorrectly
 55) don't move cursor to end of line when backspace is hit
 56) manipulate units
-57)
+57) unit detection will only use first part is the first part is another
+unit
+58)
 '''
 
 
