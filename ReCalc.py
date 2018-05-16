@@ -412,9 +412,12 @@ list_functions = (
 # regex for a number
 reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
 
-units = sort_by_length(chain.from_iterable((
-	Unit.base_units,
-	*Unit.nonbase_units.values())))
+
+units = tuple(map(
+	lambda x: x.replace("^", "\^"),
+	sort_by_length(chain.from_iterable((
+		Unit.base_units,
+		*Unit.nonbase_units.values())))))
 
 # regular expressions
 regular_expr = dict(
@@ -1990,7 +1993,7 @@ def key_pressed(event):
 	backspace.
 	'''
 
-	global up_hist
+	global up_hist, input_widget
 
 	try:
 		code = event.keycode
@@ -2007,9 +2010,10 @@ def key_pressed(event):
 		get_input()
 
 	elif key == "backspace":
-		out = input_backspace()
-		if out is not None:
-			return(out)
+		pass
+		#out = input_backspace()
+		#if out is not None:
+		#	return(out)
 
 	# go backwards in the history when the up arrow is pressed
 	elif key == "up":
@@ -2031,7 +2035,7 @@ def key_pressed(event):
 		up_hist = 0
 
 
-def input_backspace():
+def input_backspace(*event):
 	'''
 	Delete the last character in the entry widget.
 	'''
@@ -2045,16 +2049,17 @@ def input_backspace():
 	a = input_widget.get()
 	cursor_pos = input_widget.index("insert")
 
-	input_widget.delete(0, "end")
-
-	fm = re.search(delete_chr_comp, a)
+	fm = re.search(delete_chr_comp, a[:cursor_pos])
 
 	if fm.group(2) is None:
-		input_widget.insert(0, a[:])
+		input_widget.delete(0, "end")
+		input_widget.insert(0, a[:cursor_pos - 1] + a[cursor_pos:])
+		input_widget.icursor(cursor_pos - 1)
 	else:
-		input_widget.insert(0, fm.group(1))
-
-	return("break")
+		input_widget.delete(0, "end")
+		input_widget.insert(0, fm.group(1) + a[cursor_pos:])
+		input_widget.icursor(cursor_pos - len(fm.group(2)))
+		return("break")
 
 
 def get_input(s = None):
@@ -2374,7 +2379,8 @@ def tkask(s = None):
 	digit_button = list(tk.Button(
 		root,
 		text = str(i),
-		command = lambda k = i: input_widget.insert("end", k),
+		command = lambda k = i: input_widget.insert(
+			input_widget.index("insert"), k),
 		width = 5) for i in button_keys)
 
 	# equals button
@@ -2403,7 +2409,8 @@ def tkask(s = None):
 	trig_func_buttons = list(tk.Button(
 		root,
 		text = i[:-1],
-		command = lambda k = i: input_widget.insert("end", k),
+		command = lambda k = i: input_widget.insert(
+			input_widget.index("insert"), k),
 		width = 5) for i in trig_funcs)
 
 	# list of hyperbolic functions
@@ -2417,7 +2424,8 @@ def tkask(s = None):
 	hyperbolic_func_buttons = list(tk.Button(
 		root,
 		text = i[:-1],
-		command = lambda k = i: input_widget.insert("end", k),
+		command = lambda k = i: input_widget.insert(
+			input_widget.index("insert"), k),
 		width = 5) for i in hyperbolic_funcs)
 
 	# list of misc fuctions
@@ -2429,7 +2437,8 @@ def tkask(s = None):
 	misc_func_buttons = list(tk.Button(
 		root,
 		text = i[:-1],
-		command = lambda k = i: input_widget.insert("end", k),
+		command = lambda k = i: input_widget.insert(
+			input_widget.index("insert"), k),
 		width = 5) for i in misc_funcs)
 
 	# list of stats functions
@@ -2440,7 +2449,8 @@ def tkask(s = None):
 	stats_func_buttons = list(tk.Button(
 		root,
 		text = i[:-1],
-		command = lambda k = i: input_widget.insert("end", k),
+		command = lambda k = i: input_widget.insert(
+			input_widget.index("insert"), k),
 		width = 5) for i in stats_funcs)
 
 	# more functions button

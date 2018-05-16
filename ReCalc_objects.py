@@ -185,6 +185,81 @@ def sort_by_length(l):
 	return(tuple(reversed(sorted(l))))
 
 
+def enumerate2(xs, start=0, step=1):
+    for x in xs:
+        yield (start, x)
+        start += step
+
+
+def make_unit_list(
+	unit,
+	abb,
+	Range  = (-9, 9),
+	centi = True,
+	deci = False,
+	deca = False,
+	hecto = False,
+	**kwargs):
+	'''
+	Make a list of units with prefixes and their multipliers.
+	'''
+
+	u = [
+		"yocto" + unit, "y" + abb,
+		"zepto" + unit, "z" + abb,
+		"atto" + unit, "a" + abb,
+		"femto" + unit, "f" + abb,
+		"pico" + unit, "p" + abb,
+		"nano" + unit, "n" + abb,
+		"micro" + unit, "µ" + abb,
+		"milli" + unit, "m" + abb,
+		"kilo" + unit, "k" + abb,
+		"mega" + unit, "M" + abb,
+		"giga" + unit, "G" + abb,
+		"tera" + unit, "T" + abb,
+		"peta" + unit, "P" + abb,
+		"exa" + unit, "E" + abb,
+		"zetta" + unit, "Z" + abb,
+		"yotta" + unit, "Y" + abb,
+	]
+	m = [
+		1e24, 1e21, 1e18, 1e15, 1e12, 1e9, 1e6, 1e3,
+		1e-3, 1e-6, 1e-9, 1e-12, 1e-15, 1e-18, 1e-21, 1e-24,
+	]
+
+	start = (int(Range[0] / 3) + 8)
+	end = int(Range[1] / 3) + 8
+
+	un = u[start * 2:end * 2]
+	mu = m[start:end]
+
+	if centi:
+		un.extend(("centi" + unit, "c" + abb))
+		mu.append(1e2)
+	if deci:
+		un.extend(("deci" + unit, "d" + abb))
+		mu.append(1e1)
+	if deca:
+		un.extend(("deca" + unit, "da" + abb))
+		mu.append(1e-1)
+	if hecto:
+		un.extend(("hecto" + unit, "h" + abb))
+		mu.append(1e-2)
+
+	for prefix in kwargs:
+		if (prefix + unit) in un and not kwargs[prefix]:
+			index = un.index(prefix + unit)
+			un.pop(index)
+			un.pop(index)
+			mu.pop(index // 2)
+		elif (prefix + unit) not in un and kwargs[prefix]:
+			index = u.index(prefix + unit)
+			un.extend((u[index], u[index + 1]))
+			mu.append(m[index // 2 -1])
+
+	return(un, mu)
+
+
 class CalculatorError(Exception):
 	pass
 
@@ -194,20 +269,6 @@ class Unit(object):
 	A class that represents different quantities
 	'''
 
-	base_units = (
-		"meters", "m",
-		"kilograms", "kg",
-		"seconds", "s",
-		"liters", "L",
-		"volts", "V",
-		"joules", "J",
-		"square meter", "m^2",
-		"hertz", "Hz",
-		"pascal", "Pa",
-		"meters-per-second", "m/s",
-		"meters-per-second-squared", "m/s^2",
-	)
-	
 	distance_units = (
 		"kilometers", "km",
 		"centimeters", "cm",
@@ -225,10 +286,10 @@ class Unit(object):
 		1.0936132983377, 0.00062137119223733, .039370078740157,
 		5.029, 0.000539957,
 	)
-	
+
 	mass_units = (
 		"grams", "g",
-		"pounds", "lbs",
+		"pounds-mass", "lbm",
 		"milligrams", "mg",
 		"ounces", "oz",
 		"tons", "tons",
@@ -236,10 +297,10 @@ class Unit(object):
 		"tonnes", "t",
 	)
 	mass_mult = (
-		1000, 2.2046226218, 1000000, 35.274, 0.00110231, 1000000000000,
+		1000, 2.2046226218, 1e6, 35.274, 0.00110231, 1e12,
 		0.001,
 	)
-	
+
 	time_units = (
 		"minutes", "min",
 		"hours", "hr",
@@ -253,7 +314,7 @@ class Unit(object):
 		1 / 60, 1 / 3600, 1 / 86400, 1 / 604800, 1 / 31557600,
 		1000, 1000000000,
 	)
-	
+
 	volume_units = (
 		"milliliters", "mL",
 		"centimeters cubed", "cm^3",
@@ -271,17 +332,11 @@ class Unit(object):
 	)
 	volume_mult = (
 		1000, 1000, 0.0353147, 0.264172, .0001, 33.814, 2.11338,
-		1.05669, 270.512, 67.628, 202.884, 1000000,
+		1.05669, 270.512, 67.628, 202.884, 1e6, 10,
 	)
-	
-	voltage_units = (
-		"kilovolts", "kV",
-		"megavolts", "MV",
-	)
-	voltage_mult = (
-		0.001, 0.000001,
-	)
-	
+
+	voltage_units, voltage_mult = make_unit_list("volts", "V")
+
 	energy_units = (
 		"calories", "cal",
 		"kilocalories", "Cal",
@@ -290,12 +345,13 @@ class Unit(object):
 		"watt-hours", "Wh",
 		"kilowatt-hours", "kWh",
 		"British thermal units", "BTU",
+		"ergs", "erg",
 	)
 	energy_mult = (
-		0.239006, 0.000239006, 0.001, 0.737562, 0.000277778,
-		0.000000277778, 0.000947817,
+		0.239006, 0.000239006, 0.001, 0.737562, 1/3600,
+		1/3600000, 0.000947817, 1e+7,
 	)
-	
+
 	area_units = (
 		"square feet", "ft^2",
 		"square inches", "in^2",
@@ -307,31 +363,23 @@ class Unit(object):
 	)
 	area_mult = (
 		10.7639, 1550, 1.1959876543, 0.0001, 0.000247105, 0.0000003861,
-		0.000001,
+		1e-6,
 	)
-	
-	frequency_units = (
-		"kilohertz", "kHz",
-		"megahertz", "MHz",
-		"gigahertz", "GHz",
-	)
-	frequency_mult = (
-		0.001, 0.000001, 0.000000001,
-	)
-	
-	pressure_units = (
+
+	frequency_units, frequency_mult = make_unit_list("hertz", "Hz")
+
+	pressure_units, pressure_mult = make_unit_list("pascals", "Pa")
+	pressure_units.extend((
 		"atmospheres", "Atm",
 		"bars", "Bar",
 		"torrs", "Torr",
-		"kilopascals", "kPa",
-		"gigapascals", "GPa",
-	)
-	pressure_mult = (
-		0.0000098692, 0.00001, 0.00750062, 0.001, 0.000000001,
-	)
-	
+	))
+	pressure_mult.extend((
+		0.0000098692, 0.00001, 0.00750062,
+	))
+
 	speed_units = (
-		"kilometers-per-hour", "k/h",
+		"kilometers-per-hour", "km/h",
 		"feet-per-second", "ft/s",
 		"miles-per-hour", "mi/h",
 		"knots", "kn",
@@ -340,6 +388,115 @@ class Unit(object):
 		3.6, 3.28084, 2.23694, 1.94384,
 	)
 
+	acceleration_units = (
+		"feet-per-second-squared", "ft/s^2",
+	)
+	acceleration_mult = (
+		3.2808399,
+	)
+
+	current_units, current_mult = make_unit_list("amperes", "A")
+
+	resistance_units, resistance_mult = make_unit_list("-ohm", "Ω")
+
+	force_units, force_mult = make_unit_list("newtons", "N")
+	force_units.extend((
+		"pounds-force", "lbf",
+	))
+	force_mult.extend((
+		0.224809,
+	))
+
+	intensity_units, intensity_mult = make_unit_list("candela", "cd")
+
+	temp_units = (
+		"degrees-Celsius", "°C",
+		"degrees-Fahrenheit", "°F",
+	)
+	# special case for temp because you also have to add
+	temp_mult = tuple([1,] * (len(temp_units) // 2))
+
+	lumen_flux_units, lumen_flux_mult = make_unit_list(
+		"lumens", "lm",
+		Range = (0, 24),
+		hecto = True)
+
+	illuminance_units, illuminance_mult = make_unit_list("lux", "lx")
+
+	power_units, power_mult = make_unit_list(
+		"watts", "W",
+		Range = (-15, 24))
+	power_units.extend((
+		"ergs-per-second", "erg/s",
+		"horsepower", "hp",
+		"metric-horsepower", "PS",
+		"poncelets", "p",
+	))
+	power_mult.extend((
+		1e7, 0.00134102, 0.001359621617, 0.001019716213,
+	))
+
+	conductance_units, conductance_mult = make_unit_list(
+		"siemens", "S",
+		Range = (-12, 6))
+
+	charge_units, charge_mult = make_unit_list(
+		"coulombs", "C",
+		Range = (-12, 9), centi = False)
+	charge_units.extend((
+		"ampere-hours", "Ah",
+	))
+	charge_mult.extend((
+		1/3600,
+	))
+
+	capacitance_units, capacitance_mult = make_unit_list(
+		"farad", "F",
+		Range = (-12, 3),
+		deca = True,
+		hecto = True)
+
+	inductance_units, inductance_mult = make_unit_list(
+		"henry", "H",
+		Range = (-12, 9))
+
+	conductivity_units, conductivity_mult = ((), ())
+	
+	magnetic_field_units, magnetic_field_mult = make_unit_list(
+		"teslas", "T",
+		Range = (-9, 6),
+		centi = False)
+	gauss_u, gauss_m = make_unit_list("gauss", "G", Range = (-9, 3))
+	magnetic_field_units.extend(gauss_u)
+	magnetic_field_mult.extend(gauss_m)
+
+	base_units = (
+		"meters", "m",
+		"seconds", "s",
+		"kilograms", "kg",
+		"liters", "L",
+		"volts", "V",
+		"joules", "J",
+		"square meters", "m^2",
+		"hertz", "Hz",
+		"pascals", "Pa",
+		"meters-per-second", "m/s",
+		"meters-per-second-squared", "m/s^2",
+		"amperes", "A",
+		"ohm", "Ω",
+		"newtons", "N",
+		"candela", "cd",
+		"kelvin", "K",
+		"lumens", "lm",
+		"lux", "lx",
+		"watts", "W",
+		"siemens", "S",
+		"coulombs", "C",
+		"farad", "F",
+		"henry", "H",
+		"siemens-per-meter", "S/m",
+		"teslas", "T",
+	)
 	nonbase_units = {
 		"distance": distance_units,
 		"time": time_units,
@@ -351,6 +508,21 @@ class Unit(object):
 		"frequency": frequency_units,
 		"pressure": pressure_units,
 		"speed": speed_units,
+		"acceleration": acceleration_units,
+		"current": current_units,
+		"resistance": resistance_units,
+		"force": force_units,
+		"intensity": intensity_units,
+		"temperature": temp_units,
+		"lumninous flux": lumen_flux_units,
+		"illuminace": illuminance_units,
+		"power": power_units,
+		"conductance": conductance_units,
+		"electric charge": charge_units,
+		"capacitance": capacitance_units,
+		"inductance": inductance_units,
+		"conductivity": conductivity_units,
+		"magnetic field": magnetic_field_units,
 	}
 	multipliers = {
 		"distance": distance_mult,
@@ -363,31 +535,80 @@ class Unit(object):
 		"frequency": frequency_mult,
 		"pressure": pressure_mult,
 		"speed": speed_mult,
+		"acceleration": acceleration_mult,
+		"current": current_mult,
+		"resistance": resistance_mult,
+		"force": force_mult,
+		"intensity": intensity_mult,
+		"temperature": temp_mult,
+		"lumninous flux": lumen_flux_mult,
+		"illuminace": illuminance_mult,
+		"power": power_mult,
+		"conductance": conductance_mult,
+		"electric charge": charge_mult,
+		"capacitance": capacitance_mult,
+		"inductance": inductance_mult,
+		"conductivity": conductivity_mult,
+		"magnetic flux density": magnetic_field_mult,
 	}
-	
 
-	del distance_units, mass_units, time_units
-	del volume_units
+	unit_types = {}
+	for index, unit_type in enumerate2(nonbase_units.keys(), step = 2):
+		temp_dict = (lambda l, t: {i: t for i in l})(
+			nonbase_units[unit_type],
+			unit_type)
+		temp_dict.update({base_units[index]: unit_type, base_units[index + 1]: unit_type})
+		unit_types.update(temp_dict)
 
-	#del multipliers_distance, multipliers_mass, multipliers_time
-	#del multipliers_volume
+	del distance_units, mass_units, time_units, volume_units
+	del voltage_units, energy_units, area_units, frequency_units
+	del pressure_units, speed_units, acceleration_units, current_units
+	del resistance_units, force_units, intensity_units, temp_units
+	del lumen_flux_units, power_units, conductance_units, charge_units
+	del capacitance_units
+
+	del distance_mult, mass_mult, time_mult, volume_mult, voltage_mult
+	del energy_mult, area_mult, frequency_mult, pressure_mult
+	del speed_mult, acceleration_mult, current_mult, resistance_mult,
+	del force_mult, intensity_mult, temp_mult, lumen_flux_mult
+	del illuminance_mult, power_mult, conductance_mult, charge_mult
+	del capacitance_mult
 
 	for i in multipliers:
 		multipliers[i] = double_list(map(Decimal, multipliers[i]))
 
 	from_base_funcs = {unit: lambda a: a for unit in base_units}
-	for unit, mult in zip(
-		flatten(nonbase_units.values()),
-		flatten(multipliers.values())):
-
-		from_base_funcs.update({unit: lambda a, c = mult: a * c})
-
 	to_base_funcs = {}
 	for unit, mult in zip(
 		flatten(nonbase_units.values()),
 		flatten(multipliers.values())):
 
+		from_base_funcs.update({unit: lambda a, c = mult: a * c})
 		to_base_funcs.update({unit: lambda a, c = mult: a / c})
+
+	var273 = Decimal(273.15)
+	var95 = Decimal(9 / 5)
+	var32 = Decimal(32)
+
+	# special case stuff for temp
+	from_base_funcs.update({
+		"degrees-Celsius": lambda a, v2=var273: a - v2,
+		"°C": lambda a, v2=var273: a - v2,
+		"degrees-Fahrenheit": lambda a, v2=var273, v9=var95, v3=var32:\
+			(a - v2) * v9 + v3,
+		"°F": lambda a, v2=var273, v9=var95, v3=var32:\
+			(a - v2) * v9 + v3,
+	})
+	to_base_funcs.update({
+		"degrees-Celsius": lambda a, v2=var273: a + v2,
+		"°C": lambda a, v2=var273: a + v2,
+		"degrees-Fahrenheit": lambda a, v2=var273, v9=var95, v3=var32:\
+			(a - v3) / v9 + v2,
+		"°F": lambda a, v2=var273, v9=var95, v3=var32:\
+			(a - v3) / v9 + v2,
+	})
+	
+	del var273, var95, var32
 
 	def __init__(self, amount, type):
 		self.type = type
@@ -399,12 +620,19 @@ class Unit(object):
 	def __str__(self):
 		return("{a} {u}".format(a = self.amount, u = self.type))
 
+	@staticmethod
+	def compairable(this, other):
+		return(Unit.unit_types[this] == Unit.unit_types[other])
+
 	def convert_to(self, new):
 		'''
 		Change what unit the quantity is expressed as.
 		'''
 
-		print("convert to ", new)
+		if not Unit.compairable(self.type, new):
+			raise CalculatorError(
+				"non compairable units %s and %s." % (self.type, new))
+
 		if self.type in Unit.base_units:
 			new_amount = Unit.from_base_funcs[new](self.amount)
 		elif new in Unit.base_units:
@@ -467,6 +695,9 @@ class Unit(object):
 	def __mul__(self, other):
 		if isinstance(other, Unit):
 			return(NotImplemented)
+			
+			
+			
 		return(Unit(self.amount * other, self.type))
 
 	def __truediv__(self, other):
@@ -497,6 +728,7 @@ class Unit(object):
 				float_to_str(self.amount)
 				< float_to_str(other.convert_to(self.type)))
 		return(False)
+
 
 class NonRepeatingList(object):
 	'''
