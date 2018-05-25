@@ -461,14 +461,14 @@ class Unit(object):
 		Range = (-12, 9))
 
 	conductivity_units, conductivity_mult = ((), ())
-	
+
 	magnetic_field_units, magnetic_field_mult = make_unit_list(
 		"teslas", "T",
 		Range = (-9, 6),
 		centi = False)
 	gauss_u, gauss_m = make_unit_list("gauss", "G", Range = (-9, 3))
-	magnetic_field_units.extend(gauss_u)
-	magnetic_field_mult.extend(gauss_m)
+	magnetic_field_units.extend(gauss_u + ["gauss", "G"])
+	magnetic_field_mult.extend(list(map(lambda a: a * 1e4, gauss_m)) + [1e4])
 
 	base_units = (
 		"meters", "m",
@@ -522,7 +522,7 @@ class Unit(object):
 		"capacitance": capacitance_units,
 		"inductance": inductance_units,
 		"conductivity": conductivity_units,
-		"magnetic field": magnetic_field_units,
+		"magnetic flux density": magnetic_field_units,
 	}
 	multipliers = {
 		"distance": distance_mult,
