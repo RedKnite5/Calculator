@@ -1472,6 +1472,36 @@ class SimplifyMonoFunction(unittest.TestCase):
 		self.assertAlmostEqual(
 			float(c.simplify("4**floor(cos(6))")),
 			1)
+		self.assertAlmostEqual(
+			float(c.simplify("tan(45°)")),
+			1)
+		self.assertAlmostEqual(
+			float(c.simplify("arcsin(.5)")),
+			math.pi / 6)
+
+	def test_stats(self):
+		self.assertAlmostEqual(
+			float(c.simplify("mean(4, 5, 6)")),
+			5)
+		self.assertAlmostEqual(
+			float(c.simplify("median(8, 4, 3, 7, 6)")),
+			6)
+		self.assertAlmostEqual(
+			float(c.simplify("mode(4, 5, 6, 4)")),
+			4)
+		self.assertAlmostEqual(
+			float(c.simplify("mean(4, 5, mode(4, 4, 5, 3, 6, 8, 6, 6))")),
+			5)
+		self.assertAlmostEqual(
+			float(c.simplify("max(4, 5, 6)")),
+			6)
+		self.assertAlmostEqual(
+			float(c.simplify("min(4, 5, 6)")),
+			4)
+
+	def test_unit_conversions(self):
+		pass
+		
 
 
 
