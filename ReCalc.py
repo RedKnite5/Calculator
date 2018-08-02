@@ -180,6 +180,7 @@ and graphing functions in Cartesian and polar.
 buttons put there
 52) allow 'y =' in graphs
 53) put cursor in entry box on startup
+55) don't move cursor to end of line when backspace is hit
 57) unit detection will only use first part is the first part is another
 unit
 '''
@@ -208,7 +209,6 @@ unit
 42) user defined variables
 49) don't let the user pass ln(x) multiple arguments
 54) error handling for passing graph functions incorrectly
-55) don't move cursor to end of line when backspace is hit
 56) manipulate units
 58)
 '''
@@ -2045,7 +2045,6 @@ def input_backspace(*event):
 	delete_chr_comp = compile_ignore_case(
 		"^(.*?)(" + "\(|".join(list_functions) + ")?$")
 
-	# delete the last character in the input widget
 	a = input_widget.get()
 	cursor_pos = input_widget.index("insert")
 
