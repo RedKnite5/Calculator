@@ -32,7 +32,7 @@ class Matrix(object):
 		self.go_button.grid(row=0, column=4)
 		
 		self.xdim.insert(tk.END, "1")
-		self.ydim.insert(tk.END, "4")
+		self.ydim.insert(tk.END, "10")
 		
 		self.minputs = None
 		
@@ -53,7 +53,7 @@ class Matrix(object):
 			for i in range(self.y):
 				for k in range(self.x):
 					row.append(tk.Entry(self.root))
-					row[-1].grid(row=i + 1, column=k)
+					row[-1].grid(row=i + 1, column=k + 1)
 				self.minputs.append(row)
 				row = []
 			self.minputs = np.array(self.minputs)
@@ -77,14 +77,13 @@ class Matrix(object):
 					column = []
 					for k in range(self.y):
 						column.append(tk.Entry(self.root))
-						column[-1].grid(row=k + 1, column=i)
+						column[-1].grid(row=k + 1, column=i + 1)
 					self.minputs = np.append(
 						self.minputs,
 						np.array(column).reshape(self.y, 1),
 						axis=1)
 				
 				self.x = newx
-				
 				
 			if newy <= self.y:
 				for i in range(self.y - newy):
@@ -99,7 +98,7 @@ class Matrix(object):
 					print(self.x)
 					for i in range(self.x):
 						row.append(tk.Entry(self.root))
-						row[-1].grid(row=k + 1, column=i)
+						row[-1].grid(row=k + 1, column=i + 1)
 					self.minputs = np.append(
 						self.minputs,
 						np.array(row).reshape(1, self.x),

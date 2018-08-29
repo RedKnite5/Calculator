@@ -5,7 +5,7 @@ Author: Max Friedman
 License: GPLv3
 Title: ReCalc
 
-This is a graphing calculator written in python 3.7.
+This is a graphing calculator written in python 3.6.
 
 It has a GUI made with tkinter that it will default to using if tkinter
 is installed. It defines graphing and polar graphing classes. It
@@ -169,7 +169,6 @@ and graphing functions in Cartesian and polar.
 33) show request
 37) other weird trig functions
 40) doc strings for all of the tests that need them
-42) user defined variables
 43) save graphs
 44) on fedora only one enter key is bound in the GUI
 45) parametric functions
@@ -182,8 +181,8 @@ buttons put there
 52) allow 'y =' in graphs
 53) put cursor in entry box on startup
 55) don't move cursor to end of line when backspace is hit
-57) unit detection will only use first part is the first part is
-another unit
+57) unit detection will only use first part is the first part is another
+unit
 '''
 
 '''  To Do
@@ -207,12 +206,11 @@ another unit
 38) setup and wheel files
 39) make tests for all parts of the program
 41) user defined functions
+42) user defined variables
 49) don't let the user pass ln(x) multiple arguments
-54) error handling for passing graph functions incorrectly, including
-complex results
+54) error handling for passing graph functions incorrectly
 56) manipulate units
-58) fix saving graphs
-59)
+58)
 '''
 
 
@@ -227,13 +225,12 @@ import sys
 import os
 import logging
 
-
 from atexit import register
 from warnings import warn, simplefilter
 from pickle import load, dump
 from itertools import chain
 
-version = "0.1.13"
+version = "0.1.12"
 
 logger = logging.getLogger("ReCalc_logger")
 logger.setLevel(logging.DEBUG)
@@ -281,7 +278,6 @@ except ModuleNotFoundError:
 # import numpy if installed
 try:
 	import numpy as np
-	from numpy import vectorize as vect
 except ModuleNotFoundError:
 	logger.warning("Numpy could not be imported.")
 	simplefilter("default", ImportWarning)
@@ -316,14 +312,12 @@ try:
 except ModuleNotFoundError:
 	logger.warning("Regex could not be imported.")
 	simplefilter("default", ImportWarning)
-	warn(
-		"Regex could not be imported and somethings may be case "
-		"sensative when they should not be.",
+	warn("Regex could not be imported and somethings may be case sensative "
+		"when they should not be.",
 		category = ImportWarning)
 	import re
 
 from ReCalc_objects import *
-
 
 def compile_ignore_case(regex):
 	return re.compile("(?i:" + regex + ")")
@@ -338,6 +332,7 @@ use_gui = True
 graph_w = 400
 graph_h = 400
 graph_colors = ("black", "red", "blue", "green", "orange", "purple")
+
 
 
 key_binds = {
@@ -411,8 +406,6 @@ one_arg_funcs = {
 	"csc": (lambda x: 1 / math.sin(x), "in"),
 	"cot": (lambda x: 1 / math.tan(x), "in"),
 
-	"crd": (lambda a: 2 * math.sin(x / 2), "in"),
-
 	"abs": (math.fabs, ""),
 	"ceil": (math.ceil, ""),
 	"floor": (math.floor, ""),
@@ -420,7 +413,6 @@ one_arg_funcs = {
 	"erfc": (math.erfc, ""),
 	"gamma": (math.gamma, ""),
 	"Γ": (math.gamma, ""),
-	"log*": (logstar, ""),
 }
 
 list_functions = (
@@ -429,10 +421,9 @@ list_functions = (
 )
 
 keywords = list_functions + (
-	"convert", "graph", "history", "quit", "exit", "degree", "mode",
-	"radian", "solve", "eval", "evaluate", "for", "at", "integral",
-	"integrate", "from", "to", "derivative", "of", "with", "respect",
-	"C", "P",)
+	"convert", "graph", "history", "quit", "exit", "degree", "mode", "radian", "solve",
+	"eval", "evaluate", "for", "at", "integral", "integrate", "from", "to", "derivative",
+	"of", "with", "respect", "c", "p", "∫",)
 
 # regex for a number
 reg_num = "(-?[0-9]+\.?[0-9]*|-?[0-9]*\.?[0-9]+)"
@@ -453,8 +444,14 @@ regular_expr = dict(
 		"(history)|(quit|exit|^$)|"
 		"(degree mode)|(radian mode)"),
 
-	# perserved order in the dict
-	implicet_mult_pre_const_comp = None,
+	implicet_mult_pre_const_comp = compile_ignore_case(
+		"([.0-9])(?=e|pi|π|tau|τ|phi|φ|"
+		+ "|".join(list_functions) + ")"),
+
+	# regex for constants
+	const_comp = compile_ignore_case(
+		"(pi|π|(?<![a-z0-9])e(?![a-z0-9])|"
+		"ans(?:wer)?|tau|τ|phi|φ)"),
 
 	implicet_mult_comp = compile_ignore_case(
 		"([.0-9])(?=[(x])|(\)\()"),
@@ -483,9 +480,13 @@ regular_expr = dict(
 	# intentianly not using compile_ignore_case so that you can
 	# differentiate between capital and lowercase units
 	conv_comp = re.compile(
-		"(?i:convert) (.+?)(?="
-		+ "|".join(units) + ")(" + "|".join(units) + ") ?(?i:to) ("
+		"[Cc][Oo][Nn][Vv][Ee][Rr][Tt] (.+?)(?="
+		+ "|".join(units) + ")(" + "|".join(units) + ") ?[Tt][Oo] ("
 		+ "|".join(units) + ")"),
+
+	# regex for combinations and permutations
+	# parentheses is to differentiate it from choose notation
+	comb_comp = compile_ignore_case("(c|p)(\(.+)"),
 
 	# regex for statistics functions
 	ave_comp = compile_ignore_case(
@@ -494,22 +495,13 @@ regular_expr = dict(
 
 	# regex for one argument functions
 	trig_comp = compile_ignore_case(
-		"("
-		+ "|".join(map(re.escape, one_arg_funcs.keys()))
-		+ ")(.+)"),
-
-	# regex for combinations and permutations
-	# parentheses is to differentiate it from choose notation
-	comb_comp = re.compile("(C|P)(\(.+)"),
+		"(" + "|".join(one_arg_funcs.keys()) + ")(.+)"),
 
 	# regex for logarithms
 	log_comp = compile_ignore_case("log(.+)|ln(.+)"),
 
 	# regex for modulus
 	mod2_comp = compile_ignore_case("mod(.+)"),
-
-	# perserved order in the dict
-	const_comp = None,
 
 	# regex for detecting absolute value
 	abs_comp = compile_ignore_case("(.*\|.*)"),
@@ -549,9 +541,9 @@ regular_expr = dict(
 
 	# regex for addition (not recursive)
 	add_comp = compile_ignore_case(reg_num + " ?([+-]) ?" + reg_num),
-
+	
 	# regex for variable assignment
-	assign_comp = re.compile("((?i:)[a-z]+) ?= ?([^=]+)"),
+	assign_comp = re.compile("([^=]+) ?= ?([^=]+)"),
 )
 
 
@@ -607,9 +599,7 @@ class NumpyGraph(Graph):
 		except IndexError:
 			pass
 
-		self.pic = ImageTk.PhotoImage(Image.fromarray(
-			self.data,
-			"RGB"))
+		self.pic = ImageTk.PhotoImage(Image.fromarray(self.data, "RGB"))
 		self.screen.create_image(
 			self.wide / 2, self.high / 2, image = self.pic)
 
@@ -626,25 +616,13 @@ class NumpyGraph(Graph):
 		pixel_color = Graph.color_dict[color]
 
 		for i in range(self.data.shape[1]):
-			try:
-				x = i * self.xrang / self.wide + self.xmin
-				pre_y = evaluate(func, str(x))
-				y = float(pre_y)
-				a = int(round((
-					x - self.xmin) * self.wide / self.xrang,
-					0))
-				b = int(round(
-					self.high
-						- (y - self.ymin)
-						* self.high
-						/ self.yrang,
-					0))
-			except ValueError:
-				logger.warning("Invalid function passed to graph. j in"
-				" result" + " == {}".format("j" in pre_y))
-				raise CalculatorError("Invalid function.")
-			except ZeroDivisionError:
-				logger.info("ZeroDivisionError ignored in graph")
+
+			x = i * self.xrang / self.wide + self.xmin
+			y = float(evaluate(func, str(x)))
+			a = int(round((x - self.xmin) * self.wide / self.xrang, 0))
+			b = int(round(
+				self.high - (y - self.ymin) * self.high / self.yrang,
+				0))
 
 			if 0 < b and b < self.high:
 				self.data[b, i] = pixel_color
@@ -729,7 +707,7 @@ class NumpyPolarGraph(NumpyGraph):
 					self.wide / 2, self.high / 2, image = self.pic)
 
 			except (ValueError,) as e:
-				logger.info("Exception: {} in graph".format(e))
+				pass
 
 			# update the screen
 			try:
@@ -769,10 +747,10 @@ class NumpyParameticGraph(NumpyGraph):
 		density = 1000
 		t = self.tmin
 
-
+		
 		xfunc = funcs["x"]
 		yfunc = funcs["y"]
-
+		
 
 		pixel_color = Graph.color_dict[color]
 
@@ -812,122 +790,6 @@ class NumpyParameticGraph(NumpyGraph):
 				theta = self.tmax + 1
 
 
-class Matrix(object):
-
-	def __init__(self):
-		'''Create a matrix window.'''
-
-		self.mat_dict = None
-
-		self.root = tk.Toplevel()
-
-		self.display = tk.Entry(self.root)
-		self.display.grid(row=0, column=0)
-
-		self.display.insert(0, "Matrix_A")
-
-		by_mess = tk.Message(self.root, text="by")
-		by_mess.grid(row=0, column=2)
-
-		self.xvar = tk.StringVar()
-		self.yvar = tk.StringVar()
-
-		self.xdim = tk.Entry(self.root, textvariable=self.xvar)
-		self.xdim.grid(row=0, column=1)
-
-		self.ydim = tk.Entry(self.root, textvariable=self.yvar)
-		self.ydim.grid(row=0, column=3)
-
-		self.go_button = tk.Button(
-			self.root,
-			text="enter",
-			command=self.get_matrix)
-		self.go_button.grid(row=0, column=4)
-
-		self.xdim.insert(tk.END, "2")
-		self.ydim.insert(tk.END, "2")
-
-		self.minputs = None
-
-		self.resize()
-
-		self.xvar.trace("w", self.resize)
-		self.yvar.trace("w", self.resize)
-
-	def resize(self, *args):
-
-		if self.minputs is None:
-			self.minputs = []
-			row = []
-			self.x = int(self.xdim.get())
-			self.y = int(self.ydim.get())
-			for i in range(self.y):
-				for k in range(self.x):
-					row.append(tk.Entry(self.root))
-					row[-1].grid(row=i + 1, column=k + 1)
-				self.minputs.append(row)
-				row = []
-			self.minputs = np.array(self.minputs)
-		else:
-			newx = self.xdim.get()
-			newy = self.ydim.get()
-			if "" in (newx, newy):
-				return
-
-			newx, newy = int(newx), int(newy)
-
-			if newx <= self.x:
-				for i in range(self.x - newx):
-					for d in self.minputs[:, newx - 0]:
-						d.grid_forget()
-						d.destroy()
-					self.minputs = np.delete(self.minputs, newx - 0, 1)
-				self.x = newx
-			else:
-				for i in range(self.x, newx):
-					column = []
-					for k in range(self.y):
-						column.append(tk.Entry(self.root))
-						column[-1].grid(row=k + 1, column=i + 1)
-					self.minputs = np.append(
-						self.minputs,
-						np.array(column).reshape(self.y, 1),
-						axis=1)
-
-				self.x = newx
-
-			if newy <= self.y:
-				for i in range(self.y - newy):
-					for d in self.minputs[newy, :]:
-						d.grid_forget()
-						d.destroy()
-					self.minputs = np.delete(self.minputs, newy, 0)
-				self.y = newy
-			else:
-				for k in range(self.y, newy):
-					row = []
-					print(self.x)
-					for i in range(self.x):
-						row.append(tk.Entry(self.root))
-						row[-1].grid(row=k + 1, column=i + 1)
-					self.minputs = np.append(
-						self.minputs,
-						np.array(row).reshape(1, self.x),
-						axis=0)
-
-				self.y = newy
-
-	def get_matrix(self):
-		self.mat = np.matrix(vect(
-			lambda a: int(a.get()) if a.get() else 0)(
-				self.minputs.copy()))
-		update_const_dict(self.display.get(), self.mat)
-		print(repr(self.mat))
-
-		self.root.destroy()
-
-
-
 # multi session variables
 try:
 	calc_path = os.path.abspath(os.path.dirname(__file__))
@@ -943,7 +805,6 @@ try:
 	der_approx = calc_info["der_approx"]
 	hist_len = calc_info["hist_len"]
 	win_bound = calc_info["window_bounds"]
-	constant_dict = calc_info["constant_dict"]
 except Exception as e:
 	logger.warning("Loading settings failed. %s", str(e))
 
@@ -961,21 +822,13 @@ except Exception as e:
 		"theta min": 0,
 		"theta max": 10,
 	}
-	constant_dict = {
-		"pi": math.pi, "π": math.pi, "e": math.e,
-		"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
-		"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2,
-	}
 
 
-regular_expr["implicet_mult_pre_const_comp"] = compile_ignore_case(
-		"([.0-9])(?="
-		+ "|".join(list_functions + tuple(constant_dict.keys())) + ")")
-regular_expr["const_comp"] = compile_ignore_case(
-		"(ans(?:wer)?"
-		+ join_format("|(?<![a-z0-9]){}(?![a-z0-9])", constant_dict)
-		+ ")")
-
+constant_dict = {
+	"pi": math.pi, "π": math.pi, "e": math.e,
+	"ans": ans, "answer": ans, "tau": math.tau, "τ": math.tau,
+	"phi": (1 + 5 ** 0.5) / 2, "φ": (1 + 5 ** 0.5) / 2,
+}
 
 def log_end():
 	'''
@@ -1214,7 +1067,7 @@ def constant(constant):
 	'''
 
 	global constant_dict
-
+	
 	constant_dict["ans"] = ans
 	constant_dict["answer"] = ans
 
@@ -1393,7 +1246,7 @@ def solve_equations(equation):
 			"Could not solve. Sympy not installed.")
 
 
-def evaluate(expression, point, var="x"):
+def evaluate(expression, point, var = "x"):
 	'''
 	Evaluate the function by substituting var for the number you
 	want to evaluate at.
@@ -1412,7 +1265,7 @@ def evaluate(expression, point, var="x"):
 		str(point), expression, flags = re.I))
 
 
-def find_derivative(expression, point, var="x"):
+def find_derivative(expression, point, var = "x"):
 	'''
 	Calculate the derivate of the function at the given point
 
@@ -1461,7 +1314,7 @@ def convert(amount, start, end_units):
 	return str(q)
 
 
-def combinations_and_permutations(form, letter, n, m=None):
+def combinations_and_permutations(form, letter, n, m = None):
 	'''
 	Solve combinations and permutations.
 
@@ -1532,11 +1385,8 @@ def combinations_and_permutations(form, letter, n, m=None):
 		inner_m = float(simplify(comb_args[1]))
 
 		# find permutations
-		try:
-			temp_result = math.gamma(1 + inner_n) \
-				/ math.gamma(1 + inner_n - inner_m)
-		except OverflowError:
-			raise CalculatorError("Input too large.")
+		temp_result = math.gamma(1 + inner_n) \
+			/ math.gamma(1 + inner_n - inner_m)
 
 		# if combinations also divide by m!
 		if letter == "C":
@@ -1648,10 +1498,7 @@ def single_argument(func, args):
 	if degree_mode > 0 and "in" in one_arg_funcs[func][1]:
 		inner = math.pi * inner / 180
 
-	try:
-		result = one_arg_funcs[func][0](inner)
-	except OverflowError:
-		raise CalculatorError("Input too large.")
+	result = one_arg_funcs[func][0](inner)
 
 	# checks if its in degree mode (not because of
 	# degree symbols in the argument) and if so
@@ -1692,10 +1539,7 @@ def factorial(arg):
 	120.0
 	'''
 
-	try:
-		return math.gamma(float(arg) + 1)
-	except OverflowError:
-		raise CalculatorError("Input too large.")
+	return math.gamma(float(arg) + 1)
 
 
 def logarithm(log_arg):
@@ -1866,37 +1710,6 @@ def comma(left, right):
 				"Commas used inappropriately.")
 
 
-def update_const_dict(var, value):
-	'''Update the constant dictorary with the values passed by the
-	user.'''
-
-	global constant_dict
-
-	if var.lower() not in keywords:
-		if isinstance(value, str):
-			constant_dict[var] = simplify(value)
-		elif isinstance(value, np.matrix):
-			constant_dict[var] = value
-
-		regular_expr["implicet_mult_pre_const_comp"] = \
-			compile_ignore_case(
-				"([.0-9])(?="
-				+ "|".join(list_functions + tuple(constant_dict))
-				+ ")")
-		regular_expr["const_comp"] = compile_ignore_case(
-			"(ans(?:wer)?"
-			+ join_format(
-				"|(?<![a-z0-9]){}(?![a-z0-9])",
-				constant_dict)
-			+ ")")
-		save_info(constant_dict = constant_dict)
-
-		logger.info(
-			"Variable '{}' assigned as '{}'".format(var, value))
-	else:
-		raise CalculatorError("keywords can not be used as variables.")
-
-
 # main func
 def simplify(s):
 	'''
@@ -1909,9 +1722,6 @@ def simplify(s):
 	'''
 
 	global degree_mode
-
-	if isinstance(s, np.matrix):
-		s = repr(s)
 
 	original = s
 
@@ -2063,10 +1873,7 @@ def simplify(s):
 
 			elif key == "exp_comp":
 
-				try:
-					result = float(m.group(1)) ** float(m.group(3))
-				except OverflowError:
-					raise CalculatorError("Input too large.")
+				result = float(m.group(1)) ** float(m.group(3))
 
 			elif key in ("mod_comp", "mod2_comp"):
 
@@ -2106,18 +1913,10 @@ def simplify(s):
 				if m.group(2) == "*":
 
 					result = float(m.group(1)) * float(m.group(3))
-					if result in (float("inf"), float("-inf")):
-						raise CalculatorError("Input too large.")
 
 				elif m.group(2) in ("/", "÷"):
 
-					try:
-						result = float(m.group(1)) / float(m.group(3))
-					except ZeroDivisionError:
-						raise CalculatorError(
-							"Can not divide by zero")
-					if result in (float("inf"), float("-inf")):
-						raise CalculatorError("Input too large.")
+					result = float(m.group(1)) / float(m.group(3))
 
 				else:
 					raise CalculatorError(
@@ -2141,14 +1940,17 @@ def simplify(s):
 				else:
 					raise CalculatorError(
 						"add_comp must match '+' or '-'.")
-
+			
 			elif key == "assign_comp":
-
+				
 				# variable assigment
-
-				update_const_dict(m.group(1), m.group(2))
-
-				return "Done"
+				
+				global constant_dict
+				
+				constant_dict[m.group(1)] = simplify(m.group(2))
+				
+				result = "Done"
+				
 
 			else:
 				raise CalculatorError(
@@ -2183,7 +1985,7 @@ def simplify(s):
 
 
 # pre and post processing for console
-def ask(s=None):
+def ask(s = None):
 	'''
 	Ask the user what expression they want to simplify
 	and do pre and post processing when using the console.
@@ -2297,7 +2099,7 @@ def input_backspace(*event):
 		return "break"
 
 
-def get_input(s=None):
+def get_input(s = None):
 	'''
 	Get user input from the entry widget.
 	'''
@@ -2501,7 +2303,7 @@ def switch_matrices():
 	Create window for dealing with matrices. NotImplemented.
 	'''
 
-	matrix = Matrix()
+	pass
 
 
 def graph_win_key_press(event, index):
@@ -2565,7 +2367,7 @@ def edit_graph_window():
 	root.mainloop()
 
 
-def tkask(s=None):
+def tkask(s = None):
 	'''
 	Make a GUI for the program.
 
@@ -2778,7 +2580,7 @@ def main():
 
 	if "docopt" in sys.modules:
 		args = docopt(__doc__)
-
+		
 		if args["-V"] or args["--version"]:
 			print(version)
 			sys.exit()

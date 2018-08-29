@@ -2,10 +2,13 @@
 
 '''
 Classes and functions for ReCalc
+
+ReCalc_objects.py
 '''
 
-import re
+import regex as re
 from decimal import Context, Decimal
+from math import log, e
 
 # import tkinter if installed
 try:
@@ -16,12 +19,21 @@ try:
 except ModuleNotFoundError:
 	pass
 
+# import numpy if installed
+try:
+	import numpy as np
+	from numpy import vectorize as vect
+	from numpy import matrix
+except ModuleNotFoundError:
+	pass
 
-__all__ = [
+
+__all__ = (
 	"Unit", "compile_ignore_case", "CalculatorError",
 	"NonRepeatingList", "Graph", "check_if_ascii", "float_to_str",
-	"check_if_float", "find_match", "separate", "sort_by_length"
-]
+	"check_if_float", "find_match", "separate", "sort_by_length",
+	"join_format", "logstar",
+)
 
 def double_list(l):
 	return([i for s in ((i, i) for i in l) for i in s])
@@ -260,6 +272,21 @@ def make_unit_list(
 	return(un, mu)
 
 
+def join_format(s, iterable):
+	
+	return ''.join(map(lambda a: s.format(a), iterable))
+
+
+def logstar(n, b=e):
+	'''Return the iterated logarithm of n.'''
+
+	c = 0
+	while n > 1:
+		n = log(n, b)
+		c += 1
+	return c
+
+
 class CalculatorError(Exception):
 	pass
 
@@ -297,7 +324,7 @@ class Unit(object):
 		"tonnes", "t",
 	)
 	mass_mult = (
-		1000, 2.2046226218, 1e6, 35.274, 0.00110231, 1e12,
+		1000, 2.2046226218, int(1e6), 35.274, 0.00110231, int(1e12),
 		0.001,
 	)
 
@@ -896,3 +923,5 @@ class Graph(object):
 		fout = filedialog.asksaveasfile()
 		self.image.save(fout)
 		print("Saved")
+
+
