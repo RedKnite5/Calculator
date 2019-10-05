@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+	<meta charset="utf-8">
+	<title>ReCalc</title>
+	<link rel="shortcut icon" href="../ReCalc_icon.ico">
+	
+	<style>
+		html {
+			font-family: sans-serif;
+		}
+		h1 {
+			text-align: center;
+		}
+		.output {
+			border: 1px;
+			border-style: solid;
+			border-radius: 20px;
+			padding: 0px 5px 0px 5px;
+		}
+		.normalButton {
+			width: 50px;
+		}
+		.mutableButton {
+			width: 60px;
+		}
+		.dropdown {
+			display: inline-block;
+			margin-left: 5px;
+			margin-right: 5px;
+		}
+		.dropbtn {
+			width: 95px;
+		}
+		.dropdown-content {
+			display: none;
+			position: absolute;
+			z-index: 1;
+		}
+		.show {
+			display: block;
+		}
+	</style>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script type=text/javascript>
+		$SCRIPT_ROOT = "http://127.0.0.1:5000";
+	</script>
+</head>
+
+<body>
+	<h1>ReCalc</h1>
+	
+	<p class="description">ReCalc is a graphing calculator written in python.</p>
+	
+	<p class="dependancies">To run this program you will need python 3.6, Sympy, Pillow, docopt, 
+	and tkinter. It will work without these, but certain functionality will be limited.</p>
+	
+	<p class="os">I have tested it on Windows 10 and Fedora 26-27. It will not necessarily work on other operating systems.</p>
+	<br>
+	
+	<p id="output" class="output">Input an expression</p>
+	<input type="text" id="input" class="input" size=114>
+	<br>
+</body>
+
+<script>
+	
+	var body = document.getElementsByTagName("body")[0];
+	
+	var dropDownList = document.createElement("div");
+	dropDownList.id = "myDropdown";
+	dropDownList.className = "dropdown-content";
+	
+	var trigFuncButton = document.createElement("button");
+	trigFuncButton.innerHTML = "Trig Functions";
+	trigFuncButton.className = "functionsButton";
+	trigFuncButton.addEventListener("click", switchTrig);
+	
+	var hyperFuncButton = document.createElement("button");
+	hyperFuncButton.innerHTML = "Hyperbolic Functions";
+	hyperFuncButton.className = "functionsButton";
+	hyperFuncButton.addEventListener("click", switchHyperbolic);
+	
+	var statsFuncButton = document.createElement("button");
+	statsFuncButton.innerHTML = "Statistics Functions";
+	statsFuncButton.className = "functionsButton";
+	statsFuncButton.addEventListener("click", switchStats);
+	
+	var miscFuncButton = document.createElement("button");
+	miscFuncButton.innerHTML = "Misc Functions";
+	miscFuncButton.className = "functionsButton";
+	miscFuncButton.addEventListener("click", switchMisc);
+	
+	dropDownList.appendChild(trigFuncButton);
+	dropDownList.appendChild(document.createElement("br"));
+	dropDownList.appendChild(hyperFuncButton);
+	dropDownList.appendChild(document.createElement("br"));
+	dropDownList.appendChild(statsFuncButton);
+	dropDownList.appendChild(document.createElement("br"));
+	dropDownList.appendChild(miscFuncButton);
+	
+	var buttonSymbols = [
+		"7", "8", "9", "+", "-", "(", ")",
+		"4", "5", "6", "*", "÷", "|", ",",
+		"1", "2", "3", "^", "!", "∫", "x",
+		"0", ".", "=", "π", "e", "empty1", "empty2"
+	];
+	var buttonsArray = [];
+	var mutableButtons = [];
+	
+	for (var i=0; i<buttonSymbols.length; i++) {
+		buttonsArray.push(document.createElement("button"));
+		buttonsArray[i].className = "normalButton";
+		buttonsArray[i].innerHTML = buttonSymbols[i];
+		buttonsArray[i].id = buttonSymbols[i];
+		buttonsArray[i].addEventListener("click", (function (id) {return function() {buttonPress(id)}})(buttonSymbols[i]));
+		
+		body.appendChild(buttonsArray[i]);
+		
+		if ([")", ",", "x", "empty2"].includes(buttonSymbols[i])) {
+			for (var k=0; k<3; k++) {
+				mutableButtons.push(document.createElement("button"));
+				mutableButtons[mutableButtons.length-1].className = "mutableButton";
+				mutableButtons[mutableButtons.length-1].innerHTML = "dev";
+				
+				// Here the function for the button should be created which calls buttonPress on whatever is written on the  button
+				// This could not yet be accomplished.
+
+				if (k%3 === 0) {
+					mutableButtons[mutableButtons.length-1].style.marginLeft = "5px";
+				}
+				body.appendChild(mutableButtons[mutableButtons.length-1]);
+			}
+			if (mutableButtons.length === 3) {
+				var dropDownDiv = document.createElement("div");
+				dropDownDiv.className = "dropdown";
+				
+				var dropDownButton = document.createElement("button");
+				dropDownButton.innerHTML = "functions ▼";
+				dropDownButton.className = "dropbtn";
+				dropDownButton.addEventListener("click", showDropDown);
+				
+				body.appendChild(dropDownDiv);
+				
+				dropDownDiv.appendChild(dropDownButton);
+				dropDownDiv.appendChild(dropDownList);
+				
+				var deleteButton = document.createElement("button");
+				deleteButton.innerHTML = "delete";
+				deleteButton.addEventListener("click", backspace);
+				body.appendChild(deleteButton);
+			}
+		}
+		
+		if ((i+1)%7 === 0 && i !== 1) {
+			body.appendChild(document.createElement("br"));
+		}
+		if ((i+4)%7 === 0) {
+			buttonsArray[i].style.marginLeft = "5px";
+		}
+		
+	}
+	document.getElementById("=").style.background = "#5060ff";
+	
+	buttonsArray[buttonsArray.length-1].style.visibility = "hidden";
+	buttonsArray[buttonsArray.length-2].style.visibility = "hidden";
+	
+	var entry = document.getElementById("input");
+	var outputBox = document.getElementById("output");
+	
+	function buttonPress(button) {
+		if (button !== "=") {
+			entry.value += button;
+		} else {
+			var expression = entry.value;
+			/*outputBox.textContent = "NotImplemented";*/
+			loadDoc(expression);
+		}
+	}
+	
+	function showDropDown() {
+		document.getElementById("myDropdown").classList.toggle("show");
+	}
+	
+	switchTrig()
+	
+	function switchTrig() {
+		trigFuncs = ["sin", "cos", "tan", "sec", "csc", "cot", "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot"];
+		
+		for (let i=0; i<mutableButtons.length; i++) {
+			mutableButtons[i].innerHTML = trigFuncs[i];
+			mutableButtons[i].style.visibility = "visible";
+
+			mutableButtons[i].onclick = function(k) {buttonPress(trigFuncs[i] + "(");};
+		}
+	}
+	
+	function switchHyperbolic() {
+		hyperFuncs = ["sinh", "cosh", "tanh", "sech", "csch", "coth", "arcsinh", "arccosh", "arctanh", "arcsech", "arccsch", "arccoth"];
+		
+		for (let i=0; i<mutableButtons.length; i++) {
+			mutableButtons[i].innerHTML = hyperFuncs[i];
+			mutableButtons[i].style.visibility = "visible";
+			
+			mutableButtons[i].onclick = function(k) {buttonPress(hyperFuncs[i] + "(");};
+		}
+	}
+	
+	function switchStats() {
+		statsFuncs = ["mean", "median", "mode", "stdev", "max", "min"];
+		
+		for (let i=0; i<mutableButtons.length; i++) {
+			if (i<statsFuncs.length) {
+				mutableButtons[i].innerHTML = statsFuncs[i];
+				mutableButtons[i].style.visibility = "visible";
+				
+				mutableButtons[i].onclick = function(k) {buttonPress(statsFuncs[i] + "(");};
+			} else {
+				mutableButtons[i].style.visibility = "hidden";
+			}
+		}
+	}
+	
+	function switchMisc() {
+		miscFuncs = ["log", "ln", "Γ", "abs", "ceil", "floor", "erf", "mod", "C", "P"];
+		
+		for (let i=0; i<mutableButtons.length; i++) {
+			if (i<miscFuncs.length) {
+				mutableButtons[i].innerHTML = miscFuncs[i];
+				mutableButtons[i].style.visibility = "visible";
+				
+				mutableButtons[i].onclick = function(k) {buttonPress(miscFuncs[i] + "(");};
+			} else {
+				mutableButtons[i].style.visibility = "hidden";
+			}
+		}
+	}
+	
+
+	function loadDoc(expression) {
+		var data = $.getJSON($SCRIPT_ROOT + "/_calc", {
+			exp: expression
+		}, function (data) { outputBox.textContent = data.result;}
+		)
+		return 0;
+	}
+	
+	function backspace() {
+		var expression = entry.value;
+		var cursor = entry.selectionStart;
+		entry.value = expression.slice(0, cursor-1) + expression.slice(cursor);
+		var range = entry.createTextRange();
+		range.moveToPoint(cursor);
+		range.select();
+	}
+	
+	document.addEventListener("keydown", keyCheck);
+	
+	function keyCheck(event) {
+		var keyID = event.code;
+		if (keyID === "backspace") {
+			backspace();
+		}
+	}
+	
+	window.onclick = function(event) {
+		if (!event.target.matches('.dropbtn')) {
+			var dropdowns = document.getElementsByClassName("dropdown-content");
+			for (var i = 0; i < dropdowns.length; i++) {
+				var openDropdown = dropdowns[i];
+				if (openDropdown.classList.contains('show')) {
+					openDropdown.classList.remove('show');
+				}
+			}
+		}
+	}
+	
+</script>
